@@ -279,6 +279,266 @@
       .login-card { padding: 32px 24px; }
       .user-name { display: none; }
     }
+
+    /* ── 後台子導覽 ── */
+    .admin-subnav {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .subnav-btn {
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      color: var(--text-muted);
+      margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .subnav-btn.active {
+      color: var(--text);
+      border-bottom-color: var(--primary);
+    }
+
+    /* ── 後台區塊 ── */
+    .admin-section { display: none; }
+    .admin-section.active { display: block; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    /* ── 卡片格狀排列 ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .loading-row {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .empty-row {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* ── 團體卡片 ── */
+    .group-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .group-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--group-color, var(--primary));
+    }
+
+    .group-card-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .group-card-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .group-card-color {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .color-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .group-card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid #f09595;
+    }
+
+    .btn-danger:hover { background: #fcebeb; }
+
+    /* ── Modal ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 16px;
+    }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 0;
+    }
+
+    .modal-title {
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      color: var(--text-muted);
+      padding: 4px;
+      line-height: 1;
+    }
+
+    .modal-body {
+      padding: 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .modal-footer {
+      padding: 0 24px 20px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* ── 表單 ── */
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+    .form-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .required { color: var(--danger); }
+
+    .form-input {
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      color: var(--text);
+      background: var(--surface);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .form-input:focus { border-color: var(--primary); }
+
+    .color-picker-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .color-input {
+      width: 44px;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2px;
+      cursor: pointer;
+      background: var(--surface);
+    }
+
+    .color-hint {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-family: monospace;
+    }
+
+    .color-presets {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .color-preset {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.1s, border-color 0.1s;
+    }
+
+    .color-preset:hover { transform: scale(1.2); }
+
+    .form-error {
+      font-size: 13px;
+      color: var(--danger);
+      min-height: 18px;
+    }
+
   </style>
 </head>
 <body>
@@ -345,9 +605,78 @@
 
     <!-- 訂單管理（僅管理者可見） -->
     <div class="tab-panel" id="tab-admin">
-      <div class="placeholder-card">
-        <h2>訂單管理後台</h2>
-        <p>這裡將顯示所有訂單與管理功能。<br>下一步開發：訂單列表 + 狀態管理。</p>
+
+      <!-- 後台子導覽 -->
+      <div class="admin-subnav">
+        <button class="subnav-btn active" data-section="groups" onclick="switchAdminSection('groups')">團體管理</button>
+        <button class="subnav-btn" data-section="campaigns" onclick="switchAdminSection('campaigns')">團務管理</button>
+        <button class="subnav-btn" data-section="orders" onclick="switchAdminSection('orders')">訂單管理</button>
+      </div>
+
+      <!-- 團體管理 -->
+      <div class="admin-section active" id="section-groups">
+        <div class="section-header">
+          <h2 class="section-title">團體管理</h2>
+          <button class="btn btn-primary" onclick="openGroupModal()">新增團體</button>
+        </div>
+        <div id="groups-list" class="card-grid">
+          <div class="loading-row">載入中...</div>
+        </div>
+      </div>
+
+      <!-- 團務管理（下一步開發） -->
+      <div class="admin-section" id="section-campaigns">
+        <div class="placeholder-card">
+          <h2>團務管理</h2>
+          <p>即將開發</p>
+        </div>
+      </div>
+
+      <!-- 訂單管理（下一步開發） -->
+      <div class="admin-section" id="section-orders">
+        <div class="placeholder-card">
+          <h2>訂單管理</h2>
+          <p>即將開發</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 新增/編輯團體 Modal -->
+    <div class="modal-backdrop" id="modal-group" style="display:none" onclick="closeGroupModal(event)">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 class="modal-title" id="modal-group-title">新增團體</h3>
+          <button class="modal-close" onclick="closeGroupModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">團體名稱 <span class="required">*</span></label>
+            <input class="form-input" id="input-group-name" type="text" placeholder="例：登山社" maxlength="20" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">代表顏色 <span class="required">*</span></label>
+            <div class="color-picker-row">
+              <input class="color-input" id="input-group-color" type="color" value="#1D9E75" />
+              <span class="color-hint" id="color-hint">#1D9E75</span>
+            </div>
+            <div class="color-presets">
+              <button class="color-preset" style="background:#1D9E75" onclick="setColor('#1D9E75')"></button>
+              <button class="color-preset" style="background:#534AB7" onclick="setColor('#534AB7')"></button>
+              <button class="color-preset" style="background:#D85A30" onclick="setColor('#D85A30')"></button>
+              <button class="color-preset" style="background:#185FA5" onclick="setColor('#185FA5')"></button>
+              <button class="color-preset" style="background:#854F0B" onclick="setColor('#854F0B')"></button>
+              <button class="color-preset" style="background:#993556" onclick="setColor('#993556')"></button>
+              <button class="color-preset" style="background:#3B6D11" onclick="setColor('#3B6D11')"></button>
+              <button class="color-preset" style="background:#5F5E5A" onclick="setColor('#5F5E5A')"></button>
+            </div>
+          </div>
+          <p class="form-error" id="group-form-error"></p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeGroupModal()">取消</button>
+          <button class="btn btn-primary" id="btn-save-group" onclick="saveGroup()">儲存</button>
+        </div>
       </div>
     </div>
 
@@ -444,6 +773,164 @@
 
   window.handleSignOut = async function() {
     await signOutUser();
+  };
+</script>
+
+
+<script type="module">
+  import { db } from "./auth.js";
+  import {
+    collection, doc, addDoc, getDocs, deleteDoc,
+    serverTimestamp, query, orderBy
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ── 後台子導覽切換 ─────────────────────────────────────────────
+  window.switchAdminSection = function(section) {
+    document.querySelectorAll(".subnav-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.section === section);
+    });
+    document.querySelectorAll(".admin-section").forEach(el => {
+      el.classList.toggle("active", el.id === `section-${section}`);
+    });
+    if (section === "groups") loadGroups();
+  };
+
+  // ── 團體列表 ──────────────────────────────────────────────────
+  async function loadGroups() {
+    const list = document.getElementById("groups-list");
+    list.innerHTML = '<div class="loading-row">載入中...</div>';
+    try {
+      const q = query(collection(db, "groups"), orderBy("createdAt", "asc"));
+      const snap = await getDocs(q);
+      if (snap.empty) {
+        list.innerHTML = '<div class="empty-row">尚無團體，點右上角「新增團體」開始建立。</div>';
+        return;
+      }
+      list.innerHTML = "";
+      snap.forEach(docSnap => {
+        list.appendChild(renderGroupCard(docSnap.id, docSnap.data()));
+      });
+    } catch (e) {
+      list.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
+    }
+  }
+
+  function renderGroupCard(id, data) {
+    const card = document.createElement("div");
+    card.className = "group-card";
+    card.style.setProperty("--group-color", data.color);
+    card.innerHTML = `
+      <div class="group-card-name">${escHtml(data.name)}</div>
+      <div class="group-card-color">
+        <span class="color-dot" style="background:${data.color}"></span>
+        <span>${data.color}</span>
+      </div>
+      <div class="group-card-meta">建立於 ${formatDate(data.createdAt)}</div>
+      <div class="group-card-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openGroupModal('${id}', '${escHtml(data.name)}', '${data.color}')">編輯</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteGroup('${id}', '${escHtml(data.name)}')">刪除</button>
+      </div>`;
+    return card;
+  }
+
+  // ── Modal 開關 ────────────────────────────────────────────────
+  let editingGroupId = null;
+
+  window.openGroupModal = function(id = null, name = "", color = "#1D9E75") {
+    editingGroupId = id;
+    document.getElementById("modal-group-title").textContent = id ? "編輯團體" : "新增團體";
+    document.getElementById("input-group-name").value = name;
+    document.getElementById("input-group-color").value = color;
+    document.getElementById("color-hint").textContent = color;
+    document.getElementById("group-form-error").textContent = "";
+    document.getElementById("modal-group").style.display = "flex";
+    setTimeout(() => document.getElementById("input-group-name").focus(), 50);
+  };
+
+  window.closeGroupModal = function(e) {
+    if (e && e.target !== document.getElementById("modal-group")) return;
+    document.getElementById("modal-group").style.display = "none";
+    editingGroupId = null;
+  };
+
+  // ── 顏色選取 ──────────────────────────────────────────────────
+  window.setColor = function(hex) {
+    document.getElementById("input-group-color").value = hex;
+    document.getElementById("color-hint").textContent = hex;
+  };
+
+  document.getElementById("input-group-color").addEventListener("input", function() {
+    document.getElementById("color-hint").textContent = this.value;
+  });
+
+  // ── 儲存團體（新增 / 編輯）──────────────────────────────────
+  window.saveGroup = async function() {
+    const name  = document.getElementById("input-group-name").value.trim();
+    const color = document.getElementById("input-group-color").value;
+    const errEl = document.getElementById("group-form-error");
+    const btn   = document.getElementById("btn-save-group");
+
+    if (!name) { errEl.textContent = "請填寫團體名稱"; return; }
+
+    btn.disabled = true;
+    btn.textContent = "儲存中...";
+    errEl.textContent = "";
+
+    try {
+      if (editingGroupId) {
+        const { updateDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+        await updateDoc(doc(db, "groups", editingGroupId), { name, color });
+      } else {
+        await addDoc(collection(db, "groups"), {
+          name, color, createdAt: serverTimestamp()
+        });
+      }
+      document.getElementById("modal-group").style.display = "none";
+      editingGroupId = null;
+      await loadGroups();
+    } catch (e) {
+      errEl.textContent = "儲存失敗：" + e.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "儲存";
+    }
+  };
+
+  // ── 刪除團體 ──────────────────────────────────────────────────
+  window.deleteGroup = async function(id, name) {
+    if (!confirm(`確定要刪除「${name}」嗎？
+此操作無法復原。`)) return;
+    try {
+      await deleteDoc(doc(db, "groups", id));
+      await loadGroups();
+    } catch (e) {
+      alert("刪除失敗：" + e.message);
+    }
+  };
+
+  // ── 工具函式 ──────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str).replace(/[&<>"']/g, c =>
+      ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  }
+
+  function formatDate(ts) {
+    if (!ts) return "—";
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
+  }
+
+  // 頁面載入時如果已在 admin tab，自動載入團體列表
+  document.addEventListener("DOMContentLoaded", () => {
+    const adminTab = document.getElementById("tab-admin");
+    if (adminTab?.classList.contains("active")) loadGroups();
+  });
+
+  // 切換到 admin tab 時自動載入
+  const origSwitch = window.switchTab;
+  window.switchTab = function(tabName) {
+    origSwitch(tabName);
+    if (tabName === "admin") loadGroups();
   };
 </script>
 
