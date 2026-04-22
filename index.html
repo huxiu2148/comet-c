@@ -356,33 +356,13 @@
 </main>
 
 <script type="module">
-  import { signInWithGoogle, signOutUser, watchAuthState, handleRedirectResult } from "./auth.js";
+  import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
 
   // ── 初始化：先處理 Redirect 結果，再啟動狀態監聽 ─────────────
-  // 必須等 handleRedirectResult() 完成後才啟動 watchAuthState()
-  // 否則 Firebase 尚未處理完 redirect token 時會先觸發「未登入」
-  // 導致畫面錯誤地跳回登入頁
-  async function init() {
-    document.getElementById("view-loading").style.display = "flex";
-    console.log("[init] 開始，處理 redirect result...");
-
-    try {
-      await handleRedirectResult();
-      console.log("[init] handleRedirectResult 完成");
-    } catch (error) {
-      console.error("[init] Redirect 結果處理失敗：", error.code, error.message);
-      const errorEl = document.getElementById("login-error");
-      if (errorEl) {
-        errorEl.textContent = "登入失敗：" + (error.code ?? error.message);
-        errorEl.style.display = "block";
-      }
-    }
-
-    console.log("[init] 啟動 watchAuthState...");
-    watchAuthState(({ user, role }) => {
-      console.log("[watchAuthState] 觸發，user:", user ? user.email : "null", "role:", role);
+  // 監聽登入狀態，登入/登出時自動更新畫面
+  watchAuthState(({ user, role }) => {
       currentRole = role;
 
       if (!user) {
@@ -396,9 +376,6 @@
         setupAppUI(user, role);
       }
     });
-  }
-
-  init();
 
   // ── 設定登入後的 UI ───────────────────────────────────────────
   function setupAppUI(user, role) {

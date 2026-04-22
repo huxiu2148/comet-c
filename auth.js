@@ -2,8 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   signOut,
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -36,29 +35,15 @@ const ADMIN_UIDS = [
   // "your-admin-uid-here"
 ];
 
-// ─── 登入（Redirect 模式，GitHub Pages 相容性最佳）──────────────
-// 呼叫後會直接跳轉到 Google 登入頁，登入完成後自動跳回
+// ─── 登入（Popup 模式）───────────────────────────────────────────
 export async function signInWithGoogle() {
   const provider = new GoogleAuthProvider();
-  await signInWithRedirect(auth, provider);
-}
-
-// ─── 處理 Redirect 登入跳回後的結果 ──────────────────────────────
-// 每次頁面載入都要呼叫這個函式
-// 如果是從 Google 登入頁跳回來，就會在這裡取得登入結果
-export async function handleRedirectResult() {
-  console.log("[handleRedirectResult] 開始...");
   try {
-    const result = await getRedirectResult(auth);
-    console.log("[handleRedirectResult] getRedirectResult 完成，result:", result ? result.user?.email : "null");
-    if (result?.user) {
-      console.log("[handleRedirectResult] 寫入 Firestore...");
-      await ensureUserDoc(result.user);
-      console.log("[handleRedirectResult] Firestore 寫入完成");
-    }
-    console.log("[handleRedirectResult] 結束");
+    const result = await signInWithPopup(auth, provider);
+    await ensureUserDoc(result.user);
+    return result.user;
   } catch (error) {
-    console.error("[handleRedirectResult] 失敗：", error.code, error.message);
+    console.error("[signInWithGoogle] 失敗：", error.code, error.message);
     throw error;
   }
 }
