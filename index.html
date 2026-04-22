@@ -360,32 +360,43 @@
 
   let currentRole = null;
 
-  // ── 頁面載入時處理 Redirect 登入結果 ─────────────────────────
-  // Redirect 登入後會跳回這個頁面，需要在這裡接住登入結果
-  handleRedirectResult().catch((error) => {
-    console.error("Redirect 結果處理失敗：", error.code);
-    const errorEl = document.getElementById("login-error");
-    if (errorEl) {
-      errorEl.textContent = "登入失敗：" + (error.code ?? error.message);
-      errorEl.style.display = "block";
-    }
-  });
+  // ── 初始化：先處理 Redirect 結果，再啟動狀態監聽 ─────────────
+  // 必須等 handleRedirectResult() 完成後才啟動 watchAuthState()
+  // 否則 Firebase 尚未處理完 redirect token 時會先觸發「未登入」
+  // 導致畫面錯誤地跳回登入頁
+  async function init() {
+    // 顯示 loading，避免畫面閃爍
+    document.getElementById("view-loading").style.display = "flex";
 
-  // ── 監聽登入狀態 ──────────────────────────────────────────────
-  watchAuthState(({ user, role }) => {
-    currentRole = role;
-
-    if (!user) {
-      showView("login");
-      document.getElementById("btn-signin-header").style.display = "inline-flex";
-      document.getElementById("btn-signout").style.display = "none";
-      document.getElementById("user-info").style.display = "none";
-      document.getElementById("role-badge").style.display = "none";
-    } else {
-      showView("app");
-      setupAppUI(user, role);
+    try {
+      await handleRedirectResult();
+    } catch (error) {
+      console.error("Redirect 結果處理失敗：", error.code);
+      const errorEl = document.getElementById("login-error");
+      if (errorEl) {
+        errorEl.textContent = "登入失敗：" + (error.code ?? error.message);
+        errorEl.style.display = "block";
+      }
     }
-  });
+
+    // Redirect 處理完畢後，再開始監聽登入狀態
+    watchAuthState(({ user, role }) => {
+      currentRole = role;
+
+      if (!user) {
+        showView("login");
+        document.getElementById("btn-signin-header").style.display = "inline-flex";
+        document.getElementById("btn-signout").style.display = "none";
+        document.getElementById("user-info").style.display = "none";
+        document.getElementById("role-badge").style.display = "none";
+      } else {
+        showView("app");
+        setupAppUI(user, role);
+      }
+    });
+  }
+
+  init();
 
   // ── 設定登入後的 UI ───────────────────────────────────────────
   function setupAppUI(user, role) {
