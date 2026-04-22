@@ -47,13 +47,18 @@ export async function signInWithGoogle() {
 // 每次頁面載入都要呼叫這個函式
 // 如果是從 Google 登入頁跳回來，就會在這裡取得登入結果
 export async function handleRedirectResult() {
+  console.log("[handleRedirectResult] 開始...");
   try {
     const result = await getRedirectResult(auth);
+    console.log("[handleRedirectResult] getRedirectResult 完成，result:", result ? result.user?.email : "null");
     if (result?.user) {
+      console.log("[handleRedirectResult] 寫入 Firestore...");
       await ensureUserDoc(result.user);
+      console.log("[handleRedirectResult] Firestore 寫入完成");
     }
+    console.log("[handleRedirectResult] 結束");
   } catch (error) {
-    console.error("登入處理失敗：", error.code, error.message);
+    console.error("[handleRedirectResult] 失敗：", error.code, error.message);
     throw error;
   }
 }
