@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithPopup,
+  signInWithRedirect ,
   signOut,
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -39,7 +39,7 @@ const ADMIN_UIDS = [
 export async function signInWithGoogle() {
   const provider = new GoogleAuthProvider();
   try {
-    const result = await signInWithPopup(auth, provider);
+    const result = await signInWithRedirect (auth, provider);
     await ensureUserDoc(result.user);
     return result.user;
   } catch (error) {
