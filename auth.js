@@ -2,7 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import {
   getAuth,
   GoogleAuthProvider,
-  signInWithRedirect ,
+  signInWithRedirect,
+  getRedirectResult,
   signOut,
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -28,22 +29,31 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// ─── 管理者 UID 清單（在 Firestore 設定前的備用機制）─────────────
-// 部署前請將你自己的 Google 帳號 UID 填入此陣列
-// UID 可在首次登入後於瀏覽器 console 執行 auth.currentUser.uid 取得
+// ─── 管理者 UID 清單 ──────────────────────────────────────────────
+// 首次登入成功後，在 Console 執行 auth.currentUser.uid 取得 UID
+// 填入後重新部署，之後這個帳號就會自動成為管理者
 const ADMIN_UIDS = [
   // "your-admin-uid-here"
 ];
 
-// ─── 登入 ─────────────────────────────────────────────────────────
+// ─── 登入（Redirect 模式，GitHub Pages 相容性最佳）──────────────
+// 呼叫後會直接跳轉到 Google 登入頁，登入完成後自動跳回
 export async function signInWithGoogle() {
   const provider = new GoogleAuthProvider();
+  await signInWithRedirect(auth, provider);
+}
+
+// ─── 處理 Redirect 登入跳回後的結果 ──────────────────────────────
+// 每次頁面載入都要呼叫這個函式
+// 如果是從 Google 登入頁跳回來，就會在這裡取得登入結果
+export async function handleRedirectResult() {
   try {
-    const result = await signInWithRedirect (auth, provider);
-    await ensureUserDoc(result.user);
-    return result.user;
+    const result = await getRedirectResult(auth);
+    if (result?.user) {
+      await ensureUserDoc(result.user);
+    }
   } catch (error) {
-    console.error("登入失敗：", error.message);
+    console.error("登入處理失敗：", error.code, error.message);
     throw error;
   }
 }
@@ -54,13 +64,11 @@ export async function signOutUser() {
 }
 
 // ─── 確保 Firestore 有使用者文件 ──────────────────────────────────
-// 首次登入時自動建立，之後只更新 lastLogin
 async function ensureUserDoc(user) {
   const userRef = doc(db, "users", user.uid);
   const snap = await getDoc(userRef);
 
   if (!snap.exists()) {
-    // 新使用者：判斷是否為管理者
     const isAdmin = ADMIN_UIDS.includes(user.uid);
     await setDoc(userRef, {
       email: user.email,
@@ -71,13 +79,11 @@ async function ensureUserDoc(user) {
       lastLogin: new Date(),
     });
   } else {
-    // 舊使用者：只更新最後登入時間
     await setDoc(userRef, { lastLogin: new Date() }, { merge: true });
   }
 }
 
 // ─── 取得使用者角色 ────────────────────────────────────────────────
-// 回傳 "admin" | "user" | null（未登入）
 export async function getUserRole(uid) {
   if (!uid) return null;
   try {
@@ -90,9 +96,6 @@ export async function getUserRole(uid) {
 }
 
 // ─── 監聽登入狀態變化 ─────────────────────────────────────────────
-// 使用方式：
-//   watchAuthState(({ user, role }) => { ... })
-//   user 為 null 代表未登入
 export function watchAuthState(callback) {
   onAuthStateChanged(auth, async (user) => {
     if (!user) {

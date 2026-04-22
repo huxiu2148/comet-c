@@ -356,9 +356,20 @@
 </main>
 
 <script type="module">
-  import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
+  import { signInWithGoogle, signOutUser, watchAuthState, handleRedirectResult } from "./auth.js";
 
   let currentRole = null;
+
+  // ── 頁面載入時處理 Redirect 登入結果 ─────────────────────────
+  // Redirect 登入後會跳回這個頁面，需要在這裡接住登入結果
+  handleRedirectResult().catch((error) => {
+    console.error("Redirect 結果處理失敗：", error.code);
+    const errorEl = document.getElementById("login-error");
+    if (errorEl) {
+      errorEl.textContent = "登入失敗：" + (error.code ?? error.message);
+      errorEl.style.display = "block";
+    }
+  });
 
   // ── 監聽登入狀態 ──────────────────────────────────────────────
   watchAuthState(({ user, role }) => {
