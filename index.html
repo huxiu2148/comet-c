@@ -3,22 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>團購系統</title>
+  <title>COMET💫</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #f5f5f3;
+      --pink:   #FF84C3;
+      --yellow: #E1E668;
+      --orange: #FF9E23;
+      --grad: linear-gradient(135deg, #FF84C3 0%, #FF9E23 50%, #E1E668 100%);
+      --grad-h: linear-gradient(135deg, #ff9ed4 0%, #ffb347 50%, #eaef7a 100%);
+      --bg:        #fff9fb;
       --surface:   #ffffff;
-      --border:    #e2e0d8;
+      --border:    #fde0ef;
       --text:      #1a1a18;
-      --text-muted:#6b6b66;
-      --primary:   #1D9E75;
-      --primary-hover: #0F6E56;
-      --admin:     #534AB7;
-      --danger:    #A32D2D;
-      --radius:    10px;
-      --shadow:    0 1px 4px rgba(0,0,0,0.08);
+      --text-muted:#8a7a80;
+      --danger:    #e05a7a;
+      --radius:    12px;
+      --shadow:    0 2px 12px rgba(255,132,195,0.10);
     }
 
     body {
@@ -31,71 +33,64 @@
     /* ── 頂部導覽列 ── */
     header {
       background: var(--surface);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1.5px solid var(--border);
       padding: 0 24px;
-      height: 56px;
+      height: 58px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: sticky;
       top: 0;
       z-index: 100;
+      box-shadow: 0 2px 12px rgba(255,132,195,0.07);
     }
 
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
 
     .site-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text);
+      font-size: 20px;
+      font-weight: 700;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 1px;
     }
 
     .role-badge {
       font-size: 11px;
-      font-weight: 500;
-      padding: 2px 8px;
+      font-weight: 600;
+      padding: 3px 10px;
       border-radius: 20px;
       display: none;
+      letter-spacing: 0.5px;
     }
 
     .role-badge.admin {
-      background: #EEEDFE;
-      color: var(--admin);
+      background: linear-gradient(90deg,#FF84C3,#FF9E23);
+      color: #fff;
     }
 
     .role-badge.user {
-      background: #E1F5EE;
-      color: var(--primary-hover);
+      background: #fde0ef;
+      color: #c4447a;
     }
 
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    .header-right { display: flex; align-items: center; gap: 10px; }
 
-    .user-info {
-      display: none;
-      align-items: center;
-      gap: 8px;
-    }
+    .user-info { display: none; align-items: center; gap: 8px; }
 
     .user-avatar {
-      width: 30px;
-      height: 30px;
+      width: 32px; height: 32px;
       border-radius: 50%;
       object-fit: cover;
-      border: 1px solid var(--border);
+      border: 2px solid var(--pink);
     }
 
     .user-name {
-      font-size: 14px;
+      font-size: 13px;
       color: var(--text-muted);
-      max-width: 140px;
+      max-width: 130px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -103,207 +98,215 @@
 
     /* ── 按鈕 ── */
     .btn {
-      padding: 7px 16px;
-      border-radius: var(--radius);
-      font-size: 14px;
-      font-weight: 500;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
       border: none;
       cursor: pointer;
-      transition: background 0.15s, opacity 0.15s;
+      transition: opacity 0.15s, transform 0.1s;
+      letter-spacing: 0.3px;
     }
 
+    .btn:active { transform: scale(0.97); }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .btn-primary {
-      background: var(--primary);
+      background: var(--grad);
       color: #fff;
+      box-shadow: 0 2px 8px rgba(255,132,195,0.25);
     }
 
-    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+    .btn-primary:hover:not(:disabled) { background: var(--grad-h); }
 
     .btn-ghost {
       background: transparent;
       color: var(--text-muted);
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
     }
 
-    .btn-ghost:hover:not(:disabled) { background: var(--bg); }
+    .btn-ghost:hover:not(:disabled) { border-color: var(--pink); color: var(--pink); }
 
-    /* ── 主內容區 ── */
-    main {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 32px 24px;
+    .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 14px; }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1.5px solid #fbc4d4;
+      border-radius: 14px;
+    }
+
+    .btn-danger:hover { background: #fff0f4; }
+
+    /* ── 主內容 ── */
+    main { max-width: 980px; margin: 0 auto; padding: 32px 20px; }
+
+    /* ── 載入中 ── */
+    #view-loading {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: calc(100vh - 58px);
+      gap: 16px;
+    }
+
+    .spinner-wrap { position: relative; width: 48px; height: 48px; }
+
+    .spinner {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      border: 3px solid #fde0ef;
+      border-top-color: var(--pink);
+      border-right-color: var(--orange);
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 600;
     }
 
     /* ── 登入畫面 ── */
     #view-login {
-      display: flex;
+      display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: calc(100vh - 56px);
-      text-align: center;
-      gap: 16px;
+      min-height: calc(100vh - 58px);
     }
 
     .login-card {
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 48px 40px;
+      border: 1.5px solid var(--border);
+      border-radius: 24px;
+      padding: 52px 44px;
       width: 100%;
-      max-width: 380px;
+      max-width: 400px;
       box-shadow: var(--shadow);
+      text-align: center;
     }
 
-    .login-card h1 {
-      font-size: 22px;
-      font-weight: 600;
+    .login-logo {
+      font-size: 48px;
       margin-bottom: 8px;
+      display: block;
     }
 
-    .login-card p {
-      font-size: 14px;
+    .login-brand {
+      font-size: 28px;
+      font-weight: 800;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+      letter-spacing: 2px;
+    }
+
+    .login-sub {
+      font-size: 13px;
       color: var(--text-muted);
-      margin-bottom: 28px;
-      line-height: 1.6;
+      margin-bottom: 32px;
+      line-height: 1.7;
     }
 
     .btn-google {
       width: 100%;
-      padding: 10px 16px;
+      padding: 12px 16px;
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 15px;
-      font-weight: 500;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 10px;
-      transition: background 0.15s, box-shadow 0.15s;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      color: var(--text);
     }
 
-    .btn-google:hover { background: var(--bg); box-shadow: var(--shadow); }
-
-    .btn-google svg { flex-shrink: 0; }
+    .btn-google:hover {
+      border-color: var(--pink);
+      box-shadow: 0 2px 12px rgba(255,132,195,0.15);
+    }
 
     .login-error {
       font-size: 13px;
       color: var(--danger);
       display: none;
-      margin-top: 12px;
+      margin-top: 14px;
     }
 
-    /* ── 載入中 ── */
-    #view-loading {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: calc(100vh - 56px);
-      color: var(--text-muted);
-      font-size: 14px;
-      gap: 8px;
-    }
-
-    .spinner {
-      width: 18px;
-      height: 18px;
-      border: 2px solid var(--border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── 分頁標籤（管理者才看到兩個） ── */
+    /* ── 主分頁 ── */
     .tabs {
       display: none;
       gap: 4px;
-      margin-bottom: 24px;
-      border-bottom: 1px solid var(--border);
+      margin-bottom: 28px;
+      border-bottom: 2px solid var(--border);
       padding-bottom: 0;
     }
 
     .tab-btn {
-      padding: 8px 16px;
+      padding: 9px 18px;
       font-size: 14px;
-      font-weight: 500;
+      font-weight: 600;
       background: transparent;
       border: none;
-      border-bottom: 2px solid transparent;
+      border-bottom: 3px solid transparent;
       cursor: pointer;
       color: var(--text-muted);
-      margin-bottom: -1px;
+      margin-bottom: -2px;
       transition: color 0.15s, border-color 0.15s;
+      border-radius: 0;
+      letter-spacing: 0.3px;
     }
 
     .tab-btn.active {
       color: var(--text);
-      border-bottom-color: var(--primary);
+      border-bottom-color: var(--pink);
     }
 
-    .tab-btn.admin-only {
-      color: var(--admin);
-      opacity: 0.7;
-    }
+    .tab-btn.admin-only { color: var(--orange); opacity: 0.8; }
+    .tab-btn.admin-only.active { opacity: 1; border-bottom-color: var(--orange); }
 
-    .tab-btn.admin-only.active {
-      opacity: 1;
-      border-bottom-color: var(--admin);
-    }
-
-    /* ── 分頁內容 ── */
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
-
-    /* ── 佔位內容（之後替換） ── */
-    .placeholder-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 48px 24px;
-      text-align: center;
-      color: var(--text-muted);
-    }
-
-    .placeholder-card h2 { font-size: 16px; margin-bottom: 8px; color: var(--text); }
-    .placeholder-card p  { font-size: 14px; line-height: 1.6; }
-
-    /* ── 響應式 ── */
-    @media (max-width: 480px) {
-      main { padding: 20px 16px; }
-      .login-card { padding: 32px 24px; }
-      .user-name { display: none; }
-    }
 
     /* ── 後台子導覽 ── */
     .admin-subnav {
       display: flex;
-      gap: 4px;
-      margin-bottom: 24px;
-      border-bottom: 1px solid var(--border);
+      gap: 6px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
     }
 
     .subnav-btn {
-      padding: 7px 14px;
+      padding: 7px 16px;
       font-size: 13px;
-      font-weight: 500;
-      background: transparent;
-      border: none;
-      border-bottom: 2px solid transparent;
+      font-weight: 600;
+      background: #fff0f7;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
       cursor: pointer;
       color: var(--text-muted);
-      margin-bottom: -1px;
-      transition: color 0.15s, border-color 0.15s;
+      transition: all 0.15s;
     }
 
+    .subnav-btn:hover { border-color: var(--pink); color: var(--pink); }
+
     .subnav-btn.active {
-      color: var(--text);
-      border-bottom-color: var(--primary);
+      background: var(--grad);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(255,132,195,0.2);
     }
 
     /* ── 後台區塊 ── */
@@ -319,28 +322,24 @@
 
     .section-title {
       font-size: 18px;
-      font-weight: 600;
+      font-weight: 700;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    /* ── 卡片格狀排列 ── */
+    /* ── 卡片格線 ── */
     .card-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
       gap: 16px;
     }
 
-    .loading-row {
+    .loading-row, .empty-row {
       grid-column: 1 / -1;
       text-align: center;
-      padding: 40px;
-      color: var(--text-muted);
-      font-size: 14px;
-    }
-
-    .empty-row {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 40px;
+      padding: 48px;
       color: var(--text-muted);
       font-size: 14px;
     }
@@ -348,197 +347,178 @@
     /* ── 團體卡片 ── */
     .group-card {
       background: var(--surface);
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
       border-radius: var(--radius);
       padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       position: relative;
       overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: box-shadow 0.15s, transform 0.15s;
     }
+
+    .group-card:hover { box-shadow: 0 4px 20px rgba(255,132,195,0.15); transform: translateY(-1px); }
 
     .group-card::before {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
-      height: 4px;
-      background: var(--group-color, var(--primary));
+      height: 5px;
+      background: var(--group-color, var(--grad));
     }
 
-    .group-card-name {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .group-card-meta {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
+    .group-card-name { font-size: 15px; font-weight: 700; color: var(--text); }
 
     .group-card-color {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: var(--text-muted);
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--text-muted); font-family: monospace;
     }
 
     .color-dot {
-      width: 14px;
-      height: 14px;
+      width: 14px; height: 14px;
       border-radius: 50%;
       flex-shrink: 0;
-      border: 1px solid rgba(0,0,0,0.1);
+      border: 1px solid rgba(0,0,0,0.08);
     }
 
-    .group-card-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 4px;
+    .group-card-meta { font-size: 12px; color: var(--text-muted); }
+
+    .group-card-actions { display: flex; gap: 8px; margin-top: 4px; }
+
+    /* ── 佔位卡片 ── */
+    .placeholder-card {
+      background: var(--surface);
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 52px 24px;
+      text-align: center;
+      color: var(--text-muted);
     }
 
-    .btn-sm {
-      padding: 4px 10px;
-      font-size: 12px;
-      border-radius: 6px;
-    }
-
-    .btn-danger {
-      background: transparent;
-      color: var(--danger);
-      border: 1px solid #f09595;
-    }
-
-    .btn-danger:hover { background: #fcebeb; }
+    .placeholder-card h2 { font-size: 16px; margin-bottom: 8px; color: var(--text); font-weight: 700; }
+    .placeholder-card p  { font-size: 14px; line-height: 1.7; }
 
     /* ── Modal ── */
     .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 200;
-      padding: 16px;
+      position: fixed; inset: 0;
+      background: rgba(255,100,180,0.10);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; padding: 16px;
     }
 
     .modal {
       background: var(--surface);
-      border-radius: 14px;
-      width: 100%;
-      max-width: 420px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      border-radius: 20px;
+      width: 100%; max-width: 440px;
+      box-shadow: 0 12px 40px rgba(255,132,195,0.18);
+      border: 1.5px solid var(--border);
     }
 
     .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 24px 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 22px 26px 0;
     }
 
     .modal-title {
-      font-size: 17px;
-      font-weight: 600;
+      font-size: 17px; font-weight: 700;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .modal-close {
-      background: none;
-      border: none;
-      font-size: 16px;
-      cursor: pointer;
-      color: var(--text-muted);
-      padding: 4px;
-      line-height: 1;
+      background: #fde0ef; border: none;
+      width: 28px; height: 28px; border-radius: 50%;
+      font-size: 13px; cursor: pointer;
+      color: var(--pink); display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
     }
 
-    .modal-body {
-      padding: 20px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
+    .modal-close:hover { background: var(--pink); color: #fff; }
+
+    .modal-body { padding: 20px 26px; display: flex; flex-direction: column; gap: 16px; }
 
     .modal-footer {
-      padding: 0 24px 20px;
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
+      padding: 0 26px 22px;
+      display: flex; justify-content: flex-end; gap: 10px;
     }
 
-    /* ── 表單 ── */
+    /* ── 表單元素 ── */
     .form-group { display: flex; flex-direction: column; gap: 6px; }
 
-    .form-label {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--text);
-    }
+    .form-label { font-size: 13px; font-weight: 600; color: var(--text); }
 
-    .required { color: var(--danger); }
+    .required { color: var(--pink); }
 
     .form-input {
-      padding: 9px 12px;
-      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
       border-radius: var(--radius);
-      font-size: 14px;
-      color: var(--text);
+      font-size: 14px; color: var(--text);
       background: var(--surface);
       outline: none;
-      transition: border-color 0.15s;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
 
-    .form-input:focus { border-color: var(--primary); }
-
-    .color-picker-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .form-input:focus {
+      border-color: var(--pink);
+      box-shadow: 0 0 0 3px rgba(255,132,195,0.10);
     }
+
+    .color-picker-row { display: flex; align-items: center; gap: 10px; }
 
     .color-input {
-      width: 44px;
-      height: 36px;
-      border: 1px solid var(--border);
+      width: 48px; height: 38px;
+      border: 1.5px solid var(--border);
       border-radius: var(--radius);
-      padding: 2px;
-      cursor: pointer;
+      padding: 3px; cursor: pointer;
       background: var(--surface);
     }
 
-    .color-hint {
-      font-size: 13px;
-      color: var(--text-muted);
-      font-family: monospace;
-    }
+    .color-hint { font-size: 13px; color: var(--text-muted); font-family: monospace; }
 
-    .color-presets {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 6px;
-    }
+    .color-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
 
     .color-preset {
-      width: 24px;
-      height: 24px;
+      width: 26px; height: 26px;
       border-radius: 50%;
-      border: 2px solid transparent;
+      border: 2.5px solid transparent;
       cursor: pointer;
-      transition: transform 0.1s, border-color 0.1s;
+      transition: transform 0.12s, border-color 0.12s;
     }
 
-    .color-preset:hover { transform: scale(1.2); }
+    .color-preset:hover { transform: scale(1.25); border-color: rgba(0,0,0,0.2); }
 
-    .form-error {
-      font-size: 13px;
-      color: var(--danger);
-      min-height: 18px;
+    .form-error { font-size: 13px; color: var(--danger); min-height: 18px; }
+
+    /* ── 下單系統 placeholder ── */
+    .orders-hero {
+      text-align: center;
+      padding: 48px 20px 32px;
     }
 
+    .orders-hero-title {
+      font-size: 26px; font-weight: 800;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .orders-hero-sub { font-size: 14px; color: var(--text-muted); line-height: 1.7; }
+
+    /* ── 響應式 ── */
+    @media (max-width: 480px) {
+      main { padding: 20px 14px; }
+      .login-card { padding: 36px 22px; }
+      .user-name { display: none; }
+      .tab-btn { padding: 8px 12px; font-size: 13px; }
+    }
   </style>
 </head>
 <body>
@@ -546,7 +526,7 @@
 <!-- 頂部導覽列 -->
 <header>
   <div class="header-left">
-    <span class="site-title">🛒 團購系統</span>
+    <span class="site-title">COMET💫</span>
     <span class="role-badge" id="role-badge"></span>
   </div>
   <div class="header-right">
@@ -554,8 +534,8 @@
       <img class="user-avatar" id="user-avatar" src="" alt="頭像" />
       <span class="user-name" id="user-name"></span>
     </div>
-    <button class="btn btn-ghost" id="btn-signout" style="display:none" onclick="handleSignOut()">登出</button>
-    <button class="btn btn-primary" id="btn-signin-header" style="display:none" onclick="handleSignIn()">登入</button>
+    <button class="btn btn-ghost btn-sm" id="btn-signout" style="display:none" onclick="handleSignOut()">登出</button>
+    <button class="btn btn-primary btn-sm" id="btn-signin-header" style="display:none" onclick="handleSignIn()">登入</button>
   </div>
 </header>
 
@@ -563,17 +543,17 @@
 
   <!-- 載入中 -->
   <div id="view-loading">
-    <div class="spinner"></div>
-    <span>載入中...</span>
+    <div class="spinner-wrap"><div class="spinner"></div></div>
+    <span class="loading-text">載入中...</span>
   </div>
 
   <!-- 登入畫面 -->
-  <div id="view-login" style="display:none">
+  <div id="view-login">
     <div class="login-card">
-      <h1>歡迎使用團購系統</h1>
-      <p>請使用 Google 帳號登入，<br>即可瀏覽目前開放的團購活動。</p>
+      <span class="login-logo">💫</span>
+      <div class="login-brand">COMET</div>
+      <p class="login-sub">代購小幫手<br>請使用 Google 帳號登入</p>
       <button class="btn-google" id="btn-signin" onclick="handleSignIn()">
-        <!-- Google Logo SVG -->
         <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
           <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
           <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
@@ -589,126 +569,130 @@
   <!-- 登入後主畫面 -->
   <div id="view-app" style="display:none">
 
-    <!-- 分頁標籤 -->
+    <!-- 主分頁標籤 -->
     <div class="tabs" id="tabs">
       <button class="tab-btn active" data-tab="orders" onclick="switchTab('orders')">團購活動</button>
-      <button class="tab-btn admin-only" data-tab="admin" onclick="switchTab('admin')">訂單管理</button>
+      <button class="tab-btn admin-only" data-tab="admin" onclick="switchTab('admin')">管理後台</button>
     </div>
 
-    <!-- 下單系統（所有人可見） -->
+    <!-- 下單系統 -->
     <div class="tab-panel active" id="tab-orders">
-      <div class="placeholder-card">
-        <h2>團購活動</h2>
-        <p>這裡將顯示目前開放中的團務列表。<br>下一步開發：團務卡片 + 下單流程。</p>
+      <div class="orders-hero">
+        <div class="orders-hero-title">COMET💫 代購</div>
+        <p class="orders-hero-sub">目前開放中的團購活動將顯示於此<br>敬請期待</p>
       </div>
     </div>
 
-    <!-- 訂單管理（僅管理者可見） -->
+    <!-- 管理後台 -->
     <div class="tab-panel" id="tab-admin">
 
-      <!-- 後台子導覽 -->
       <div class="admin-subnav">
-        <button class="subnav-btn active" data-section="groups" onclick="switchAdminSection('groups')">團體管理</button>
-        <button class="subnav-btn" data-section="campaigns" onclick="switchAdminSection('campaigns')">團務管理</button>
-        <button class="subnav-btn" data-section="orders" onclick="switchAdminSection('orders')">訂單管理</button>
+        <button class="subnav-btn active" data-section="groups"    onclick="switchAdminSection('groups')">🏷️ 團體管理</button>
+        <button class="subnav-btn"         data-section="campaigns" onclick="switchAdminSection('campaigns')">📦 開團系統</button>
+        <button class="subnav-btn"         data-section="orders"    onclick="switchAdminSection('orders')">📋 訂單管理</button>
+        <button class="subnav-btn"         data-section="finance"   onclick="switchAdminSection('finance')">💰 記帳</button>
       </div>
 
       <!-- 團體管理 -->
       <div class="admin-section active" id="section-groups">
         <div class="section-header">
-          <h2 class="section-title">團體管理</h2>
-          <button class="btn btn-primary" onclick="openGroupModal()">新增團體</button>
+          <h2 class="section-title">🏷️ 團體管理</h2>
+          <button class="btn btn-primary btn-sm" onclick="openGroupModal()">＋ 新增團體</button>
         </div>
         <div id="groups-list" class="card-grid">
           <div class="loading-row">載入中...</div>
         </div>
       </div>
 
-      <!-- 團務管理（下一步開發） -->
+      <!-- 開團系統（下一階段） -->
       <div class="admin-section" id="section-campaigns">
         <div class="placeholder-card">
-          <h2>團務管理</h2>
-          <p>即將開發</p>
+          <h2>📦 開團系統</h2>
+          <p>即將開發：建立團務、商品計算、文案生成</p>
         </div>
       </div>
 
-      <!-- 訂單管理（下一步開發） -->
+      <!-- 訂單管理（下一階段） -->
       <div class="admin-section" id="section-orders">
         <div class="placeholder-card">
-          <h2>訂單管理</h2>
+          <h2>📋 訂單管理</h2>
+          <p>即將開發</p>
+        </div>
+      </div>
+
+      <!-- 記帳（下一階段） -->
+      <div class="admin-section" id="section-finance">
+        <div class="placeholder-card">
+          <h2>💰 記帳</h2>
           <p>即將開發</p>
         </div>
       </div>
 
     </div>
-
-    <!-- 新增/編輯團體 Modal -->
-    <div class="modal-backdrop" id="modal-group" style="display:none" onclick="closeGroupModal(event)">
-      <div class="modal">
-        <div class="modal-header">
-          <h3 class="modal-title" id="modal-group-title">新增團體</h3>
-          <button class="modal-close" onclick="closeGroupModal()">✕</button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label class="form-label">團體名稱 <span class="required">*</span></label>
-            <input class="form-input" id="input-group-name" type="text" placeholder="例：登山社" maxlength="20" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">代表顏色 <span class="required">*</span></label>
-            <div class="color-picker-row">
-              <input class="color-input" id="input-group-color" type="color" value="#1D9E75" />
-              <span class="color-hint" id="color-hint">#1D9E75</span>
-            </div>
-            <div class="color-presets">
-              <button class="color-preset" style="background:#1D9E75" onclick="setColor('#1D9E75')"></button>
-              <button class="color-preset" style="background:#534AB7" onclick="setColor('#534AB7')"></button>
-              <button class="color-preset" style="background:#D85A30" onclick="setColor('#D85A30')"></button>
-              <button class="color-preset" style="background:#185FA5" onclick="setColor('#185FA5')"></button>
-              <button class="color-preset" style="background:#854F0B" onclick="setColor('#854F0B')"></button>
-              <button class="color-preset" style="background:#993556" onclick="setColor('#993556')"></button>
-              <button class="color-preset" style="background:#3B6D11" onclick="setColor('#3B6D11')"></button>
-              <button class="color-preset" style="background:#5F5E5A" onclick="setColor('#5F5E5A')"></button>
-            </div>
-          </div>
-          <p class="form-error" id="group-form-error"></p>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-ghost" onclick="closeGroupModal()">取消</button>
-          <button class="btn btn-primary" id="btn-save-group" onclick="saveGroup()">儲存</button>
-        </div>
-      </div>
-    </div>
-
   </div>
 
 </main>
 
+<!-- 新增/編輯團體 Modal -->
+<div class="modal-backdrop" id="modal-group" style="display:none" onclick="closeGroupModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modal-group-title">新增團體</h3>
+      <button class="modal-close" onclick="closeGroupModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">團體名稱 <span class="required">*</span></label>
+        <input class="form-input" id="input-group-name" type="text" placeholder="例：登山社" maxlength="20" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">代表顏色 <span class="required">*</span></label>
+        <div class="color-picker-row">
+          <input class="color-input" id="input-group-color" type="color" value="#FF84C3" />
+          <span class="color-hint" id="color-hint">#FF84C3</span>
+        </div>
+        <div class="color-presets">
+          <button class="color-preset" style="background:#FF84C3" onclick="setColor('#FF84C3')"></button>
+          <button class="color-preset" style="background:#FF9E23" onclick="setColor('#FF9E23')"></button>
+          <button class="color-preset" style="background:#E1E668" onclick="setColor('#E1E668')"></button>
+          <button class="color-preset" style="background:#ff6eb4" onclick="setColor('#ff6eb4')"></button>
+          <button class="color-preset" style="background:#a78bfa" onclick="setColor('#a78bfa')"></button>
+          <button class="color-preset" style="background:#60c4f8" onclick="setColor('#60c4f8')"></button>
+          <button class="color-preset" style="background:#6ee7b7" onclick="setColor('#6ee7b7')"></button>
+          <button class="color-preset" style="background:#f87171" onclick="setColor('#f87171')"></button>
+        </div>
+      </div>
+      <p class="form-error" id="group-form-error"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeGroupModal()">取消</button>
+      <button class="btn btn-primary btn-sm" id="btn-save-group" onclick="saveGroup()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 登入 / 權限邏輯 ── -->
 <script type="module">
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
 
-  // ── 初始化：先處理 Redirect 結果，再啟動狀態監聽 ─────────────
-  // 監聽登入狀態，登入/登出時自動更新畫面
+  // 監聽登入狀態
   watchAuthState(({ user, role }) => {
-      currentRole = role;
+    currentRole = role;
+    if (!user) {
+      showView("login");
+      document.getElementById("btn-signin-header").style.display = "inline-flex";
+      document.getElementById("btn-signout").style.display = "none";
+      document.getElementById("user-info").style.display = "none";
+      document.getElementById("role-badge").style.display = "none";
+    } else {
+      showView("app");
+      setupAppUI(user, role);
+    }
+  });
 
-      if (!user) {
-        showView("login");
-        document.getElementById("btn-signin-header").style.display = "inline-flex";
-        document.getElementById("btn-signout").style.display = "none";
-        document.getElementById("user-info").style.display = "none";
-        document.getElementById("role-badge").style.display = "none";
-      } else {
-        showView("app");
-        setupAppUI(user, role);
-      }
-    });
-
-  // ── 設定登入後的 UI ───────────────────────────────────────────
   function setupAppUI(user, role) {
-    // 導覽列
     const avatar = document.getElementById("user-avatar");
     if (user.photoURL) avatar.src = user.photoURL;
     document.getElementById("user-name").textContent = user.displayName || user.email;
@@ -716,75 +700,62 @@
     document.getElementById("btn-signout").style.display = "inline-flex";
     document.getElementById("btn-signin-header").style.display = "none";
 
-    // 角色徽章
     const badge = document.getElementById("role-badge");
-    badge.textContent = role === "admin" ? "管理者" : "一般會員";
+    badge.textContent = role === "admin" ? "✦ 管理者" : "會員";
     badge.className = `role-badge ${role}`;
     badge.style.display = "inline-block";
 
-    // 分頁：管理者顯示兩個，一般使用者只顯示一個
     const tabs = document.getElementById("tabs");
     tabs.style.display = "flex";
-
     const adminTab = tabs.querySelector('[data-tab="admin"]');
     if (role === "admin") {
       adminTab.style.display = "inline-flex";
     } else {
       adminTab.style.display = "none";
-      // 確保一般使用者不會停在 admin 分頁
       switchTab("orders");
     }
   }
 
-  // ── 分頁切換 ─────────────────────────────────────────────────
   window.switchTab = function(tabName) {
-    // 只有管理者能切到 admin
     if (tabName === "admin" && currentRole !== "admin") return;
-
     document.querySelectorAll(".tab-btn").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.tab === tabName);
     });
     document.querySelectorAll(".tab-panel").forEach(panel => {
       panel.classList.toggle("active", panel.id === `tab-${tabName}`);
     });
+    if (tabName === "admin") loadGroups();
   };
 
-  // ── 切換 view ────────────────────────────────────────────────
   function showView(name) {
     document.getElementById("view-loading").style.display = "none";
     document.getElementById("view-login").style.display = "none";
     document.getElementById("view-app").style.display = "none";
-
-    if (name === "login")   document.getElementById("view-login").style.display = "flex";
-    if (name === "app")     document.getElementById("view-app").style.display = "block";
+    if (name === "login") document.getElementById("view-login").style.display = "flex";
+    if (name === "app")   document.getElementById("view-app").style.display = "block";
   }
 
-  // ── 登入 / 登出 ──────────────────────────────────────────────
   window.handleSignIn = async function() {
     const errorEl = document.getElementById("login-error");
     errorEl.style.display = "none";
-    try {
-      await signInWithGoogle();
-    } catch (e) {
-      errorEl.textContent = "登入失敗，請再試一次。";
+    try { await signInWithGoogle(); }
+    catch (e) {
+      errorEl.textContent = "登入失敗，請再試一次。(" + e.code + ")";
       errorEl.style.display = "block";
     }
   };
 
-  window.handleSignOut = async function() {
-    await signOutUser();
-  };
+  window.handleSignOut = async function() { await signOutUser(); };
 </script>
 
-
+<!-- ── 團體管理邏輯 ── -->
 <script type="module">
   import { db } from "./auth.js";
   import {
-    collection, doc, addDoc, getDocs, deleteDoc,
+    collection, doc, addDoc, updateDoc, getDocs, deleteDoc,
     serverTimestamp, query, orderBy
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  // ── 後台子導覽切換 ─────────────────────────────────────────────
   window.switchAdminSection = function(section) {
     document.querySelectorAll(".subnav-btn").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.section === section);
@@ -795,8 +766,7 @@
     if (section === "groups") loadGroups();
   };
 
-  // ── 團體列表 ──────────────────────────────────────────────────
-  async function loadGroups() {
+  window.loadGroups = async function() {
     const list = document.getElementById("groups-list");
     list.innerHTML = '<div class="loading-row">載入中...</div>';
     try {
@@ -807,36 +777,33 @@
         return;
       }
       list.innerHTML = "";
-      snap.forEach(docSnap => {
-        list.appendChild(renderGroupCard(docSnap.id, docSnap.data()));
-      });
+      snap.forEach(d => list.appendChild(renderGroupCard(d.id, d.data())));
     } catch (e) {
       list.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
     }
-  }
+  };
 
   function renderGroupCard(id, data) {
     const card = document.createElement("div");
     card.className = "group-card";
     card.style.setProperty("--group-color", data.color);
     card.innerHTML = `
-      <div class="group-card-name">${escHtml(data.name)}</div>
+      <div class="group-card-name">${esc(data.name)}</div>
       <div class="group-card-color">
         <span class="color-dot" style="background:${data.color}"></span>
         <span>${data.color}</span>
       </div>
-      <div class="group-card-meta">建立於 ${formatDate(data.createdAt)}</div>
+      <div class="group-card-meta">建立於 ${fmtDate(data.createdAt)}</div>
       <div class="group-card-actions">
-        <button class="btn btn-ghost btn-sm" onclick="openGroupModal('${id}', '${escHtml(data.name)}', '${data.color}')">編輯</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteGroup('${id}', '${escHtml(data.name)}')">刪除</button>
+        <button class="btn btn-ghost btn-sm" onclick="openGroupModal('${id}','${esc(data.name)}','${data.color}')">編輯</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteGroup('${id}','${esc(data.name)}')">刪除</button>
       </div>`;
     return card;
   }
 
-  // ── Modal 開關 ────────────────────────────────────────────────
   let editingGroupId = null;
 
-  window.openGroupModal = function(id = null, name = "", color = "#1D9E75") {
+  window.openGroupModal = function(id=null, name="", color="#FF84C3") {
     editingGroupId = id;
     document.getElementById("modal-group-title").textContent = id ? "編輯團體" : "新增團體";
     document.getElementById("input-group-name").value = name;
@@ -853,7 +820,6 @@
     editingGroupId = null;
   };
 
-  // ── 顏色選取 ──────────────────────────────────────────────────
   window.setColor = function(hex) {
     document.getElementById("input-group-color").value = hex;
     document.getElementById("color-hint").textContent = hex;
@@ -863,27 +829,18 @@
     document.getElementById("color-hint").textContent = this.value;
   });
 
-  // ── 儲存團體（新增 / 編輯）──────────────────────────────────
   window.saveGroup = async function() {
     const name  = document.getElementById("input-group-name").value.trim();
     const color = document.getElementById("input-group-color").value;
     const errEl = document.getElementById("group-form-error");
     const btn   = document.getElementById("btn-save-group");
-
     if (!name) { errEl.textContent = "請填寫團體名稱"; return; }
-
-    btn.disabled = true;
-    btn.textContent = "儲存中...";
-    errEl.textContent = "";
-
+    btn.disabled = true; btn.textContent = "儲存中..."; errEl.textContent = "";
     try {
       if (editingGroupId) {
-        const { updateDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
         await updateDoc(doc(db, "groups", editingGroupId), { name, color });
       } else {
-        await addDoc(collection(db, "groups"), {
-          name, color, createdAt: serverTimestamp()
-        });
+        await addDoc(collection(db, "groups"), { name, color, createdAt: serverTimestamp() });
       }
       document.getElementById("modal-group").style.display = "none";
       editingGroupId = null;
@@ -891,47 +848,26 @@
     } catch (e) {
       errEl.textContent = "儲存失敗：" + e.message;
     } finally {
-      btn.disabled = false;
-      btn.textContent = "儲存";
+      btn.disabled = false; btn.textContent = "儲存";
     }
   };
 
-  // ── 刪除團體 ──────────────────────────────────────────────────
   window.deleteGroup = async function(id, name) {
-    if (!confirm(`確定要刪除「${name}」嗎？
-此操作無法復原。`)) return;
-    try {
-      await deleteDoc(doc(db, "groups", id));
-      await loadGroups();
-    } catch (e) {
-      alert("刪除失敗：" + e.message);
-    }
+    if (!confirm(`確定要刪除「${name}」嗎？`)) return;
+    try { await deleteDoc(doc(db, "groups", id)); await loadGroups(); }
+    catch (e) { alert("刪除失敗：" + e.message); }
   };
 
-  // ── 工具函式 ──────────────────────────────────────────────────
-  function escHtml(str) {
-    return String(str).replace(/[&<>"']/g, c =>
-      ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c =>
+      ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   }
 
-  function formatDate(ts) {
+  function fmtDate(ts) {
     if (!ts) return "—";
     const d = ts.toDate ? ts.toDate() : new Date(ts);
     return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
   }
-
-  // 頁面載入時如果已在 admin tab，自動載入團體列表
-  document.addEventListener("DOMContentLoaded", () => {
-    const adminTab = document.getElementById("tab-admin");
-    if (adminTab?.classList.contains("active")) loadGroups();
-  });
-
-  // 切換到 admin tab 時自動載入
-  const origSwitch = window.switchTab;
-  window.switchTab = function(tabName) {
-    origSwitch(tabName);
-    if (tabName === "admin") loadGroups();
-  };
 </script>
 
 </body>
