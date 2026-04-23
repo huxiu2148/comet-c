@@ -1428,6 +1428,32 @@
       gap: 8px;
     }
 
+
+    /* 多規格下單 */
+    .order-product-multi {
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 14px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .multi-items-list { display: flex; flex-direction: column; gap: 6px; }
+
+    .multi-item-row { display: flex; }
+
+    .multi-item-inner {
+      display: flex; align-items: center; gap: 8px;
+      background: #fff8fb;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      flex: 1; flex-wrap: wrap;
+    }
+
+    .multi-item-num {
+      font-size: 12px; font-weight: 700; color: var(--text-muted);
+      min-width: 36px;
+    }
+
     /* 代購價手動覆蓋列 */
     .product-override-row {
       grid-template-columns: 1fr 100px auto !important;
@@ -1768,11 +1794,16 @@
                 </div>
               </div>
 
-              <!-- 模式 2：集運倉地址 -->
+              <!-- 模式 2：集運倉（多選，跟匯款帳號同邏輯） -->
               <div class="mode-extra" id="mode-extra-2" style="display:none">
                 <div class="form-group">
-                  <label class="form-label">集運倉地址</label>
-                  <input class="form-input" id="c-warehouse" type="text" placeholder="完整寄件地址" />
+                  <div class="bank-header">
+                    <label class="form-label" style="margin:0">本次團務的集運倉（可多選）</label>
+                    <button class="btn btn-ghost btn-sm" onclick="openWarehouseManager()" type="button">📦 管理集運倉</button>
+                  </div>
+                  <div id="warehouse-checklist" class="bank-checklist">
+                    <div class="bank-loading">載入中...</div>
+                  </div>
                 </div>
               </div>
 
@@ -2043,6 +2074,37 @@
   </div>
 </div>
 
+
+<!-- 集運倉管理 Modal -->
+<div class="modal-backdrop" id="modal-warehouse" style="display:none" onclick="closeWarehouseManager(event)">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h3 class="modal-title">📦 集運倉管理</h3>
+      <button class="modal-close" onclick="closeWarehouseManager()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="warehouse-list-admin" class="bank-list-admin"></div>
+      <div class="bank-add-form">
+        <div class="form-card-title" style="font-size:13px;padding-bottom:6px;border:none">新增集運倉</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="bank-add-grid" style="grid-template-columns:1fr 1fr auto">
+            <input class="form-input" id="w-add-name" type="text" placeholder="倉庫名稱（例：首爾倉）" />
+            <input class="form-input" id="w-add-phone" type="text" placeholder="電話" />
+            <span></span>
+          </div>
+          <input class="form-input" id="w-add-address" type="text" placeholder="地址（例：(03779) 서울특별시...）" />
+          <input class="form-input" id="w-add-detail" type="text" placeholder="詳細地址" />
+          <button class="btn btn-primary btn-sm" onclick="addWarehouse()" style="align-self:flex-end">新增</button>
+        </div>
+        <p class="form-error" id="warehouse-add-error"></p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-sm" onclick="closeWarehouseManager()">完成</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── 登入 / 權限邏輯 ── -->
 <script type="module">
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
@@ -2171,14 +2233,14 @@
       </div>
 
       <div class="group-card-actions">
-        <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${id}" data-name="${esc(data.name)}" data-colors="${colorsJson}">編輯</button>
+        <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${id}" data-name="${esc(data.name)}" data-colors="${colorsJson}" data-abbr="${esc(data.abbr || '')}">編輯</button>
         <button class="btn btn-danger btn-sm" onclick="deleteGroup('${id}','${esc(data.name)}')">刪除</button>
       </div>`;
     // 綁定編輯按鈕（避免 onclick 字串中帶陣列出錯）
     card.querySelector('[data-action="edit"]').addEventListener("click", (ev) => {
       const btn = ev.currentTarget;
       const colors = JSON.parse(btn.dataset.colors.replace(/&quot;/g, '"'));
-      openGroupModal(btn.dataset.id, btn.dataset.name, colors);
+      openGroupModal(btn.dataset.id, btn.dataset.name, colors, btn.dataset.abbr || "");
     });
     return card;
   }
@@ -2251,19 +2313,22 @@
     updateColorPreview();
   };
 
-  window.openGroupModal = function(id=null, name="", colors=null) {
+  window.openGroupModal = function(id=null, name="", colors=null, abbr="") {
     editingGroupId = id;
     document.getElementById("modal-group-title").textContent = id ? "編輯團體" : "新增團體";
     document.getElementById("input-group-name").value = name;
-    // 支援舊資料（colors 是字串）與新資料（colors 是陣列）
+    document.getElementById("input-group-abbr").value = abbr;
     if (typeof colors === "string" && colors) groupColors = [colors];
     else if (Array.isArray(colors) && colors.length) groupColors = [...colors];
     else groupColors = ["#FF84C3"];
-    renderColorList();
-    updateColorPreview();
     document.getElementById("group-form-error").textContent = "";
+    // 先顯示 Modal，再渲染（確保 DOM 已存在）
     document.getElementById("modal-group").style.display = "flex";
-    setTimeout(() => document.getElementById("input-group-name").focus(), 50);
+    requestAnimationFrame(() => {
+      renderColorList();
+      updateColorPreview();
+      setTimeout(() => document.getElementById("input-group-name")?.focus(), 50);
+    });
   };
 
   window.closeGroupModal = function(e) {
@@ -2274,8 +2339,10 @@
 
   window.saveGroup = async function() {
     const name = document.getElementById("input-group-name").value.trim();
+    const abbrInput = document.getElementById("input-group-abbr").value.trim().replace(/\s+/g,"");
+    const abbr = abbrInput || genAbbr(name);
     const colors = [...groupColors];
-    const color = colors[0]; // 保留 color 欄位給舊資料相容
+    const color = colors[0];
     const errEl = document.getElementById("group-form-error");
     const btn   = document.getElementById("btn-save-group");
     if (!name) { errEl.textContent = "請填寫團體名稱"; return; }
@@ -2283,9 +2350,9 @@
     btn.disabled = true; btn.textContent = "儲存中..."; errEl.textContent = "";
     try {
       if (editingGroupId) {
-        await updateDoc(doc(db, "groups", editingGroupId), { name, colors, color });
+        await updateDoc(doc(db, "groups", editingGroupId), { name, abbr, colors, color });
       } else {
-        await addDoc(collection(db, "groups"), { name, colors, color, createdAt: serverTimestamp() });
+        await addDoc(collection(db, "groups"), { name, abbr, colors, color, createdAt: serverTimestamp() });
       }
       document.getElementById("modal-group").style.display = "none";
       editingGroupId = null;
@@ -2594,24 +2661,56 @@
   // ── 規格設定 ──────────────────────────────────────────────────
   const specCounters = {};
 
+  // 規格模式切換
+  window.onSpecModeChange = function(productId) {
+    const mode = document.getElementById(`p-specmode-${productId}`)?.value;
+    const container = document.getElementById(`p-specs-${productId}`);
+    container.innerHTML = "";
+    if (mode === "none") return;
+    if (mode === "simple") {
+      // 簡單規格：一組選項，使用者全部共用同一選單
+      addSpecGroup(productId);
+    } else if (mode === "multi") {
+      // 多規格：先設選項組，下單時每件各自選
+      addSpecGroup(productId);
+    }
+  };
+
   window.addSpecGroup = function(productId) {
     if (!specCounters[productId]) specCounters[productId] = 0;
     specCounters[productId]++;
     const sid = specCounters[productId];
     const container = document.getElementById(`p-specs-${productId}`);
+    const mode = document.getElementById(`p-specmode-${productId}`)?.value || "simple";
     const group = document.createElement("div");
     group.className = "spec-group";
     group.id = `spec-group-${productId}-${sid}`;
     group.innerHTML = `
       <div class="spec-group-header">
-        <input class="form-input spec-name-input" type="text" placeholder="規格名（例：尺寸、顏色、成員）"
+        <input class="form-input spec-name-input" type="text"
+               placeholder="規格標籤（例：成員、尺寸、顏色）"
                id="spec-name-${productId}-${sid}" style="flex:1" />
-        <button class="product-remove" type="button" onclick="removeSpecGroup(${productId},${sid})">✕</button>
+        ${sid > 1 ? `<button class="product-remove" type="button" onclick="removeSpecGroup(${productId},${sid})">✕</button>` : ""}
+      </div>
+      <div class="spec-hint" style="font-size:11px;color:var(--text-muted);margin-bottom:4px">
+        ${mode === "multi" ? "每件商品可各自選不同規格" : "所有件共用一組選項"}
       </div>
       <div class="spec-options" id="spec-options-${productId}-${sid}"></div>
       <button class="btn-add-spec-option" type="button" onclick="addSpecOption(${productId},${sid})">＋ 新增選項</button>`;
     container.appendChild(group);
-    addSpecOption(productId, sid); // 預設一個空選項
+    addSpecOption(productId, sid);
+    // 多規格：可繼續新增更多規格組
+    if (mode === "multi") {
+      const addMoreBtn = container.querySelector(".add-more-spec-group");
+      if (!addMoreBtn) {
+        const btn = document.createElement("button");
+        btn.className = "btn-add-spec add-more-spec-group";
+        btn.type = "button";
+        btn.textContent = "＋ 新增另一組規格（如：顏色）";
+        btn.onclick = () => addSpecGroup(productId);
+        container.appendChild(btn);
+      }
+    }
   };
 
   window.removeSpecGroup = function(pid, sid) {
@@ -2623,26 +2722,30 @@
     const row = document.createElement("div");
     row.className = "spec-option-row";
     row.innerHTML = `
-      <input class="form-input" type="text" placeholder="選項（例：S、M、L）" style="flex:1" />
+      <input class="form-input" type="text" placeholder="選項（例：S、成員名）" style="flex:1" />
       <button class="product-remove" type="button" onclick="this.parentElement.remove()">✕</button>`;
     opts.appendChild(row);
   };
 
-  // 取得單一商品的規格資料
+  // 取得商品規格資料（含 specMode）
   function getProductSpecs(id) {
     const container = document.getElementById(`p-specs-${id}`);
-    if (!container) return [];
+    const mode = document.getElementById(`p-specmode-${id}`)?.value || "none";
+    if (!container || mode === "none") return [];
     const groups = container.querySelectorAll(".spec-group");
     const result = [];
     groups.forEach(g => {
       const nameInput = g.querySelector(".spec-name-input");
       const name = nameInput ? nameInput.value.trim() : "";
       const opts = Array.from(g.querySelectorAll(".spec-option-row input"))
-        .map(inp => inp.value.trim())
-        .filter(v => v);
-      if (name) result.push({ name, options: opts });
+        .map(inp => inp.value.trim()).filter(v => v);
+      if (opts.length) result.push({ name: name || "規格", options: opts });
     });
     return result;
+  }
+
+  function getProductSpecMode(id) {
+    return document.getElementById(`p-specmode-${id}`)?.value || "none";
   }
 
   window.removeProductRow = function(id) {
@@ -2766,10 +2869,11 @@
       const autoSell = roundUpTo5(twd * (1 + fee + markup));
       const sell = overrides[id] != null ? overrides[id] : autoSell;
       const specs = getProductSpecs(id);
+      const specMode = getProductSpecMode(id);
       const hasNote = document.getElementById(`p-hasnote-${id}`)?.checked || false;
       const noteHint = document.getElementById(`p-note-hint-${id}`)?.value.trim() || "";
       return { id, name, price, currency, cost, sell, profit: sell - cost,
-               isManual: overrides[id] != null, specs, hasNote, noteHint };
+               isManual: overrides[id] != null, specs, specMode, hasNote, noteHint };
     }).filter(p => p.name && p.price > 0);
   }
 
@@ -2841,8 +2945,10 @@
       const formExtra = document.getElementById("form-extra");
       if (formExtra) formExtra.style.display = (val === "4") ? "none" : "flex";
 
-      // 選擇匯款模式時載入帳號清單
       if (val === "1") await renderBankChecklist();
+      if (val === "2") {
+        await renderWarehouseChecklist();
+      }
 
       updateCopywriter();
     });
@@ -2884,7 +2990,19 @@
     const deadline = fmtDeadline(document.getElementById("c-deadline").value);
     const shipdate = document.getElementById("c-shipdate").value.trim() || "待更新";
     const products = getProductData();
-    const formUrl  = window.currentFormUrl || "";
+
+    // 表單連結：若已儲存用 currentFormUrl，否則用即時預覽
+    let formUrl = window.currentFormUrl || "";
+    if (!formUrl) {
+      const formSource = document.querySelector('input[name="form-source"]:checked')?.value;
+      if (formSource === "builtin") {
+        const base = window.location.origin + window.location.pathname.replace(/index\.html$/, "");
+        const previewId = document.getElementById("c-id-preview-val")?.textContent;
+        if (previewId) formUrl = `${base}?c=${previewId}`;
+      } else if (formSource === "google") {
+        formUrl = document.getElementById("c-gform-url")?.value.trim() || "";
+      }
+    }
 
     if (!name || !products.length) {
       document.getElementById("copywriter-card").style.display = "none";
@@ -2893,13 +3011,17 @@
     document.getElementById("copywriter-card").style.display = "block";
 
     const itemLines = products.map((p, i) => `${i+1}. ${p.name} NT$${p.sell.toLocaleString()}｜${p.price.toLocaleString()} ${p.currency}`).join("\n");
+    const discounts = getDiscounts();
+    const discountLines = discounts.length
+      ? "\n\n\uD83C\uDF81" + discounts.map(d => `${d.text}${d.amount ? " 可折NT$"+d.amount : ""}（可累計）`).join("\n\uD83C\uDF81")
+      : "";
 
     const itemLinesNoFx = products.map((p, i) => `${i+1}. ${p.name} NT$${p.sell.toLocaleString()}`).join("\n");
 
     const selectedMode = document.querySelector('input[name="c-mode"]:checked')?.value;
     const payFooter = selectedMode === "1" ? "\n\n匯款完成後請在此記事本留下匯款帳戶末五碼" : "";
-    const memo   = name+"\n\n💰商品金額\n"+itemLines+"\n\n表單連結："+formUrl+"\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n\u{16999}跟團前請先詳閱記事本重要貼文裡的注意事項\n\u{16999}填單即視同已閱讀並同意所有內容"+payFooter+"\n謝謝";
-    const note   = name+"\n\n💰商品金額\n"+itemLinesNoFx+"\n\n表單連結："+formUrl+"\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n\u{16999}跟團前請先詳閱記事本重要貼文裡的注意事項\n\u{16999}填單即視同已閱讀並同意所有內容"+payFooter+"\n謝謝";
+    const memo   = name+"\n\n💰商品金額\n"+itemLines+discountLines+"\n\n表單連結："+formUrl+"\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n\u{16999}跟團前請先詳閱記事本重要貼文裡的注意事項\n\u{16999}填單即視同已閱讀並同意所有內容"+payFooter+"\n謝謝";
+    const note   = name+"\n\n💰商品金額\n"+itemLinesNoFx+discountLines+"\n\n表單連結："+formUrl+"\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n\u{16999}跟團前請先詳閱記事本重要貼文裡的注意事項\n\u{16999}填單即視同已閱讀並同意所有內容"+payFooter+"\n謝謝";
     const social = "#代購 "+name+"\n\n💰商品金額\n"+itemLinesNoFx+"\n\n✓以上需二補 收單時間："+deadline+"\n\u{16999}欲跟團者請加入社群填單匯款\n🔗：https://reurl.cc/EQ1rLk\n\n有任何問題都歡迎詢問 謝謝～";
 
     document.getElementById("txt-memo").value   = memo;
@@ -2950,7 +3072,9 @@
         if (!selected.length) { alert("匯款模式請至少勾選一個帳號"); return; }
         extraData.bankAccounts = selected;
       } else if (mode === "2") {
-        extraData.warehouse = document.getElementById("c-warehouse").value;
+        const selectedWH = getSelectedWarehouses();
+        if (!selectedWH.length) { alert("代收模式請至少勾選一個集運倉"); return; }
+        extraData.warehouses = selectedWH;
       } else if (mode === "4") {
         extraData.buyshipUrl = document.getElementById("c-buyship-url").value;
       }
@@ -3105,12 +3229,16 @@
     }
   }
 
-  // 從中文名自動取英文縮寫（取拼音首字母失敗就用 Hash）
+  // 縮寫邏輯：
+  // 1. 若有手動填寫的 abbr → 直接用
+  // 2. 若名稱全為英數（SHINee/RIIZE/BTS）→ 全名保留
+  // 3. 否則（中文）→ hash 縮寫
   function genAbbr(name) {
-    // 若名稱本身含英數（如 NCT、BTS），優先取出
-    const en = name.match(/[A-Za-z0-9]+/g);
-    if (en) return en.join("").slice(0, 4);
-    // 否則用名稱 hash 取 3 位
+    if (/^[A-Za-z0-9\s]+$/.test(name.trim())) {
+      // 全英數：保留全名，去空格，最多10字
+      return name.replace(/\s+/g, "").slice(0, 10);
+    }
+    // 中文或混合：用 hash
     let h = 0;
     for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) & 0xFFFF;
     return "G" + h.toString(36).toUpperCase().slice(0, 3);
@@ -3822,39 +3950,71 @@
       : "—";
 
     // 代收護照欄位
-    const passportField = c.mode === 2 ? `
-      <div class="profile-section">
-        <div class="profile-title">🛃 收件資訊（代收）</div>
-        <div class="profile-grid">
-          <div class="form-group">
-            <label class="form-label">護照英文姓名 <span class="required">*</span></label>
-            <input class="form-input" id="p-passport" type="text" placeholder="如護照上所示（例：WANG XIAO MING）" style="text-transform:uppercase" />
+    const passportField = c.mode === 2 ? (() => {
+      const whs = (c.warehouses || []).filter(Boolean);
+      const whList = whs.map(w => `
+        <div style="margin-bottom:6px">
+          ${w.name ? `<div style="font-weight:600;font-size:12px">${escHtmlU(w.name)}</div>` : ""}
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.7">
+            收件人：<strong id="passport-preview">（請填寫護照姓名）</strong><br>
+            收件電話：${escHtmlU(w.phone || "01058182588")}<br>
+            地址：${escHtmlU(w.address || "")}<br>
+            詳細地址：${escHtmlU(w.detail || "")}
           </div>
-        </div>
-        <div class="form-card" style="margin-top:10px;font-size:13px;line-height:1.8;color:var(--text-muted)">
-          收件人：<strong id="passport-preview">（請填寫護照姓名）</strong><br>
-          收件電話：01058182588<br>
-          地址：(03779) 서울특별시 서대문구 신촌로 109<br>
-          詳細地址：신촌르메이에르타운5 지하1층 B110호 HCH
-        </div>
-      </div>` : "";
+        </div>`).join("<hr style='border:none;border-top:1px dashed var(--border);margin:6px 0'>");
+      return `
+        <div class="profile-section">
+          <div class="profile-title">🛃 收件資訊（代收）</div>
+          <div class="profile-grid">
+            <div class="form-group">
+              <label class="form-label">護照英文姓名 <span class="required">*</span></label>
+              <input class="form-input" id="p-passport" type="text" placeholder="如護照上所示（例：WANG XIAO MING）" style="text-transform:uppercase" />
+            </div>
+          </div>
+          <div class="form-card" style="margin-top:10px">${whList || '<div style="font-size:13px;color:var(--text-muted)">集運倉資訊載入中...</div>'}</div>
+        </div>`;
+    })() : "";
 
-    // 商品 HTML（新版：含規格選擇 + 說明欄）
+    // 多規格模式下的「加件」邏輯
+    window._multiItems = {}; // { productIdx: [{specSelects...}] }
+
+    // 商品 HTML（依 specMode 渲染）
     const productsHtml = c.products.map((p, i) => {
-      const specsHtml = (p.specs || []).map((spec, si) => `
+      const specMode = p.specMode || "none";
+
+      if (specMode === "multi") {
+        // 多規格：顯示「＋加入一件」按鈕，不顯示 +/- 數量
+        return `
+          <div class="order-product-multi" id="order-product-${i}">
+            <div class="op-info" style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div class="op-name">${escHtmlU(p.name)}</div>
+                <div class="op-price">NT$${p.price.toLocaleString()}</div>
+              </div>
+              <button class="btn btn-ghost btn-sm" type="button" onclick="addMultiItem(${i})">＋ 加入一件</button>
+            </div>
+            <div id="multi-items-${i}" class="multi-items-list"></div>
+            <div class="op-subtotal" id="subtotal-${i}" style="grid-column:1/-1;text-align:right;margin-top:4px">NT$0</div>
+          </div>`;
+      }
+
+      // 無規格 or 簡單規格：顯示 +/- 數量
+      const specsHtml = specMode === "simple" ? (p.specs || []).map((spec, si) => `
         <div class="spec-select-row">
-          <label class="form-label" style="font-size:12px">${escHtmlU(spec.name)} <span class="required">*</span></label>
+          <span style="font-size:12px;color:var(--text-muted);min-width:fit-content">${escHtmlU(spec.name)}</span>
           <select class="form-input" id="spec-${i}-${si}" style="font-size:13px">
             <option value="">— 請選擇 —</option>
             ${spec.options.map(o => `<option value="${escHtmlU(o)}">${escHtmlU(o)}</option>`).join("")}
           </select>
-        </div>`).join("");
+        </div>`).join("") : "";
 
       const noteHtml = p.hasNote ? `
         <div class="spec-select-row">
-          <label class="form-label" style="font-size:12px">${p.noteHint || "備注說明"}</label>
-          <input class="form-input" id="note-${i}" type="text" placeholder="${escHtmlU(p.noteHint || "請填寫說明")}" style="font-size:13px" />
+          <span style="font-size:12px;color:var(--text-muted);min-width:60px">${escHtmlU(p.noteHint || "說明")}</span>
+          <input class="form-input" id="note-${i}" type="text" placeholder="${escHtmlU(p.noteHint || "請填寫")}" style="font-size:13px" />
         </div>` : "";
+
+      const hasExtras = specsHtml || noteHtml;
 
       return `
         <div class="order-product" id="order-product-${i}">
@@ -3868,7 +4028,7 @@
             <button class="op-qty-btn" onclick="changeQty(${i}, 1)">＋</button>
           </div>
           <div class="op-subtotal" id="subtotal-${i}">NT$0</div>
-          ${specsHtml || noteHtml ? `<div class="op-extras" id="op-extras-${i}" style="display:none">${specsHtml}${noteHtml}</div>` : ""}
+          ${hasExtras ? `<div class="op-extras" id="op-extras-${i}" style="display:none">${specsHtml}${noteHtml}</div>` : ""}
         </div>`;
     }).join("");
 
@@ -3975,12 +4135,66 @@
     if (qtyEl) qtyEl.textContent = next;
     if (subEl) subEl.textContent = `NT$${(next * p.price).toLocaleString()}`;
 
-    // 規格欄：有選購（qty>0）才顯示
+    // 簡單規格欄：有選購才顯示
     const extrasEl = document.getElementById(`op-extras-${idx}`);
     if (extrasEl) extrasEl.style.display = next > 0 ? "block" : "none";
 
     updateOrderTotal();
   };
+
+  // ── 多規格模式：加入一件 ─────────────────────────────────────
+  let multiItemCounters = {};
+
+  window.addMultiItem = function(productIdx) {
+    if (!multiItemCounters[productIdx]) multiItemCounters[productIdx] = 0;
+    multiItemCounters[productIdx]++;
+    const itemId = multiItemCounters[productIdx];
+    const p = currentCampaign.products[productIdx];
+    const list = document.getElementById(`multi-items-${productIdx}`);
+
+    const row = document.createElement("div");
+    row.className = "multi-item-row";
+    row.id = `multi-item-${productIdx}-${itemId}`;
+
+    const specsHtml = (p.specs || []).map((spec, si) => `
+      <select class="form-input" data-spec="${escHtmlU(spec.name)}" style="font-size:12px;min-width:80px">
+        <option value="">— ${escHtmlU(spec.name)} —</option>
+        ${spec.options.map(o => `<option value="${escHtmlU(o)}">${escHtmlU(o)}</option>`).join("")}
+      </select>`).join("");
+
+    const noteHtml = p.hasNote ? `
+      <input class="form-input" data-note="1" type="text" placeholder="${escHtmlU(p.noteHint || "說明")}"
+             style="font-size:12px;min-width:100px" />` : "";
+
+    row.innerHTML = `
+      <div class="multi-item-inner">
+        <span class="multi-item-num">第${itemId}件</span>
+        ${specsHtml}
+        ${noteHtml}
+        <span style="font-size:12px;color:var(--text-muted);white-space:nowrap">NT$${p.price.toLocaleString()}</span>
+        <button class="product-remove" type="button"
+                onclick="removeMultiItem(${productIdx}, ${itemId})">✕</button>
+      </div>`;
+    list.appendChild(row);
+    updateMultiSubtotal(productIdx);
+  };
+
+  window.removeMultiItem = function(productIdx, itemId) {
+    document.getElementById(`multi-item-${productIdx}-${itemId}`)?.remove();
+    updateMultiSubtotal(productIdx);
+  };
+
+  function updateMultiSubtotal(productIdx) {
+    const p = currentCampaign.products[productIdx];
+    const rows = document.querySelectorAll(`[id^="multi-item-${productIdx}-"]`);
+    const qty = rows.length;
+    const sub = qty * p.price;
+    const subEl = document.getElementById(`subtotal-${productIdx}`);
+    if (subEl) subEl.textContent = qty > 0 ? `× ${qty} = NT$${sub.toLocaleString()}` : "NT$0";
+    // 更新 cart
+    if (qty === 0) delete cart[productIdx]; else cart[productIdx] = qty;
+    updateOrderTotal();
+  }
 
   function updateOrderTotal() {
     // 計算原始小計
@@ -4085,12 +4299,24 @@
           </div>
           <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="submitReturnInfo('transfer')">回傳匯款資訊</button>
         </div>`;
-    } else if (c.mode === 2 && c.warehouse) {
-      // 代收模式
+    } else if (c.mode === 2) {
+      const whs = (c.warehouses || [c.warehouse]).filter(Boolean);
+      const whHtml = whs.map(w => {
+        const wObj = typeof w === "string" ? { address: w } : w;
+        return `<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--border)">
+          ${wObj.name ? `<div style="font-weight:700;margin-bottom:4px">${escHtmlU(wObj.name)}</div>` : ""}
+          <div style="font-size:13px;line-height:1.8;color:var(--text-muted)">
+            收件人：<strong id="order-success-passport">${escHtmlU(passport || "（未填寫）")}</strong><br>
+            收件電話：${escHtmlU(wObj.phone || "01058182588")}<br>
+            地址：${escHtmlU(wObj.address || "")}<br>
+            詳細地址：${escHtmlU(wObj.detail || "")}
+          </div>
+        </div>`;
+      }).join("");
       paymentBlock = `
         <div class="payment-info">
-          <div class="payment-info-title">📦 集運倉地址</div>
-          <div style="font-size:13px;line-height:1.7">${escHtmlU(c.warehouse)}</div>
+          <div class="payment-info-title">📦 集運倉資訊</div>
+          ${whHtml}
         </div>
         <div class="payment-callback">
           <div class="payment-callback-title">寄出後請回來填寫貨運單號</div>
@@ -4265,14 +4491,25 @@
   function renderMemberRow(uid, data) {
     const row = document.createElement("div");
     row.className = "member-row";
+    row.style.gridTemplateColumns = "1fr 1fr 1fr auto auto";
     const profile = data.profile || {};
     row.innerHTML = `
       <span class="member-name">${esc(data.displayName || profile.nickname || "—")}</span>
       <span class="member-email">${esc(data.email || "—")}</span>
-      <span>${esc(profile.contact || "—")}</span>
-      <span class="role-badge ${data.role || 'user'}" style="display:inline-block">${data.role === "admin" ? "✦ 管理者" : "會員"}</span>`;
+      <span style="font-size:12px;color:var(--text-muted)">${esc(profile.contact || "—")}</span>
+      <span class="role-badge ${data.role || 'user'}" style="display:inline-block">${data.role === "admin" ? "✦ 管理者" : "會員"}</span>
+      ${data.isManual ? `<button class="btn btn-danger btn-sm" onclick="deleteMember('${uid}','${esc(data.displayName || data.email || "")}')">刪除</button>` : "<span></span>"}`;
     return row;
   }
+
+  window.deleteMember = async function(uid, name) {
+    if (!confirm(`確定刪除「${name}」嗎？`)) return;
+    try {
+      const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+      await deleteDoc(doc(db, "users", uid));
+      await loadMembers();
+    } catch (e) { alert("刪除失敗：" + e.message); }
+  };
 
   // ── 手動新增會員 Modal ────────────────────────────────────
   window.openMemberModal = function() {
@@ -4315,6 +4552,148 @@
       errEl.textContent = "新增失敗：" + e.message;
     }
   };
+
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c =>
+      ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+</script>
+
+
+<!-- ── 集運倉管理 ── -->
+<script type="module">
+  import { db } from "./auth.js";
+  import {
+    collection, doc, addDoc, updateDoc, deleteDoc,
+    getDocs, query, orderBy, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // 預設集運倉
+  const DEFAULT_WAREHOUSES = [{
+    name: "首爾倉",
+    address: "(03779) 서울특별시 서대문구 신촌로 109",
+    detail: "신촌르메이에르타운5 지하1층 B110호 HCH",
+    phone: "01058182588",
+  }];
+
+  let warehouses = [];
+
+  async function ensureDefaultWarehouses() {
+    const snap = await getDocs(collection(db, "warehouses"));
+    if (snap.empty) {
+      for (const w of DEFAULT_WAREHOUSES) {
+        await addDoc(collection(db, "warehouses"), { ...w, createdAt: serverTimestamp() });
+      }
+    }
+  }
+
+  async function loadWarehouses() {
+    const snap = await getDocs(query(collection(db, "warehouses"), orderBy("createdAt", "asc")));
+    warehouses = [];
+    snap.forEach(d => warehouses.push({ id: d.id, ...d.data() }));
+  }
+
+  async function renderWarehouseChecklist() {
+    const container = document.getElementById("warehouse-checklist");
+    if (!container) return;
+    container.innerHTML = '<div class="bank-loading">載入中...</div>';
+    await ensureDefaultWarehouses();
+    await loadWarehouses();
+    if (!warehouses.length) {
+      container.innerHTML = '<div class="bank-empty">尚無集運倉</div>';
+      return;
+    }
+    container.innerHTML = "";
+    warehouses.forEach(w => {
+      const label = document.createElement("label");
+      label.className = "bank-check-item";
+      label.innerHTML = `
+        <input type="checkbox" value="${w.id}" onchange="toggleWarehouseCheck(this)" />
+        <div class="bank-check-body">
+          <div class="bank-check-name">${esc(w.name)}</div>
+          <div class="bank-check-account" style="white-space:normal;line-height:1.5">${esc(w.address)}</div>
+        </div>`;
+      container.appendChild(label);
+    });
+  }
+
+  window.toggleWarehouseCheck = function(inp) {
+    inp.closest(".bank-check-item").classList.toggle("checked", inp.checked);
+  };
+
+  window.getSelectedWarehouses = function() {
+    const checked = document.querySelectorAll('#warehouse-checklist input:checked');
+    return Array.from(checked).map(cb => {
+      const w = warehouses.find(x => x.id === cb.value);
+      return w ? { id: w.id, name: w.name, address: w.address, detail: w.detail || "", phone: w.phone || "" } : null;
+    }).filter(Boolean);
+  };
+
+  // ── 集運倉 Modal ─────────────────────────────────────────────
+  window.openWarehouseManager = async function() {
+    document.getElementById("modal-warehouse").style.display = "flex";
+    await renderWarehouseAdminList();
+  };
+
+  window.closeWarehouseManager = async function(e) {
+    if (e && e.target !== document.getElementById("modal-warehouse")) return;
+    document.getElementById("modal-warehouse").style.display = "none";
+    await renderWarehouseChecklist();
+  };
+
+  async function renderWarehouseAdminList() {
+    const container = document.getElementById("warehouse-list-admin");
+    container.innerHTML = '<div class="bank-loading">載入中...</div>';
+    await loadWarehouses();
+    if (!warehouses.length) { container.innerHTML = '<div class="bank-empty">尚無集運倉</div>'; return; }
+    container.innerHTML = "";
+    warehouses.forEach(w => {
+      const row = document.createElement("div");
+      row.className = "bank-admin-item";
+      row.style.gridTemplateColumns = "1fr 2fr auto";
+      row.innerHTML = `
+        <input class="bank-admin-field name" data-id="${w.id}" data-field="name" value="${esc(w.name)}" onchange="updateWarehouseField(this)" placeholder="倉庫名稱" />
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <input class="bank-admin-field" data-id="${w.id}" data-field="address" value="${esc(w.address || '')}" onchange="updateWarehouseField(this)" placeholder="地址" />
+          <input class="bank-admin-field" data-id="${w.id}" data-field="detail" value="${esc(w.detail || '')}" onchange="updateWarehouseField(this)" placeholder="詳細地址" />
+          <input class="bank-admin-field" data-id="${w.id}" data-field="phone" value="${esc(w.phone || '')}" onchange="updateWarehouseField(this)" placeholder="電話" />
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteWarehouse('${w.id}','${esc(w.name)}')">刪除</button>`;
+      container.appendChild(row);
+    });
+  }
+
+  window.updateWarehouseField = async function(inp) {
+    try { await updateDoc(doc(db, "warehouses", inp.dataset.id), { [inp.dataset.field]: inp.value.trim() }); }
+    catch (e) { alert("更新失敗：" + e.message); }
+  };
+
+  window.addWarehouse = async function() {
+    const name = document.getElementById("w-add-name").value.trim();
+    const address = document.getElementById("w-add-address").value.trim();
+    const detail = document.getElementById("w-add-detail").value.trim();
+    const phone = document.getElementById("w-add-phone").value.trim();
+    const err = document.getElementById("warehouse-add-error");
+    if (!name) { err.textContent = "請填寫名稱"; return; }
+    err.textContent = "";
+    try {
+      await addDoc(collection(db, "warehouses"), { name, address, detail, phone, createdAt: serverTimestamp() });
+      ["w-add-name","w-add-address","w-add-detail","w-add-phone"].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = "";
+      });
+      await renderWarehouseAdminList();
+    } catch (e) { err.textContent = "新增失敗：" + e.message; }
+  };
+
+  window.deleteWarehouse = async function(id, name) {
+    if (!confirm(`確定刪除「${name}」？`)) return;
+    try { await deleteDoc(doc(db, "warehouses", id)); await renderWarehouseAdminList(); }
+    catch (e) { alert("刪除失敗：" + e.message); }
+  };
+
+  // 選代收模式時載入
+  const origModeChange = window.switchAdminSection;
+  document.addEventListener("warehouseMode", () => renderWarehouseChecklist());
 
   function esc(s) {
     return String(s ?? "").replace(/[&<>"']/g, c =>
