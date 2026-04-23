@@ -2195,7 +2195,10 @@
       <div class="admin-section" id="section-members">
         <div class="section-header">
           <h2 class="section-title">👤 會員管理</h2>
-          <button class="btn btn-primary btn-sm" onclick="openMemberModal()">＋ 手動新增會員</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="openBatchMemberModal()">📋 批次匯入</button>
+            <button class="btn btn-primary btn-sm" onclick="openMemberModal()">＋ 手動新增會員</button>
+          </div>
         </div>
         <div id="members-list" class="members-list">
           <div class="loading-row">載入中...</div>
@@ -2345,6 +2348,33 @@
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" onclick="closeLedgerModal()">取消</button>
       <button class="btn btn-primary btn-sm" onclick="saveLedger()">儲存</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- 批次匯入會員 Modal -->
+<div class="modal-backdrop" id="modal-batch-member" style="display:none" onclick="closeBatchMemberModal(event)">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <h3 class="modal-title">👥 批次匯入會員</h3>
+      <button class="modal-close" onclick="closeBatchMemberModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fee-hint" style="margin-bottom:8px">
+        每行一筆，格式：<code style="background:#fff0f7;padding:2px 6px;border-radius:6px">email、暱稱、聯絡帳號</code>
+        （分隔符號：頓號、逗號、Tab 均可）
+      </div>
+      <textarea class="form-input" id="batch-member-input"
+                style="min-height:160px;font-family:monospace;font-size:13px;resize:vertical"
+                placeholder="huxiu2148@gmail.com、gg、ggoct11ze
+gmga@gmail.com、1223、xxuxuuu"></textarea>
+      <div id="batch-member-preview" style="margin-top:8px"></div>
+      <p class="form-error" id="batch-member-error"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeBatchMemberModal()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveBatchMembers()">匯入</button>
     </div>
   </div>
 </div>
@@ -4143,7 +4173,7 @@
       const snap = await getDocs(q);
 
       if (snap.empty) {
-        el.innerHTML = '<div class="placeholder-card"><h2>尚無訂單</h2><p></p></div>';
+        el.innerHTML = '<div class="placeholder-card"><h2>尚無訂單</h2><p>去看看團購活動吧～</p></div>';
         return;
       }
 
@@ -5042,6 +5072,87 @@
     return String(s ?? "").replace(/[&<>"']/g, c =>
       ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   }
+
+  // ── 批次匯入會員 ─────────────────────────────────────────────
+  window.openBatchMemberModal = function() {
+    document.getElementById("modal-batch-member").style.display = "flex";
+    document.getElementById("batch-member-input").value = "";
+    document.getElementById("batch-member-preview").innerHTML = "";
+    document.getElementById("batch-member-error").textContent = "";
+  };
+
+  window.closeBatchMemberModal = function(e) {
+    if (e && e.target !== document.getElementById("modal-batch-member")) return;
+    document.getElementById("modal-batch-member").style.display = "none";
+  };
+
+  // 解析輸入文字 → 會員陣列
+  function parseBatchInput(text) {
+    const lines = text.split("\n").map(l => l.trim()).filter(l => l);
+    const results = [], errors = [];
+    lines.forEach((line, i) => {
+      // 支援頓號、逗號、Tab 分隔
+      const parts = line.split(/[、,，\t]+/).map(p => p.trim());
+      if (parts.length < 1 || !parts[0]) {
+        errors.push(`第 ${i+1} 行：格式錯誤`);
+        return;
+      }
+      const email   = parts[0] || "";
+      const nickname = parts[1] || "";
+      const contact  = parts[2] || "";
+      if (!email.includes("@")) {
+        errors.push(`第 ${i+1} 行：「${email}」不像 email`);
+        return;
+      }
+      results.push({ email, nickname, contact });
+    });
+    return { results, errors };
+  }
+
+  // 即時預覽
+  document.getElementById("batch-member-input")?.addEventListener("input", function() {
+    const { results, errors } = parseBatchInput(this.value);
+    const preview = document.getElementById("batch-member-preview");
+    if (!this.value.trim()) { preview.innerHTML = ""; return; }
+    preview.innerHTML = `
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">
+        預覽（共 ${results.length} 筆有效）：
+      </div>
+      ${results.slice(0,5).map(m => `
+        <div style="font-size:12px;padding:4px 8px;background:#fff8fb;border-radius:6px;margin-bottom:3px">
+          ${esc(m.email)} · ${esc(m.nickname || "（無暱稱）")} · ${esc(m.contact || "（無聯絡）")}
+        </div>`).join("")}
+      ${results.length > 5 ? `<div style="font-size:11px;color:var(--text-muted)">...還有 ${results.length-5} 筆</div>` : ""}
+      ${errors.map(e => `<div style="font-size:12px;color:var(--danger)">${esc(e)}</div>`).join("")}`;
+  });
+
+  window.saveBatchMembers = async function() {
+    const text = document.getElementById("batch-member-input").value;
+    const { results, errors } = parseBatchInput(text);
+    const errEl = document.getElementById("batch-member-error");
+    if (!results.length) { errEl.textContent = "沒有有效的資料"; return; }
+    errEl.textContent = "匯入中...";
+    let success = 0, fail = 0;
+    for (const m of results) {
+      try {
+        const uid = "manual_" + btoa(encodeURIComponent(m.email)).replace(/[^a-zA-Z0-9]/g,"").slice(0,16);
+        await setDoc(doc(db, "users", uid), {
+          displayName: m.nickname || m.email,
+          email: m.email,
+          role: "user",
+          isManual: true,
+          profile: { email: m.email, nickname: m.nickname, contact: m.contact },
+          createdAt: serverTimestamp(),
+          lastLogin: new Date(),
+        }, { merge: true });
+        success++;
+      } catch(e) { fail++; console.error(m.email, e); }
+    }
+    errEl.textContent = "";
+    document.getElementById("modal-batch-member").style.display = "none";
+    alert(`✅ 匯入完成！成功 ${success} 筆${fail ? `，失敗 ${fail} 筆` : ""}`);
+    await loadMembers();
+  };
 </script>
 
 
@@ -5193,7 +5304,7 @@
 <script type="module">
   import { db } from "./auth.js";
   import {
-    collection, doc, updateDoc, getDocs, setDoc,
+    collection, doc, updateDoc, deleteDoc, getDocs, setDoc,
     query, orderBy, where, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -5212,8 +5323,9 @@
   const _origSwitch = window.switchAdminSection;
   window.switchAdminSection = function(section) {
     _origSwitch(section);
-    if (section === "orders") { loadCampaignFilter(); loadAdminOrders(); }
-    if (section === "finance") initFinance();
+    if (section === "orders")    { loadCampaignFilter(); loadAdminOrders(); }
+    if (section === "finance")   initFinance();
+    if (section === "campaigns") setTimeout(() => window.loadCampaignList?.(), 300);
   };
 
   // ── 團務篩選選單 ─────────────────────────────────────────────
@@ -5426,11 +5538,11 @@
   window.deleteCampaign = async function(campaignId, name) {
     if (!confirm(`確定刪除團務「${name}」嗎？\n注意：此操作不會刪除相關訂單。`)) return;
     try {
-      const { deleteDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
       await deleteDoc(doc(db, "campaigns", campaignId));
-      // 從 UI 移除
       document.getElementById(`campaign-row-${campaignId}`)?.remove();
-      alert(`✅ 團務「${name}」已刪除`);
+      // 也更新訂單篩選選單
+      const opt = document.querySelector(`#orders-filter-campaign option[value="${campaignId}"]`);
+      opt?.remove();
     } catch(e) { alert("刪除失敗：" + e.message); }
   };
 </script>
