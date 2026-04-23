@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>%F0%9F%92%AB</text></svg>" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -1274,18 +1275,19 @@
       el.className = "rate-item";
     });
 
+    // 主要 API：fawazahmed0/currency-api 透過 jsDelivr CDN
+    // 200+ 幣別、無需 key、穩定支援 CORS
     try {
-      // Frankfurter API：歐洲央行資料，免費無需 key，支援 CORS
-      // 一次拿回所有幣別對 TWD 的匯率
-      const res = await fetch("https://api.frankfurter.app/latest?from=TWD&to=KRW,JPY,CNY,USD");
+      const res = await fetch("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/twd.json");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      // data.rates = { KRW: 43.21, JPY: 4.52, CNY: 0.22, USD: 0.031 }
-      // 這是「1 TWD = X 外幣」，我們要「1 外幣 = X TWD」→ 取倒數
+      // 結構：{ "date": "...", "twd": { "usd": 0.031, "jpy": 4.5, ... } }
+      const twdRates = data.twd;
       Object.keys(LABELS).forEach(code => {
         const el = document.getElementById(`rate-${code}`);
-        if (data.rates[code]) {
-          rates[code] = 1 / data.rates[code];
+        const lower = code.toLowerCase();
+        if (twdRates[lower]) {
+          rates[code] = 1 / twdRates[lower]; // 1 外幣 = X TWD
           el.textContent = `${LABELS[code]} ${rates[code].toFixed(4)}`;
           el.className = "rate-item loaded";
         } else {
@@ -1294,19 +1296,16 @@
         }
       });
     } catch (err) {
-      console.error("Frankfurter 失敗：", err);
-      // 備用：Open Exchange Rates 的免費端點（不需 key，僅限 USD base）
-      // 先抓 USD/TWD，再用交叉匯率換算
+      console.error("主 API 失敗：", err);
+      // 備援 1：Frankfurter (新網域 .dev)
       try {
-        const r2 = await fetch("https://open.er-api.com/v6/latest/USD");
-        if (!r2.ok) throw new Error(`HTTP ${r2.status}`);
-        const d2 = await r2.json();
-        const usdToTwd = d2.rates["TWD"];
+        const res = await fetch("https://api.frankfurter.dev/v1/latest?base=TWD&symbols=KRW,JPY,CNY,USD");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
         Object.keys(LABELS).forEach(code => {
           const el = document.getElementById(`rate-${code}`);
-          const usdToCode = d2.rates[code];
-          if (usdToTwd && usdToCode) {
-            rates[code] = usdToTwd / usdToCode; // 1 外幣 = ? TWD
+          if (data.rates[code]) {
+            rates[code] = 1 / data.rates[code];
             el.textContent = `${LABELS[code]} ${rates[code].toFixed(4)}`;
             el.className = "rate-item loaded";
           } else {
@@ -1315,7 +1314,7 @@
           }
         });
       } catch (err2) {
-        console.error("備用 API 也失敗：", err2);
+        console.error("備援 API 也失敗：", err2);
         Object.keys(LABELS).forEach(code => {
           const el = document.getElementById(`rate-${code}`);
           el.textContent = `${LABELS[code]} 無法取得`;
