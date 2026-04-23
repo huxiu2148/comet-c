@@ -1431,6 +1431,20 @@
 
 
 
+
+    /* 成員編輯卡片 */
+    .member-edit-card {
+      background: #fff8fb;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      display: flex; flex-direction: column; gap: 6px;
+      margin-bottom: 8px;
+    }
+    .member-edit-row {
+      display: flex; align-items: center; gap: 8px;
+    }
+
     /* 成員勾選格 */
     .member-check-grid {
       display: flex; flex-wrap: wrap; gap: 6px;
@@ -2310,16 +2324,17 @@
       </div>
 
       <div class="group-card-actions">
-        <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${id}" data-name="${esc(data.name)}" data-colors="${colorsJson}" data-abbr="${esc(data.abbr || '')}" data-members="${JSON.stringify(data.members || []).replace(/"/g,'&quot;')}">編輯</button>
+        <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${id}" data-name="${esc(data.name)}" data-colors="${colorsJson}" data-abbr="${esc(data.abbr || '')}" data-members="${JSON.stringify(data.members || []).replace(/"/g,'&quot;')}" data-aliases="${JSON.stringify(data.aliases || []).replace(/"/g,'&quot;')}">編輯</button>
         <button class="btn btn-danger btn-sm" onclick="deleteGroup('${id}','${esc(data.name)}')">刪除</button>
       </div>`;
     // 綁定編輯按鈕（避免 onclick 字串中帶陣列出錯）
     card.querySelector('[data-action="edit"]').addEventListener("click", (ev) => {
       const btn = ev.currentTarget;
       const colors = JSON.parse(btn.dataset.colors.replace(/&quot;/g, '"'));
-      let members = [];
+      let members = [], aliases = [];
       try { members = JSON.parse(btn.dataset.members.replace(/&quot;/g, '"')); } catch {}
-      openGroupModal(btn.dataset.id, btn.dataset.name, colors, btn.dataset.abbr || "", members);
+      try { aliases = JSON.parse(btn.dataset.aliases.replace(/&quot;/g, '"')); } catch {}
+      openGroupModal(btn.dataset.id, btn.dataset.name, colors, btn.dataset.abbr || "", members, aliases);
     });
     return card;
   }
@@ -2393,22 +2408,27 @@
     updateColorPreview();
   };
 
-  window.openGroupModal = function(id=null, name="", colors=null, abbr="", members=[]) {
+  window.openGroupModal = function(id=null, name="", colors=null, abbr="", members=[], aliases=[]) {
     editingGroupId = id;
     // 先設資料
     if (typeof colors === "string" && colors) groupColors = [colors];
     else if (Array.isArray(colors) && colors.length) groupColors = [...colors];
     else groupColors = ["#FF84C3"];
-    window._openGroupMembers = Array.isArray(members) ? [...members] : [];
+    // 支援舊格式（字串）→ 自動轉新格式
+    window._openGroupMembers = Array.isArray(members)
+      ? members.map(m => typeof m === "string" ? { display: m, aliases: [] } : m)
+      : [];
     // 顯示 Modal
     document.getElementById("modal-group-title").textContent = id ? "編輯團體" : "新增團體";
     document.getElementById("modal-group").style.display = "flex";
     // DOM 就緒後再填值
     requestAnimationFrame(() => {
-      const nameEl = document.getElementById("input-group-name");
-      const abbrEl = document.getElementById("input-group-abbr");
+      const nameEl    = document.getElementById("input-group-name");
+      const abbrEl    = document.getElementById("input-group-abbr");
+      const aliasesEl = document.getElementById("input-group-aliases");
       if (nameEl) nameEl.value = name;
       if (abbrEl) abbrEl.value = abbr;
+      if (aliasesEl) aliasesEl.value = Array.isArray(aliases) ? aliases.join(", ") : "";
       document.getElementById("group-form-error").textContent = "";
       renderColorList();
       updateColorPreview();
@@ -2438,8 +2458,9 @@
   window.saveGroup = async function() {
     const name = document.getElementById("input-group-name").value.trim();
     const abbrInput = document.getElementById("input-group-abbr")?.value.trim().replace(/\s+/g,"") || "";
-    const members = Array.from(document.querySelectorAll("#members-input-list input"))
-      .map(inp => inp.value.trim()).filter(v => v);
+    const members = (window._openGroupMembers || [])
+      .map(m => typeof m === "string" ? { display: m, aliases: [] } : m)
+      .filter(m => m.display);
     const abbr = abbrInput || genAbbr(name);
     const colors = [...groupColors];
     const color = colors[0];
@@ -2450,9 +2471,9 @@
     btn.disabled = true; btn.textContent = "儲存中..."; errEl.textContent = "";
     try {
       if (editingGroupId) {
-        await updateDoc(doc(db, "groups", editingGroupId), { name, abbr, colors, color, members });
+        await updateDoc(doc(db, "groups", editingGroupId), { name, abbr, aliases, colors, color, members });
       } else {
-        await addDoc(collection(db, "groups"), { name, abbr, colors, color, members, createdAt: serverTimestamp() });
+        await addDoc(collection(db, "groups"), { name, abbr, aliases, colors, color, members, createdAt: serverTimestamp() });
       }
       document.getElementById("modal-group").style.display = "none";
       editingGroupId = null;
@@ -2761,10 +2782,12 @@
     if (!specText || !specText.trim()) return [];
     const text = specText.trim();
     // 判斷是否為「成員規格」
-    if (text.includes("成員") || text.includes("member")) {
-      const members = groupMembers || [];
-      if (members.length === 0) return [{ label: text, options: ["（請先在團體管理設定成員）"] }];
-      return [{ label: text, options: members, isMember: true }];
+    if (text.includes("成員") || text.toLowerCase().includes("member")) {
+      const raw = groupMembers || [];
+      if (raw.length === 0) return [{ label: text, options: ["（請先在團體管理設定成員）"] }];
+      // 支援舊格式（字串）和新格式（{display, aliases}）
+      const displays = raw.map(m => typeof m === "string" ? m : m.display).filter(Boolean);
+      return [{ label: text, options: displays, isMember: true }];
     }
     // 一般規格：逗號分組，斜線分選項
     const groups = text.split(",").map(g => g.trim()).filter(g => g);
@@ -2789,8 +2812,12 @@
     if (isMemberSpec && allMembers.length > 0) {
       // 分成員：顯示勾選 UI，讓管理者選這個商品有哪些成員可選
       preview.style.display = "flex";
+      // 取得成員顯示名清單（支援新舊格式）
+      const memberDisplays = allMembers.map(m =>
+        typeof m === "string" ? m : m.display
+      ).filter(Boolean);
       const stored = window._productMemberSel || {};
-      if (!stored[productId]) stored[productId] = new Set(allMembers); // 預設全選
+      if (!stored[productId]) stored[productId] = new Set(memberDisplays); // 預設全選
       window._productMemberSel = stored;
       const sel = stored[productId];
       preview.innerHTML = `
@@ -2799,7 +2826,7 @@
             此商品可選的成員（預設全選）：
           </div>
           <div class="member-check-grid">
-            ${allMembers.map(m => `
+            ${memberDisplays.map(m => `
               <label class="member-check-item" style="${sel.has(m) ? 'background:#fff0f7;border-color:var(--pink)' : ''}">
                 <input type="checkbox" value="${esc(m)}"
                        ${sel.has(m) ? 'checked' : ''}
@@ -2809,7 +2836,7 @@
               </label>`).join("")}
           </div>
           <div style="font-size:11px;color:var(--text-muted);margin-top:4px">
-            已選 ${sel.size} / ${allMembers.length} 位成員
+            已選 ${sel.size} / ${memberDisplays.length} 位成員
           </div>
         </div>`;
     } else {
@@ -2851,10 +2878,15 @@
     if (isMemberSpec && allMembers.length > 0) {
       // 用勾選的成員（若沒有設定就預設全部）
       const sel = window._productMemberSel?.[id];
-      const members = sel && sel.size > 0
-        ? allMembers.filter(m => sel.has(m))
-        : allMembers;
-      return [{ label: text, options: members, isMember: true }];
+      // 取得成員的顯示名
+      const memberDisplays = allMembers.map(m =>
+        typeof m === "string" ? m : m.display
+      ).filter(Boolean);
+      // 套用勾選過濾
+      const options = sel && sel.size > 0
+        ? memberDisplays.filter(d => sel.has(d))
+        : memberDisplays;
+      return [{ label: text, options, isMember: true }];
     }
     return parseSpecText(text, allMembers);
   }
@@ -2873,26 +2905,56 @@
     if (!container) return;
     const members = window._openGroupMembers || [];
     container.innerHTML = "";
+
     members.forEach((m, idx) => {
-      const row = document.createElement("div");
-      row.className = "spec-option-row";
-      row.innerHTML = `
-        <input class="form-input" type="text" value="${esc(m)}"
-               style="flex:1" placeholder="成員名稱"
-               oninput="window._openGroupMembers[${idx}]=this.value" />
-        <button class="product-remove" type="button"
-                onclick="window._openGroupMembers.splice(${idx},1);renderMemberInputList()">✕</button>`;
-      container.appendChild(row);
+      // 支援舊格式（字串）和新格式（{display, aliases}）
+      const display = typeof m === "string" ? m : (m.display || "");
+      const aliases  = typeof m === "string" ? "" : (m.aliases || []).join(", ");
+
+      const card = document.createElement("div");
+      card.className = "member-edit-card";
+      card.innerHTML = `
+        <div class="member-edit-row">
+          <input class="form-input member-display-input" type="text"
+                 value="${esc(display)}" placeholder="顯示名（下單時出現）"
+                 data-idx="${idx}" data-field="display"
+                 oninput="updateMemberField(${idx},'display',this.value)"
+                 style="flex:1;font-weight:600" />
+          <button class="product-remove" type="button"
+                  onclick="removeMemberInput(${idx})">✕</button>
+        </div>
+        <input class="form-input" type="text"
+               value="${esc(aliases)}" placeholder="別名（逗號分隔，例：Taeyong, 태용, 太用）"
+               data-idx="${idx}" data-field="aliases"
+               oninput="updateMemberField(${idx},'aliases',this.value)"
+               style="font-size:12px;color:var(--text-muted)" />`;
+      container.appendChild(card);
     });
+  };
+
+  window.updateMemberField = function(idx, field, value) {
+    if (!window._openGroupMembers) return;
+    const m = window._openGroupMembers[idx];
+    if (typeof m === "string") {
+      window._openGroupMembers[idx] = { display: field === "display" ? value : m, aliases: [] };
+    } else {
+      if (field === "display") m.display = value;
+      else m.aliases = value.split(",").map(a => a.trim()).filter(a => a);
+    }
+  };
+
+  window.removeMemberInput = function(idx) {
+    if (!window._openGroupMembers) return;
+    window._openGroupMembers.splice(idx, 1);
+    window.renderMemberInputList();
   };
 
   window.addMemberInput = function() {
     if (!window._openGroupMembers) window._openGroupMembers = [];
-    window._openGroupMembers.push("");
-    renderMemberInputList();
-    // focus 最後一個
+    window._openGroupMembers.push({ display: "", aliases: [] });
+    window.renderMemberInputList();
     setTimeout(() => {
-      const inputs = document.querySelectorAll("#members-input-list input");
+      const inputs = document.querySelectorAll(".member-display-input");
       if (inputs.length) inputs[inputs.length - 1].focus();
     }, 30);
   };
@@ -3321,22 +3383,50 @@
       groupKeywords = [];
       snap.forEach(d => {
         const data = d.data();
-        // 關鍵字：團體名稱本身（之後可擴充成員列表）
-        groupKeywords.push({ keywords: [data.name], color: data.color });
+        // 建立關鍵字清單：團體名 + 團體別名 + 所有成員顯示名 + 所有成員別名
+        const keys = [
+          data.name,
+          ...(data.aliases || []),
+          ...((data.members || []).flatMap(m =>
+            typeof m === "string"
+              ? [m]
+              : [m.display, ...(m.aliases || [])]
+          ))
+        ].filter(k => k && k.trim());
+        groupKeywords.push({ keywords: keys, color: data.colors || [data.color || "#FF84C3"], id: d.id, name: data.name });
       });
-    } catch(e) { console.warn("載入團體失敗", e); }
+    } catch(e) { console.warn("載入團體關鍵字失敗", e); }
   }
 
   function applyNameColor(name) {
     const bar = document.getElementById("rate-bar");
-    if (!name) { bar.style.borderColor = "var(--border)"; return; }
+    const groupSel = document.getElementById("c-group");
+    if (!name) {
+      bar.style.borderColor = "var(--border)";
+      if (groupSel && !groupSel.value) groupSel.value = "";
+      return;
+    }
     const matched = groupKeywords.find(g =>
-      g.keywords.some(kw => name.includes(kw))
+      g.keywords.some(kw => kw && name.toLowerCase().includes(kw.toLowerCase()))
     );
-    bar.style.borderColor = matched ? matched.color : "var(--border)";
-    // 同時把整個開團表單頂部色條換色
-    const card = document.querySelector("#section-campaigns .campaign-form-col .form-card");
-    if (card) card.style.borderColor = matched ? matched.color : "var(--border)";
+
+    // 更新邊框色
+    const colors = matched?.color;
+    const gradient = Array.isArray(colors) && colors.length > 1
+      ? `linear-gradient(135deg, ${colors.join(",")})`
+      : (Array.isArray(colors) ? colors[0] : (colors || "var(--border)"));
+    bar.style.borderLeft = matched ? `4px solid ${Array.isArray(colors) ? colors[0] : colors}` : "";
+    bar.style.borderColor = matched ? (Array.isArray(colors) ? colors[0] : colors) : "var(--border)";
+
+    // 自動選中對應團體
+    if (matched && groupSel) {
+      const matchedGroupId = matched.id;
+      if (groupSel.value !== matchedGroupId) {
+        groupSel.value = matchedGroupId;
+        // 觸發 change 事件更新 ID 預覽
+        groupSel.dispatchEvent(new Event("change"));
+      }
+    }
   }
 
   document.getElementById("c-name")?.addEventListener("input", function() {
@@ -3366,7 +3456,7 @@
         const data = d.data();
         const abbr = (data.abbr || window.genAbbr(data.name)).toUpperCase();
         const colors = (data.colors && data.colors.length) ? data.colors : [data.color || "#FF84C3"];
-        groupsCache.push({ id: d.id, name: data.name, color: data.color || colors[0], colors, abbr, members: data.members || [] });
+        groupsCache.push({ id: d.id, name: data.name, color: data.color || colors[0], colors, abbr, aliases: data.aliases || [], members: data.members || [] });
         const opt = document.createElement("option");
         opt.value = d.id;
         opt.textContent = `${data.name} (${abbr})`;
