@@ -885,6 +885,33 @@
     .member-email { color:var(--text-muted); font-family:monospace; font-size:12px; }
 
 
+
+
+    /* 已建立團務列表 */
+    .campaign-admin-list { display:flex; flex-direction:column; gap:8px; }
+    .campaign-admin-row {
+      background:#fff8fb; border:1.5px solid var(--border);
+      border-radius:var(--radius); padding:10px 14px;
+    }
+    .car-main { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap; }
+    .car-name { font-size:13px; font-weight:700; }
+    .car-meta { font-size:11px; color:var(--text-muted); margin-top:2px; font-family:monospace; }
+    .car-progress-sel { padding:3px 6px !important; height:28px; }
+
+    /* 記帳商品帶入 */
+    .ledger-products-list { display:flex; flex-direction:column; gap:6px; }
+    .ledger-product-btn {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:8px 12px; background:#fff8fb;
+      border:1.5px solid var(--border); border-radius:var(--radius);
+      cursor:pointer; transition:all 0.15s; text-align:left; width:100%;
+    }
+    .ledger-product-btn:hover { border-color:var(--pink); background:#fff0f7; }
+    .lpb-name { font-size:13px; font-weight:600; color:var(--text); }
+    .lpb-prices { display:flex; gap:10px; font-size:12px; }
+    .lpb-cost  { color:var(--text-muted); }
+    .lpb-price { color:var(--pink); font-weight:700; }
+
     /* ══ 訂單管理 ══ */
     .order-admin-card {
       background: var(--surface);
@@ -2099,6 +2126,17 @@
           <button class="btn btn-primary" onclick="generateAll()">✨ 生成文案 &amp; 儲存團務</button>
         </div>
 
+        <!-- 已建立的團務列表 -->
+        <div class="form-card" style="margin-top:16px">
+          <div class="form-card-title" style="display:flex;justify-content:space-between;align-items:center">
+            <span>📋 已建立的團務</span>
+            <button class="btn btn-ghost btn-sm" onclick="loadCampaignList()">重新整理</button>
+          </div>
+          <div id="campaign-list-admin" class="campaign-admin-list">
+            <div class="loading-row">點「重新整理」載入</div>
+          </div>
+        </div>
+
       </div>
 
       <!-- 訂單管理 -->
@@ -2256,7 +2294,7 @@
 
 <!-- 記帳新增 Modal -->
 <div class="modal-backdrop" id="modal-ledger" style="display:none" onclick="closeLedgerModal(event)">
-  <div class="modal" style="max-width:440px">
+  <div class="modal" style="max-width:480px">
     <div class="modal-header">
       <h3 class="modal-title">💰 新增收支記錄</h3>
       <button class="modal-close" onclick="closeLedgerModal()">✕</button>
@@ -2267,27 +2305,36 @@
         <div class="mode-grid" style="grid-template-columns:1fr 1fr">
           <label class="mode-option" data-ledger-type="income">
             <input type="radio" name="ledger-type" value="income" checked />
-            <span class="mode-icon">💰</span><span class="mode-name">收款</span>
+            <span class="mode-icon">💰</span><span class="mode-name">收入</span>
           </label>
           <label class="mode-option" data-ledger-type="expense">
             <input type="radio" name="ledger-type" value="expense" />
-            <span class="mode-icon">🛒</span><span class="mode-name">支出（購貨）</span>
+            <span class="mode-icon">🛒</span><span class="mode-name">支出</span>
           </label>
         </div>
       </div>
+
+      <div class="form-group">
+        <label class="form-label">關聯團務</label>
+        <select class="form-input" id="ledger-campaign" onchange="onLedgerCampaignChange()">
+          <option value="">無（一般收支）</option>
+        </select>
+      </div>
+
+      <!-- 商品快速帶入（選了團務才顯示）-->
+      <div class="form-group" id="ledger-products-group" style="display:none">
+        <label class="form-label">快速帶入商品金額</label>
+        <div id="ledger-products-list" class="ledger-products-list"></div>
+      </div>
+
       <div class="form-group">
         <label class="form-label">金額 NT$ <span class="required">*</span></label>
         <input class="form-input" id="ledger-amount" type="number" min="0" placeholder="0" />
       </div>
-      <div class="form-group">
-        <label class="form-label">關聯團務</label>
-        <select class="form-input" id="ledger-campaign">
-          <option value="">無（一般收支）</option>
-        </select>
-      </div>
+
       <div class="form-group">
         <label class="form-label">說明</label>
-        <input class="form-input" id="ledger-note" type="text" placeholder="例：收到匯款、購買商品" />
+        <input class="form-input" id="ledger-note" type="text" placeholder="例：購買商品、跟團收款" />
       </div>
       <div class="form-group">
         <label class="form-label">日期</label>
@@ -4096,7 +4143,7 @@
       const snap = await getDocs(q);
 
       if (snap.empty) {
-        el.innerHTML = '<div class="placeholder-card"><h2>尚無訂單</h2><p>目前尚無下單紀錄</p></div>';
+        el.innerHTML = '<div class="placeholder-card"><h2>尚無訂單</h2><p>去看看團購活動吧～</p></div>';
         return;
       }
 
@@ -5326,6 +5373,66 @@
     return String(s ?? "").replace(/[&<>"']/g, c =>
       ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   }
+
+  // ── 已建立團務列表 ──────────────────────────────────────────
+  window.loadCampaignList = async function() {
+    const list = document.getElementById("campaign-list-admin");
+    if (!list) return;
+    list.innerHTML = '<div class="loading-row">載入中...</div>';
+    try {
+      const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt","desc")));
+      if (snap.empty) { list.innerHTML = '<div class="empty-row">尚無團務</div>'; return; }
+      list.innerHTML = "";
+      snap.forEach(d => {
+        const data = d.data();
+        const row = document.createElement("div");
+        row.className = "campaign-admin-row";
+        row.id = `campaign-row-${d.id}`;
+        const PROGRESS = { ongoing:"🟢進行中", closed:"🟡已收單", shipping:"🔵出貨中",
+          warehouse:"🔵到集運", returning:"🔵運回中", arrived:"🟣已抵台", done:"⚪結束" };
+        const progress = PROGRESS[data.progress] || "🟢進行中";
+        const deadline = data.deadline
+          ? new Date(data.deadline).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})
+          : "—";
+        row.innerHTML = `
+          <div class="car-main">
+            <div>
+              <div class="car-name">${esc(data.name)}</div>
+              <div class="car-meta">${d.id} · 收單：${deadline}</div>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <select class="form-input car-progress-sel" style="font-size:12px;width:110px"
+                      onchange="updateCampaignProgress('${d.id}',this.value)">
+                ${["ongoing","closed","shipping","warehouse","returning","arrived","done"].map(k =>
+                  `<option value="${k}" ${data.progress===k?"selected":""}>${PROGRESS[k]}</option>`
+                ).join("")}
+              </select>
+              <button class="btn btn-danger btn-sm" onclick="deleteCampaign('${d.id}','${esc(data.name)}')">刪除</button>
+            </div>
+          </div>`;
+        list.appendChild(row);
+      });
+    } catch(e) { list.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`; }
+  };
+
+  // 更新團務進度
+  window.updateCampaignProgress = async function(campaignId, progress) {
+    try {
+      await updateDoc(doc(db, "campaigns", campaignId), { progress });
+    } catch(e) { alert("更新失敗：" + e.message); }
+  };
+
+  // ── 刪除團務 ────────────────────────────────────────────────
+  window.deleteCampaign = async function(campaignId, name) {
+    if (!confirm(`確定刪除團務「${name}」嗎？\n注意：此操作不會刪除相關訂單。`)) return;
+    try {
+      const { deleteDoc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+      await deleteDoc(doc(db, "campaigns", campaignId));
+      // 從 UI 移除
+      document.getElementById(`campaign-row-${campaignId}`)?.remove();
+      alert(`✅ 團務「${name}」已刪除`);
+    } catch(e) { alert("刪除失敗：" + e.message); }
+  };
 </script>
 
 <!-- ── 記帳 JS ── -->
@@ -5391,24 +5498,32 @@
       </div>`;
   }
 
+  // 快取團務資料（含商品）
+  let _ledgerCampaigns = [];
+
   window.openLedgerModal = async function() {
     document.getElementById("modal-ledger").style.display = "flex";
     document.getElementById("ledger-error").textContent = "";
     document.getElementById("ledger-amount").value = "";
     document.getElementById("ledger-note").value = "";
     document.getElementById("ledger-date").value = new Date().toISOString().slice(0,10);
-    // 載入團務選單
+    document.getElementById("ledger-products-group").style.display = "none";
+
+    // 載入團務選單（含商品資料）
     const sel = document.getElementById("ledger-campaign");
     sel.innerHTML = '<option value="">無（一般收支）</option>';
     try {
       const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt","desc")));
+      _ledgerCampaigns = [];
       snap.forEach(d => {
+        _ledgerCampaigns.push({ id: d.id, ...d.data() });
         const opt = document.createElement("option");
         opt.value = d.id;
         opt.textContent = `${d.data().name} (${d.id})`;
         sel.appendChild(opt);
       });
     } catch(e) {}
+
     // 類型按鈕
     document.querySelectorAll("[data-ledger-type]").forEach(opt => {
       opt.addEventListener("click", () => {
@@ -5418,6 +5533,35 @@
       });
     });
     document.querySelector("[data-ledger-type='income']")?.classList.add("selected");
+  };
+
+  // 選了團務後顯示商品清單
+  window.onLedgerCampaignChange = function() {
+    const cid = document.getElementById("ledger-campaign").value;
+    const group = document.getElementById("ledger-products-group");
+    const list  = document.getElementById("ledger-products-list");
+    if (!cid) { group.style.display = "none"; return; }
+    const campaign = _ledgerCampaigns.find(c => c.id === cid);
+    const products = campaign?.products || [];
+    if (!products.length) { group.style.display = "none"; return; }
+    group.style.display = "block";
+    list.innerHTML = products.map((p, i) => `
+      <button type="button" class="ledger-product-btn"
+              onclick="addLedgerProductAmount(${p.cost || p.price}, '${esc(p.name)}')">
+        <span class="lpb-name">${esc(p.name)}</span>
+        <span class="lpb-prices">
+          <span class="lpb-cost">成本 NT$${(p.cost||p.price||0).toLocaleString()}</span>
+          <span class="lpb-price">售價 NT$${(p.price||0).toLocaleString()}</span>
+        </span>
+      </button>`).join("");
+  };
+
+  window.addLedgerProductAmount = function(amount, name) {
+    const cur = parseFloat(document.getElementById("ledger-amount").value) || 0;
+    document.getElementById("ledger-amount").value = cur + amount;
+    const noteEl = document.getElementById("ledger-note");
+    if (!noteEl.value) noteEl.value = name;
+    else if (!noteEl.value.includes(name)) noteEl.value += "+" + name;
   };
 
   window.closeLedgerModal = function(e) {
