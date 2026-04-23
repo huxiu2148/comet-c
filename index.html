@@ -1487,10 +1487,9 @@
 
     const itemLinesNoFx = products.map((p, i) => `${i+1}. NT$${p.sell.toLocaleString()} ${p.name}`).join("\n");
 
-    const S = "𖬹";
-    const memo   = name+"\n\n💰商品金額\n"+itemLines+"\n\n表單連結：\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n"+S+"跟團前請先詳閱記事本重要貼文裡的注意事項\n"+S+"填單即視同已閱讀並同意所有內容\n\n匯款完成後請在此記事本留下匯款帳戶末五碼\n謝謝";
-    const note   = name+"\n\n💰商品金額\n"+itemLinesNoFx+"\n\n表單連結：\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n"+S+"跟團前請先詳閱記事本重要貼文裡的注意事項\n"+S+"填單即視同已閱讀並同意所有內容\n\n匯款完成後請在此記事本留下匯款帳戶末五碼\n謝謝";
-    const social = "#代購 "+name+"\n\n💰商品金額\n"+itemLinesNoFx+"\n\n✓以上需二補 收單時間："+deadline+"\n"+S+"欲跟團者請加入社群填單匯款\n🔗：https://reurl.cc/EQ1rLk\n\n有任何問題都歡迎詢問 謝謝～";
+    const memo   = name+"\n\n💰商品金額\n"+itemLines+"\n\n表單連結：\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n\u{16999}跟團前請先詳閱記事本重要貼文裡的注意事項\n\u{16999}填單即視同已閱讀並同意所有內容\n\n匯款完成後請在此記事本留下匯款帳戶末五碼\n謝謝";
+    const note   = name+"\n\n💰商品金額\n"+itemLinesNoFx+"\n\n表單連結：\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n\u{16999}跟團前請先詳閱記事本重要貼文裡的注意事項\n\u{16999}填單即視同已閱讀並同意所有內容\n\n匯款完成後請在此記事本留下匯款帳戶末五碼\n謝謝";
+    const social = "#代購 "+name+"\n\n💰商品金額\n"+itemLinesNoFx+"\n\n✓以上需二補 收單時間："+deadline+"\n\u{16999}欲跟團者請加入社群填單匯款\n🔗：https://reurl.cc/EQ1rLk\n\n有任何問題都歡迎詢問 謝謝～";
 
     document.getElementById("txt-memo").value   = memo;
     document.getElementById("txt-note").value   = note;
