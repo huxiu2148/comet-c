@@ -632,6 +632,28 @@
     }
 
     /* 商品列 */
+    
+    /* 代購價手動覆蓋列 */
+    .product-override-row {
+      grid-template-columns: 1fr 100px auto !important;
+      margin-top: 6px;
+      align-items: center;
+    }
+
+    .override-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: right;
+      padding-right: 4px;
+    }
+
+    .product-reset {
+      padding: 4px 10px;
+      font-size: 13px;
+      border-radius: 14px;
+      cursor: pointer;
+    }
+
     .product-row {
       display: grid;
       grid-template-columns: 1fr 100px auto;
@@ -672,6 +694,40 @@
     }
 
     .btn-add-product:hover { border-color: var(--pink); background: #fff0f7; }
+
+
+    .markup-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.2fr;
+      gap: 8px;
+    }
+
+    .markup-cell {
+      display: flex; align-items: center; gap: 4px;
+      background: #fff8fb;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 10px;
+    }
+
+    .markup-cell .form-input {
+      border: none; background: transparent;
+      padding: 2px 0; font-size: 14px; font-weight: 600;
+      text-align: center; width: 100%;
+      color: var(--pink);
+    }
+
+    .markup-cell .form-input:focus { box-shadow: none; border: none; }
+
+    .markup-label {
+      font-size: 11px; color: var(--text-muted);
+      font-weight: 600; white-space: nowrap;
+    }
+
+    .markup-unit {
+      font-size: 11px; color: var(--text-muted);
+      white-space: nowrap;
+    }
 
     .fee-row { display: flex; align-items: center; gap: 8px; }
     .fee-unit { font-size: 14px; color: var(--text-muted); }
@@ -917,20 +973,33 @@
               <div class="form-group">
                 <label class="form-label">幣別</label>
                 <select class="form-input" id="calc-currency">
-                  <option value="KRW">韓幣 KRW</option>
-                  <option value="JPY">日幣 JPY</option>
-                  <option value="CNY">人民幣 CNY</option>
-                  <option value="USD">美金 USD</option>
+                  <option value="KRW" data-markup="18" data-markup-high="12" data-threshold="30000">韓幣 KRW ₩</option>
+                  <option value="JPY" data-markup="12.5" data-markup-high="8" data-threshold="3500">日幣 JPY ¥</option>
+                  <option value="CNY" data-markup="8" data-markup-high="5" data-threshold="150">人民幣 CNY ¥</option>
+                  <option value="USD" data-markup="20" data-markup-high="15" data-threshold="25">美金 USD $</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label class="form-label">手續費加成</label>
-                <div class="fee-row">
-                  <input class="form-input" id="calc-markup" type="number" value="10" min="0" max="100" step="0.5" style="width:80px" />
-                  <span class="fee-unit">%</span>
-                  <span class="fee-hint">（預設 10%，含刷卡手續費 1.5%）</span>
+                <label class="form-label">加成趴數（依門檻自動切換）</label>
+                <div class="markup-grid">
+                  <div class="markup-cell">
+                    <span class="markup-label">小額</span>
+                    <input class="form-input" id="calc-markup" type="number" min="0" max="100" step="0.5" />
+                    <span class="markup-unit">%</span>
+                  </div>
+                  <div class="markup-cell">
+                    <span class="markup-label">大額</span>
+                    <input class="form-input" id="calc-markup-high" type="number" min="0" max="100" step="0.5" />
+                    <span class="markup-unit">%</span>
+                  </div>
+                  <div class="markup-cell markup-threshold">
+                    <span class="markup-label">門檻</span>
+                    <input class="form-input" id="calc-threshold" type="number" min="0" step="100" />
+                    <span class="markup-unit" id="threshold-unit">KRW</span>
+                  </div>
                 </div>
+                <span class="fee-hint">外幣 ≥ 門檻時套用大額趴數（含刷卡手續費 1.5%）</span>
               </div>
 
               <!-- 商品列表 -->
@@ -1348,6 +1417,11 @@
         <input class="form-input" id="p-price-${id}" type="number" placeholder="外幣金額" min="0" oninput="recalcRow(${id})" />
         <button class="product-remove" onclick="removeProductRow(${id})">✕</button>
       </div>
+      <div class="product-row product-override-row">
+        <div class="override-hint">代購價（自動湊整到 0/5）：</div>
+        <input class="form-input" id="p-override-${id}" type="number" placeholder="自動" min="0" oninput="overrideRow(${id})" />
+        <button class="product-reset btn-sm btn-ghost" onclick="resetOverride(${id})" title="恢復自動計算">↻</button>
+      </div>
       <div class="product-result" id="p-result-${id}"></div>`;
     list.appendChild(div);
     document.getElementById(`p-name-${id}`).focus();
@@ -1355,34 +1429,69 @@
 
   window.removeProductRow = function(id) {
     productRows = productRows.filter(r => r !== id);
+    delete overrides[id];
     document.getElementById(`product-entry-${id}`)?.remove();
     updateCalcResults();
     updateCopywriter();
   };
 
+  // 湊整到最近的 0 或 5 結尾（無條件進位）
+  function roundUpTo5(n) {
+    return Math.ceil(n / 5) * 5;
+  }
+
+  // 儲存每列的手動覆蓋值（null 代表用自動）
+  const overrides = {};
+
+  // 依金額 vs 門檻選擇趴數
+  function getMarkupForPrice(foreignPrice) {
+    const markupLow  = parseFloat(document.getElementById("calc-markup").value)      / 100;
+    const markupHigh = parseFloat(document.getElementById("calc-markup-high").value) / 100;
+    const threshold  = parseFloat(document.getElementById("calc-threshold").value)   || Infinity;
+    if (isNaN(markupLow))  return 0.10;
+    if (foreignPrice >= threshold && !isNaN(markupHigh)) return markupHigh;
+    return markupLow;
+  }
+
   window.recalcRow = function(id) {
     const currency = document.getElementById("calc-currency").value;
-    const markup   = parseFloat(document.getElementById("calc-markup").value) / 100 || 0.10;
     const price    = parseFloat(document.getElementById(`p-price-${id}`)?.value) || 0;
     const name     = document.getElementById(`p-name-${id}`)?.value.trim() || "";
     const resultEl = document.getElementById(`p-result-${id}`);
+    const overrideInput = document.getElementById(`p-override-${id}`);
+    const markup   = getMarkupForPrice(price);
 
     if (!price || !rates[currency]) {
       resultEl.className = "product-result";
+      if (overrideInput) overrideInput.placeholder = "自動";
       return;
     }
 
     const fee = 0.015; // 刷卡手續費
     const twd_raw = price * rates[currency];
     const cost    = Math.ceil(twd_raw * (1 + fee));
-    const selling = Math.ceil(twd_raw * (1 + fee + markup));
+    const autoSell = roundUpTo5(twd_raw * (1 + fee + markup)); // 湊整到 5
+
+    // 若有手動覆蓋值就用手動，否則用自動
+    const selling = overrides[id] != null ? overrides[id] : autoSell;
     const profit  = selling - cost;
+
+    // 顯示自動值在 placeholder（方便對照）
+    if (overrideInput) overrideInput.placeholder = `自動 NT$${autoSell}`;
+
+    const isManual = overrides[id] != null;
+    const priceColor = isManual ? "#8a5cff" : "var(--pink)";
+    const manualTag  = isManual ? `<span style="font-size:11px;color:#8a5cff;margin-left:4px">(手動)</span>` : "";
+
+    const threshold = parseFloat(document.getElementById("calc-threshold").value) || Infinity;
+    const isHigh = price >= threshold;
+    const markupTag = `<span style="font-size:11px;color:var(--text-muted);margin-left:4px">[${(markup*100).toFixed(1)}%${isHigh ? " 大額" : " 小額"}]</span>`;
 
     resultEl.innerHTML = `
       <strong>${name || "商品"}</strong>：
       外幣 ${price.toLocaleString()} ${currency} ／
       成本 <strong>NT$${cost.toLocaleString()}</strong> ／
-      代購價 <strong style="color:var(--pink)">NT$${selling.toLocaleString()}</strong> ／
+      代購價 <strong style="color:${priceColor}">NT$${selling.toLocaleString()}</strong>${manualTag}${markupTag} ／
       利潤 <strong style="color:#4caf50">NT$${profit.toLocaleString()}</strong>`;
     resultEl.className = "product-result show";
 
@@ -1390,25 +1499,55 @@
     updateCopywriter();
   };
 
+  // 使用者手動修改代購價
+  window.overrideRow = function(id) {
+    const val = parseFloat(document.getElementById(`p-override-${id}`).value);
+    overrides[id] = isNaN(val) || val <= 0 ? null : val;
+    recalcRow(id);
+  };
+
+  // 恢復自動計算
+  window.resetOverride = function(id) {
+    overrides[id] = null;
+    document.getElementById(`p-override-${id}`).value = "";
+    recalcRow(id);
+  };
+
   window.recalcAll = function() {
     productRows.forEach(id => recalcRow(id));
   };
 
-  // 幣別或加成改變時重算
-  document.getElementById("calc-currency")?.addEventListener("change", recalcAll);
+  // 幣別切換：自動套用該幣別的預設趴數與門檻
+  function applyCurrencyDefaults() {
+    const sel = document.getElementById("calc-currency");
+    const opt = sel.options[sel.selectedIndex];
+    document.getElementById("calc-markup").value       = opt.dataset.markup     || "10";
+    document.getElementById("calc-markup-high").value  = opt.dataset.markupHigh || "8";
+    document.getElementById("calc-threshold").value    = opt.dataset.threshold  || "0";
+    document.getElementById("threshold-unit").textContent = sel.value;
+    recalcAll();
+  }
+
+  document.getElementById("calc-currency")?.addEventListener("change", applyCurrencyDefaults);
   document.getElementById("calc-markup")?.addEventListener("input", recalcAll);
+  document.getElementById("calc-markup-high")?.addEventListener("input", recalcAll);
+  document.getElementById("calc-threshold")?.addEventListener("input", recalcAll);
+
+  // 初始化時套用預設
+  applyCurrencyDefaults();
 
   function getProductData() {
     const currency = document.getElementById("calc-currency").value;
-    const markup   = parseFloat(document.getElementById("calc-markup").value) / 100 || 0.10;
     const fee = 0.015;
     return productRows.map(id => {
       const name  = document.getElementById(`p-name-${id}`)?.value.trim() || "";
       const price = parseFloat(document.getElementById(`p-price-${id}`)?.value) || 0;
-      const twd   = price * (rates[currency] || 0);
-      const cost  = Math.ceil(twd * (1 + fee));
-      const sell  = Math.ceil(twd * (1 + fee + markup));
-      return { id, name, price, currency, cost, sell, profit: sell - cost };
+      const markup = getMarkupForPrice(price);
+      const twd    = price * (rates[currency] || 0);
+      const cost   = Math.ceil(twd * (1 + fee));
+      const autoSell = roundUpTo5(twd * (1 + fee + markup));
+      const sell = overrides[id] != null ? overrides[id] : autoSell;
+      return { id, name, price, currency, cost, sell, profit: sell - cost, isManual: overrides[id] != null };
     }).filter(p => p.name && p.price > 0);
   }
 
@@ -1560,6 +1699,7 @@
     document.getElementById("c-shipdate").value = "";
     document.getElementById("products-list").innerHTML = "";
     productRows = []; rowCounter = 0;
+    Object.keys(overrides).forEach(k => delete overrides[k]);
     document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('selected'));
     [1,2,4].forEach(m => { const el = document.getElementById(`mode-extra-${m}`); if(el) el.style.display="none"; });
     document.getElementById("calc-results").style.display = "none";
