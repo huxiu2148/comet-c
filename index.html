@@ -519,6 +519,215 @@
       .user-name { display: none; }
       .tab-btn { padding: 8px 12px; font-size: 13px; }
     }
+
+    /* ══ 開團系統 ══════════════════════════════════════════════ */
+
+    /* 匯率列 */
+    .rate-bar {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .rate-label {
+      font-size: 12px; font-weight: 700;
+      background: var(--grad);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; white-space: nowrap;
+    }
+
+    .rate-items { display: flex; gap: 16px; flex-wrap: wrap; flex: 1; }
+
+    .rate-item {
+      font-size: 13px; color: var(--text-muted);
+      background: #fff0f7; border-radius: 8px;
+      padding: 3px 10px;
+    }
+
+    .rate-item.loaded { color: var(--text); font-weight: 600; }
+    .rate-item.error  { color: var(--danger); }
+
+    .rate-refresh {
+      background: none; border: none;
+      font-size: 16px; cursor: pointer;
+      color: var(--pink); padding: 2px 6px;
+      border-radius: 8px; transition: background 0.15s;
+    }
+
+    .rate-refresh:hover { background: #fde0ef; }
+
+    /* 兩欄佈局 */
+    .campaign-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 700px) {
+      .campaign-layout { grid-template-columns: 1fr; }
+    }
+
+    /* 表單卡片 */
+    .form-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex; flex-direction: column; gap: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .form-card-title {
+      font-size: 15px; font-weight: 700;
+      background: var(--grad);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      padding-bottom: 10px;
+      border-bottom: 1.5px solid var(--border);
+    }
+
+    /* 付款模式選擇 */
+    .mode-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .mode-option {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+      padding: 12px 8px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.15s;
+      background: var(--surface);
+    }
+
+    .mode-option:hover { border-color: var(--pink); background: #fff0f7; }
+
+    .mode-option input[type="radio"] { display: none; }
+
+    .mode-option.selected {
+      border-color: var(--pink);
+      background: linear-gradient(135deg, #fff0f7, #fff8e0);
+      box-shadow: 0 2px 8px rgba(255,132,195,0.15);
+    }
+
+    .mode-icon { font-size: 22px; }
+    .mode-name { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+    .mode-option.selected .mode-name { color: var(--text); }
+
+    .mode-extra {
+      background: #fff8fb;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+
+    /* 商品列 */
+    .product-row {
+      display: grid;
+      grid-template-columns: 1fr 100px auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .product-result {
+      grid-column: 1 / -1;
+      background: #fff0f7;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.8;
+      display: none;
+    }
+
+    .product-result.show { display: block; }
+
+    .product-result strong { color: var(--text); font-weight: 700; }
+
+    .product-remove {
+      background: none; border: none;
+      color: #ffb3ce; font-size: 18px;
+      cursor: pointer; padding: 0 4px;
+      line-height: 1; transition: color 0.15s;
+    }
+
+    .product-remove:hover { color: var(--danger); }
+
+    .btn-add-product {
+      background: none; border: 1.5px dashed var(--border);
+      border-radius: var(--radius); padding: 9px;
+      font-size: 13px; font-weight: 600; color: var(--pink);
+      cursor: pointer; transition: all 0.15s;
+      width: 100%;
+    }
+
+    .btn-add-product:hover { border-color: var(--pink); background: #fff0f7; }
+
+    .fee-row { display: flex; align-items: center; gap: 8px; }
+    .fee-unit { font-size: 14px; color: var(--text-muted); }
+    .fee-hint { font-size: 12px; color: var(--text-muted); }
+
+    /* 試算結果 */
+    .calc-divider { height: 1px; background: var(--border); }
+    .calc-result-title { font-size: 13px; font-weight: 700; color: var(--text-muted); }
+
+    .calc-result-row {
+      display: flex; justify-content: space-between;
+      font-size: 13px; padding: 4px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .calc-result-row:last-child { border-bottom: none; }
+    .calc-result-name { color: var(--text); font-weight: 600; }
+    .calc-result-vals { display: flex; gap: 16px; text-align: right; }
+    .calc-cost  { color: var(--text-muted); }
+    .calc-price { color: var(--pink); font-weight: 700; }
+    .calc-profit{ color: #4caf50; font-weight: 600; }
+
+    /* 文案生成 */
+    .copy-tabs { display: flex; gap: 6px; }
+
+    .copy-tab {
+      padding: 6px 14px; font-size: 13px; font-weight: 600;
+      border: 1.5px solid var(--border); border-radius: 20px;
+      background: none; cursor: pointer; color: var(--text-muted);
+      transition: all 0.15s;
+    }
+
+    .copy-tab.active {
+      background: var(--grad); border-color: transparent;
+      color: #fff;
+    }
+
+    .copy-panel { display: none; flex-direction: column; gap: 8px; }
+    .copy-panel.active { display: flex; }
+
+    .copy-textarea {
+      width: 100%; min-height: 220px;
+      padding: 14px; font-size: 13px;
+      border: 1.5px solid var(--border); border-radius: var(--radius);
+      background: #fff8fb; color: var(--text);
+      resize: vertical; line-height: 1.8;
+      font-family: inherit;
+    }
+
+    .copy-btn { align-self: flex-end; }
+
+    /* 底部按鈕列 */
+    .campaign-actions {
+      display: flex; justify-content: flex-end; gap: 10px;
+      padding-top: 4px;
+    }
+
   </style>
 </head>
 <body>
@@ -604,12 +813,170 @@
         </div>
       </div>
 
-      <!-- 開團系統（下一階段） -->
+      <!-- 開團系統 -->
       <div class="admin-section" id="section-campaigns">
-        <div class="placeholder-card">
-          <h2>📦 開團系統</h2>
-          <p>即將開發：建立團務、商品計算、文案生成</p>
+
+        <!-- 匯率列 -->
+        <div class="rate-bar" id="rate-bar">
+          <span class="rate-label">即時匯率</span>
+          <div class="rate-items" id="rate-items">
+            <span class="rate-item" id="rate-KRW">韓幣 載入中...</span>
+            <span class="rate-item" id="rate-JPY">日幣 載入中...</span>
+            <span class="rate-item" id="rate-CNY">人民幣 載入中...</span>
+            <span class="rate-item" id="rate-USD">美金 載入中...</span>
+          </div>
+          <button class="rate-refresh" onclick="fetchRates()" title="重新整理匯率">↻</button>
         </div>
+
+        <!-- 兩欄佈局：左=開團表單，右=商品試算 -->
+        <div class="campaign-layout">
+
+          <!-- 左欄：團務基本資料 -->
+          <div class="campaign-form-col">
+            <div class="form-card">
+              <div class="form-card-title">📋 團務基本資料</div>
+
+              <div class="form-group">
+                <label class="form-label">團務名稱 <span class="required">*</span></label>
+                <input class="form-input" id="c-name" type="text" placeholder="例：韓國直送第三團" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">收單時間</label>
+                <input class="form-input" id="c-deadline" type="datetime-local" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">官方出貨時間</label>
+                <input class="form-input" id="c-shipdate" type="text" placeholder="待更新" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">付款模式 <span class="required">*</span></label>
+                <div class="mode-grid">
+                  <label class="mode-option" data-mode="1">
+                    <input type="radio" name="c-mode" value="1" />
+                    <span class="mode-icon">🏦</span>
+                    <span class="mode-name">匯款</span>
+                  </label>
+                  <label class="mode-option" data-mode="2">
+                    <input type="radio" name="c-mode" value="2" />
+                    <span class="mode-icon">📦</span>
+                    <span class="mode-name">代收</span>
+                  </label>
+                  <label class="mode-option" data-mode="3">
+                    <input type="radio" name="c-mode" value="3" />
+                    <span class="mode-icon">📝</span>
+                    <span class="mode-name">登記</span>
+                  </label>
+                  <label class="mode-option" data-mode="4">
+                    <input type="radio" name="c-mode" value="4" />
+                    <span class="mode-icon">🛍️</span>
+                    <span class="mode-name">賣貨便</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- 模式 1：匯款帳號 -->
+              <div class="mode-extra" id="mode-extra-1" style="display:none">
+                <div class="form-group">
+                  <label class="form-label">匯款銀行名稱</label>
+                  <input class="form-input" id="c-bank-name" type="text" placeholder="例：玉山銀行" />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">匯款帳號</label>
+                  <input class="form-input" id="c-bank-account" type="text" placeholder="完整帳號" />
+                </div>
+              </div>
+
+              <!-- 模式 2：集運倉地址 -->
+              <div class="mode-extra" id="mode-extra-2" style="display:none">
+                <div class="form-group">
+                  <label class="form-label">集運倉地址</label>
+                  <input class="form-input" id="c-warehouse" type="text" placeholder="完整寄件地址" />
+                </div>
+              </div>
+
+              <!-- 模式 4：賣貨便連結 -->
+              <div class="mode-extra" id="mode-extra-4" style="display:none">
+                <div class="form-group">
+                  <label class="form-label">賣貨便連結</label>
+                  <input class="form-input" id="c-buyship-url" type="url" placeholder="https://..." />
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- 右欄：商品試算 -->
+          <div class="campaign-calc-col">
+            <div class="form-card">
+              <div class="form-card-title">🧮 商品試算</div>
+
+              <div class="form-group">
+                <label class="form-label">幣別</label>
+                <select class="form-input" id="calc-currency">
+                  <option value="KRW">韓幣 KRW</option>
+                  <option value="JPY">日幣 JPY</option>
+                  <option value="CNY">人民幣 CNY</option>
+                  <option value="USD">美金 USD</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">手續費加成</label>
+                <div class="fee-row">
+                  <input class="form-input" id="calc-markup" type="number" value="10" min="0" max="100" step="0.5" style="width:80px" />
+                  <span class="fee-unit">%</span>
+                  <span class="fee-hint">（預設 10%，含刷卡手續費 1.5%）</span>
+                </div>
+              </div>
+
+              <!-- 商品列表 -->
+              <div id="products-list"></div>
+
+              <button class="btn-add-product" onclick="addProductRow()">＋ 新增商品</button>
+
+              <!-- 試算結果 -->
+              <div class="calc-results" id="calc-results" style="display:none">
+                <div class="calc-divider"></div>
+                <div class="calc-result-title">試算結果</div>
+                <div id="calc-result-rows"></div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 文案生成區 -->
+        <div class="form-card" id="copywriter-card" style="display:none">
+          <div class="form-card-title">✍️ 文案生成</div>
+          <div class="copy-tabs">
+            <button class="copy-tab active" data-ct="memo"   onclick="switchCopyTab('memo')">備忘錄</button>
+            <button class="copy-tab"         data-ct="note"   onclick="switchCopyTab('note')">記事本</button>
+            <button class="copy-tab"         data-ct="social" onclick="switchCopyTab('social')">社群貼文</button>
+          </div>
+          <div class="copy-panel active" id="ct-memo">
+            <textarea class="copy-textarea" id="txt-memo" readonly></textarea>
+            <button class="btn btn-primary btn-sm copy-btn" onclick="copyText('txt-memo')">複製</button>
+          </div>
+          <div class="copy-panel" id="ct-note">
+            <textarea class="copy-textarea" id="txt-note" readonly></textarea>
+            <button class="btn btn-primary btn-sm copy-btn" onclick="copyText('txt-note')">複製</button>
+          </div>
+          <div class="copy-panel" id="ct-social">
+            <textarea class="copy-textarea" id="txt-social" readonly></textarea>
+            <button class="btn btn-primary btn-sm copy-btn" onclick="copyText('txt-social')">複製</button>
+          </div>
+        </div>
+
+        <!-- 底部按鈕列 -->
+        <div class="campaign-actions">
+          <button class="btn btn-ghost" onclick="resetCampaignForm()">重置</button>
+          <button class="btn btn-primary" onclick="generateAll()">✨ 生成文案 &amp; 儲存團務</button>
+        </div>
+
       </div>
 
       <!-- 訂單管理（下一階段） -->
@@ -868,6 +1235,343 @@
     const d = ts.toDate ? ts.toDate() : new Date(ts);
     return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
   }
+</script>
+
+
+<!-- ── 開團系統邏輯 ── -->
+<script type="module">
+  import { db } from "./auth.js";
+  import {
+    collection, addDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ── 匯率 ──────────────────────────────────────────────────────
+  let rates = { KRW: null, JPY: null, CNY: null, USD: null };
+
+  window.fetchRates = async function() {
+    const ids = { KRW:"korean-won", JPY:"japanese-yen", CNY:"chinese-yuan", USD:"united-states-dollar" };
+    const labels = { KRW:"韓幣", JPY:"日幣", CNY:"人民幣", USD:"美金" };
+    for (const [code, slug] of Object.entries(ids)) {
+      const el = document.getElementById(`rate-${code}`);
+      el.textContent = `${labels[code]} 載入中...`;
+      el.className = "rate-item";
+      try {
+        const res = await fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${slug}.json`);
+        const data = await res.json();
+        const twdKey = Object.keys(data[slug]).find(k => k === "twd" || k === "TWD");
+        if (twdKey) {
+          rates[code] = data[slug][twdKey];
+          el.textContent = `${labels[code]} ${rates[code].toFixed(4)}`;
+          el.className = "rate-item loaded";
+        } else { throw new Error("no TWD"); }
+      } catch {
+        // 備用 API
+        try {
+          const res2 = await fetch(`https://api.exchangerate-api.com/v4/latest/TWD`);
+          const data2 = await res2.json();
+          const base = data2.rates[code];
+          if (base) {
+            rates[code] = 1 / base;
+            el.textContent = `${labels[code]} ${rates[code].toFixed(4)}`;
+            el.className = "rate-item loaded";
+          } else throw new Error();
+        } catch {
+          el.textContent = `${labels[code]} 無法取得`;
+          el.className = "rate-item error";
+        }
+      }
+    }
+    recalcAll();
+  };
+
+  // 頁面切換到開團系統時自動載入匯率
+  const origSwitch = window.switchAdminSection;
+  window.switchAdminSection = function(section) {
+    origSwitch(section);
+    if (section === "campaigns" && rates.KRW === null) fetchRates();
+  };
+
+  // ── 商品列表管理 ─────────────────────────────────────────────
+  let productRows = [];
+  let rowCounter = 0;
+
+  window.addProductRow = function() {
+    rowCounter++;
+    const id = rowCounter;
+    productRows.push(id);
+    const list = document.getElementById("products-list");
+    const div = document.createElement("div");
+    div.className = "product-entry";
+    div.id = `product-entry-${id}`;
+    div.innerHTML = `
+      <div class="product-row">
+        <input class="form-input" id="p-name-${id}" type="text" placeholder="商品名稱" oninput="recalcRow(${id})" />
+        <input class="form-input" id="p-price-${id}" type="number" placeholder="外幣金額" min="0" oninput="recalcRow(${id})" />
+        <button class="product-remove" onclick="removeProductRow(${id})">✕</button>
+      </div>
+      <div class="product-result" id="p-result-${id}"></div>`;
+    list.appendChild(div);
+    document.getElementById(`p-name-${id}`).focus();
+  };
+
+  window.removeProductRow = function(id) {
+    productRows = productRows.filter(r => r !== id);
+    document.getElementById(`product-entry-${id}`)?.remove();
+    updateCalcResults();
+    updateCopywriter();
+  };
+
+  window.recalcRow = function(id) {
+    const currency = document.getElementById("calc-currency").value;
+    const markup   = parseFloat(document.getElementById("calc-markup").value) / 100 || 0.10;
+    const price    = parseFloat(document.getElementById(`p-price-${id}`)?.value) || 0;
+    const name     = document.getElementById(`p-name-${id}`)?.value.trim() || "";
+    const resultEl = document.getElementById(`p-result-${id}`);
+
+    if (!price || !rates[currency]) {
+      resultEl.className = "product-result";
+      return;
+    }
+
+    const fee = 0.015; // 刷卡手續費
+    const twd_raw = price * rates[currency];
+    const cost    = Math.ceil(twd_raw * (1 + fee));
+    const selling = Math.ceil(twd_raw * (1 + fee + markup));
+    const profit  = selling - cost;
+
+    resultEl.innerHTML = `
+      <strong>${name || "商品"}</strong>：
+      外幣 ${price.toLocaleString()} ${currency} ／
+      成本 <strong>NT$${cost.toLocaleString()}</strong> ／
+      代購價 <strong style="color:var(--pink)">NT$${selling.toLocaleString()}</strong> ／
+      利潤 <strong style="color:#4caf50">NT$${profit.toLocaleString()}</strong>`;
+    resultEl.className = "product-result show";
+
+    updateCalcResults();
+    updateCopywriter();
+  };
+
+  window.recalcAll = function() {
+    productRows.forEach(id => recalcRow(id));
+  };
+
+  // 幣別或加成改變時重算
+  document.getElementById("calc-currency")?.addEventListener("change", recalcAll);
+  document.getElementById("calc-markup")?.addEventListener("input", recalcAll);
+
+  function getProductData() {
+    const currency = document.getElementById("calc-currency").value;
+    const markup   = parseFloat(document.getElementById("calc-markup").value) / 100 || 0.10;
+    const fee = 0.015;
+    return productRows.map(id => {
+      const name  = document.getElementById(`p-name-${id}`)?.value.trim() || "";
+      const price = parseFloat(document.getElementById(`p-price-${id}`)?.value) || 0;
+      const twd   = price * (rates[currency] || 0);
+      const cost  = Math.ceil(twd * (1 + fee));
+      const sell  = Math.ceil(twd * (1 + fee + markup));
+      return { id, name, price, currency, cost, sell, profit: sell - cost };
+    }).filter(p => p.name && p.price > 0);
+  }
+
+  function updateCalcResults() {
+    const products = getProductData();
+    const container = document.getElementById("calc-results");
+    const rows      = document.getElementById("calc-result-rows");
+    if (!products.length) { container.style.display = "none"; return; }
+    container.style.display = "block";
+    rows.innerHTML = products.map(p => `
+      <div class="calc-result-row">
+        <span class="calc-result-name">${p.name}</span>
+        <span class="calc-result-vals">
+          <span class="calc-cost">成本 NT$${p.cost.toLocaleString()}</span>
+          <span class="calc-price">NT$${p.sell.toLocaleString()}</span>
+          <span class="calc-profit">+${p.profit.toLocaleString()}</span>
+        </span>
+      </div>`).join("");
+  }
+
+  // ── 付款模式切換 ─────────────────────────────────────────────
+  document.querySelectorAll('.mode-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      opt.querySelector('input').checked = true;
+      [1,2,4].forEach(m => {
+        const el = document.getElementById(`mode-extra-${m}`);
+        if (el) el.style.display = "none";
+      });
+      const val = opt.dataset.mode;
+      const extra = document.getElementById(`mode-extra-${val}`);
+      if (extra) extra.style.display = "flex";
+      updateCopywriter();
+    });
+  });
+
+  // ── 預設收單時間（當天晚上 22:00） ───────────────────────────
+  function setDefaultDeadline() {
+    const now = new Date();
+    now.setHours(22, 0, 0, 0);
+    const pad = n => String(n).padStart(2, "0");
+    const val = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T22:00`;
+    document.getElementById("c-deadline").value = val;
+  }
+  setDefaultDeadline();
+  document.getElementById("c-shipdate").placeholder = "待更新";
+
+  // ── 文案生成 ─────────────────────────────────────────────────
+  window.switchCopyTab = function(ct) {
+    document.querySelectorAll(".copy-tab").forEach(t => t.classList.toggle("active", t.dataset.ct === ct));
+    document.querySelectorAll(".copy-panel").forEach(p => p.classList.toggle("active", p.id === `ct-${ct}`));
+  };
+
+  function fmtDeadline(dtStr) {
+    if (!dtStr) return "（請填寫）";
+    const d = new Date(dtStr);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function updateCopywriter() {
+    const name     = document.getElementById("c-name").value.trim() || "（團務名稱）";
+    const deadline = fmtDeadline(document.getElementById("c-deadline").value);
+    const shipdate = document.getElementById("c-shipdate").value.trim() || "待更新";
+    const products = getProductData();
+
+    if (!name || !products.length) {
+      document.getElementById("copywriter-card").style.display = "none";
+      return;
+    }
+    document.getElementById("copywriter-card").style.display = "block";
+
+    const itemLines = products.map((p, i) =>
+      `${i+1}. NT$${p.sell.toLocaleString()}｜${p.price.toLocaleString()} ${p.currency}　${p.name}`
+    ).join("
+");
+
+    const itemLinesNoFx = products.map((p, i) =>
+      `${i+1}. NT$${p.sell.toLocaleString()}　${p.name}`
+    ).join("
+");
+
+    const memo = `${name}
+
+💰商品金額
+${itemLines}
+
+表單連結：
+收單時間：${deadline}
+官方出貨時間：${shipdate}
+
+✓以上都可以接受再跟團 需二補
+𖦹跟團前請先詳閱記事本重要貼文裡的注意事項
+𖦹填單即視同已閱讀並同意所有內容
+
+匯款完成後請在此記事本留下匯款帳戶末五碼
+謝謝`;
+
+    const note = `${name}
+
+💰商品金額
+${itemLinesNoFx}
+
+表單連結：
+收單時間：${deadline}
+官方出貨時間：${shipdate}
+
+✓以上都可以接受再跟團 需二補
+𖦹跟團前請先詳閱記事本重要貼文裡的注意事項
+𖦹填單即視同已閱讀並同意所有內容
+
+匯款完成後請在此記事本留下匯款帳戶末五碼
+謝謝`;
+
+    const social = `#代購 ${name}
+
+💰商品金額
+${itemLinesNoFx}
+
+✓以上需二補 收單時間：${deadline}
+𖦹欲跟團者請加入社群填單匯款
+🔗：https://reurl.cc/EQ1rLk
+
+有任何問題都歡迎詢問 謝謝～`;
+
+    document.getElementById("txt-memo").value   = memo;
+    document.getElementById("txt-note").value   = note;
+    document.getElementById("txt-social").value = social;
+  }
+
+  // 即時更新文案
+  ["c-name","c-deadline","c-shipdate"].forEach(id => {
+    document.getElementById(id)?.addEventListener("input", updateCopywriter);
+  });
+
+  window.copyText = function(id) {
+    const el = document.getElementById(id);
+    navigator.clipboard.writeText(el.value).then(() => {
+      const btn = el.nextElementSibling;
+      btn.textContent = "✓ 已複製";
+      setTimeout(() => btn.textContent = "複製", 1800);
+    });
+  };
+
+  // ── 生成文案 & 儲存團務 ──────────────────────────────────────
+  window.generateAll = async function() {
+    const name = document.getElementById("c-name").value.trim();
+    const mode = document.querySelector('input[name="c-mode"]:checked')?.value;
+    if (!name) { alert("請填寫團務名稱"); return; }
+    if (!mode) { alert("請選擇付款模式"); return; }
+    const products = getProductData();
+    if (!products.length) { alert("請新增至少一項商品並填入金額"); return; }
+
+    updateCopywriter();
+
+    // 儲存到 Firestore
+    try {
+      const deadline  = document.getElementById("c-deadline").value;
+      const shipdate  = document.getElementById("c-shipdate").value || "待更新";
+      const currency  = document.getElementById("calc-currency").value;
+      const markup    = parseFloat(document.getElementById("calc-markup").value) || 10;
+
+      const extraData = {};
+      if (mode === "1") {
+        extraData.bankName    = document.getElementById("c-bank-name").value;
+        extraData.bankAccount = document.getElementById("c-bank-account").value;
+      } else if (mode === "2") {
+        extraData.warehouse = document.getElementById("c-warehouse").value;
+      } else if (mode === "4") {
+        extraData.buyshipUrl = document.getElementById("c-buyship-url").value;
+      }
+
+      await addDoc(collection(db, "campaigns"), {
+        name, mode: parseInt(mode), deadline, shipdate,
+        currency, markup,
+        products: products.map(p => ({ name: p.name, foreignPrice: p.price, cost: p.cost, price: p.sell })),
+        status: "open",
+        createdAt: serverTimestamp(),
+        ...extraData,
+      });
+
+      // 切換到文案 tab 讓使用者複製
+      document.getElementById("copywriter-card").scrollIntoView({ behavior: "smooth" });
+      alert(`✨ 團務「${name}」已儲存！請複製所需文案。`);
+    } catch (e) {
+      alert("儲存失敗：" + e.message);
+    }
+  };
+
+  window.resetCampaignForm = function() {
+    if (!confirm("確定要重置所有欄位嗎？")) return;
+    document.getElementById("c-name").value = "";
+    document.getElementById("c-shipdate").value = "";
+    document.getElementById("products-list").innerHTML = "";
+    productRows = []; rowCounter = 0;
+    document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('selected'));
+    [1,2,4].forEach(m => { const el = document.getElementById(`mode-extra-${m}`); if(el) el.style.display="none"; });
+    document.getElementById("calc-results").style.display = "none";
+    document.getElementById("copywriter-card").style.display = "none";
+    setDefaultDeadline();
+  };
 </script>
 
 </body>
