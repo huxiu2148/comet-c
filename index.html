@@ -634,6 +634,36 @@
     /* 商品列 */
     
 
+
+    /* 訂單表單來源選擇 */
+    .form-source-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .form-source-option {
+      display: flex; flex-direction: column;
+      gap: 2px; cursor: pointer;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      transition: all 0.15s;
+    }
+
+    .form-source-option:hover { border-color: var(--pink); }
+
+    .form-source-option input[type="radio"] { display: none; }
+
+    .form-source-option:has(input:checked) {
+      border-color: var(--pink);
+      background: linear-gradient(135deg, #fff0f7, #fff8e0);
+    }
+
+    .fs-name { font-size: 13px; font-weight: 600; color: var(--text); }
+    .fs-hint { font-size: 11px; color: var(--text-muted); }
+
     /* 匯款帳號清單（開團勾選） */
     .bank-header {
       display: flex; justify-content: space-between;
@@ -1051,6 +1081,36 @@
                 <div class="form-group">
                   <label class="form-label">賣貨便連結</label>
                   <input class="form-input" id="c-buyship-url" type="url" placeholder="https://..." />
+                </div>
+              </div>
+
+              <!-- 訂單表單設定（模式 1/2/3 適用） -->
+              <div class="mode-extra" id="form-extra" style="display:none">
+                <div class="form-group">
+                  <label class="form-label">訂單表單來源</label>
+                  <div class="form-source-row">
+                    <label class="form-source-option">
+                      <input type="radio" name="form-source" value="builtin" checked onchange="onFormSourceChange()" />
+                      <span class="fs-name">🌐 內建表單</span>
+                      <span class="fs-hint">網站直接下單</span>
+                    </label>
+                    <label class="form-source-option">
+                      <input type="radio" name="form-source" value="google" onchange="onFormSourceChange()" />
+                      <span class="fs-name">📋 Google 表單</span>
+                      <span class="fs-hint">連結到外部</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Google Forms 設定 -->
+                <div class="form-group" id="google-form-settings" style="display:none">
+                  <label class="form-label">Google 表單網址</label>
+                  <input class="form-input" id="c-gform-url" type="url" placeholder="https://docs.google.com/forms/d/e/.../viewform" />
+                  <span class="fee-hint">
+                    支援預填：若表單裡有「商品清單」欄位，輸入欄位 ID（例：entry.123456789），<br>
+                    系統會自動把本次商品清單帶進去。
+                  </span>
+                  <input class="form-input" id="c-gform-entry" type="text" placeholder="欄位 ID（選填，例：entry.123456789）" style="margin-top:6px" />
                 </div>
               </div>
 
@@ -1853,12 +1913,23 @@
       const extra = document.getElementById(`mode-extra-${val}`);
       if (extra) extra.style.display = "flex";
 
+      // 模式 1/2/3 需要訂單表單；模式 4（賣貨便）直接跳轉不需要
+      const formExtra = document.getElementById("form-extra");
+      if (formExtra) formExtra.style.display = (val === "4") ? "none" : "flex";
+
       // 選擇匯款模式時載入帳號清單
       if (val === "1") await renderBankChecklist();
 
       updateCopywriter();
     });
   });
+
+  // 訂單表單來源切換
+  window.onFormSourceChange = function() {
+    const src = document.querySelector('input[name="form-source"]:checked')?.value;
+    document.getElementById("google-form-settings").style.display = src === "google" ? "flex" : "none";
+    updateCopywriter();
+  };
 
   // ── 預設收單時間（當天晚上 22:00） ───────────────────────────
   function setDefaultDeadline() {
@@ -1889,6 +1960,7 @@
     const deadline = fmtDeadline(document.getElementById("c-deadline").value);
     const shipdate = document.getElementById("c-shipdate").value.trim() || "待更新";
     const products = getProductData();
+    const formUrl  = window.currentFormUrl || "";
 
     if (!name || !products.length) {
       document.getElementById("copywriter-card").style.display = "none";
@@ -1900,9 +1972,11 @@
 
     const itemLinesNoFx = products.map((p, i) => `${i+1}. ${p.name} NT$${p.sell.toLocaleString()}`).join("\n");
 
-    const memo   = name+"\n\n💰商品金額\n"+itemLines+"\n\n表單連結：\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n\u{16999}跟團前請先詳閱記事本重要貼文裡的注意事項\n\u{16999}填單即視同已閱讀並同意所有內容\n\n匯款完成後請在此記事本留下匯款帳戶末五碼\n謝謝";
-    const note   = name+"\n\n💰商品金額\n"+itemLinesNoFx+"\n\n表單連結：\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n\u{16999}跟團前請先詳閱記事本重要貼文裡的注意事項\n\u{16999}填單即視同已閱讀並同意所有內容\n\n匯款完成後請在此記事本留下匯款帳戶末五碼\n謝謝";
-    const social = "#代購 "+name+"\n\n💰商品金額\n"+itemLinesNoFx+"\n\n✓以上需二補 收單時間："+deadline+"\n\u{16999}欲跟團者請加入社群填單匯款\n🔗：https://reurl.cc/EQ1rLk\n\n有任何問題都歡迎詢問 謝謝～";
+    const selectedMode = document.querySelector('input[name="c-mode"]:checked')?.value;
+    const payFooter = selectedMode === "1" ? "\n\n匯款完成後請在此記事本留下匯款帳戶末五碼" : "";
+    const memo   = name+"\n\n💰商品金額\n"+itemLines+"\n\n表單連結："+formUrl+"\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n\u{16999}跟團前請先詳閱記事本重要貼文裡的注意事項\n\u{16999}填單即視同已閱讀並同意所有內容"+payFooter+"\n謝謝";
+    const note   = name+"\n\n💰商品金額\n"+itemLinesNoFx+"\n\n表單連結："+formUrl+"\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n\u{16999}跟團前請先詳閱記事本重要貼文裡的注意事項\n\u{16999}填單即視同已閱讀並同意所有內容"+payFooter+"\n謝謝";
+    const social = "#代購 "+name+"\n\n💰商品金額\n"+itemLinesNoFx+"\n\n✓以上需二補 收單時間："+deadline+"\n\u{16999}欲跟團者請加入社群填單匯款\n🔗："+(formUrl || "https://reurl.cc/EQ1rLk")+"\n\n有任何問題都歡迎詢問 謝謝～";
 
     document.getElementById("txt-memo").value   = memo;
     document.getElementById("txt-note").value   = note;
@@ -1952,7 +2026,33 @@
         extraData.buyshipUrl = document.getElementById("c-buyship-url").value;
       }
 
-      await addDoc(collection(db, "campaigns"), {
+      // 訂單表單來源（模式 4 直接跳 buyshipUrl，不需要）
+      let formSource = "none";
+      let formUrl = "";
+      if (mode !== "4") {
+        formSource = document.querySelector('input[name="form-source"]:checked')?.value || "builtin";
+        if (formSource === "google") {
+          const gUrl   = document.getElementById("c-gform-url").value.trim();
+          const gEntry = document.getElementById("c-gform-entry").value.trim();
+          if (!gUrl) { alert("請填寫 Google 表單網址"); return; }
+          // 如果有填 entry ID，產生預填連結（帶入商品清單）
+          if (gEntry) {
+            const prefillText = products.map((p,i) =>
+              `${i+1}. ${p.name} NT$${p.sell}`
+            ).join("\n");
+            const sep = gUrl.includes("?") ? "&" : "?";
+            formUrl = `${gUrl}${sep}usp=pp_url&${gEntry}=${encodeURIComponent(prefillText)}`;
+          } else {
+            formUrl = gUrl;
+          }
+        }
+        // builtin 的表單連結會在儲存後根據 doc id 產生
+      }
+
+      extraData.formSource = formSource;
+
+      // 先儲存到 Firestore
+      const docRef = await addDoc(collection(db, "campaigns"), {
         name, mode: parseInt(mode), deadline, shipdate,
         currency, markup,
         products: products.map(p => ({ name: p.name, foreignPrice: p.price, cost: p.cost, price: p.sell })),
@@ -1961,9 +2061,26 @@
         ...extraData,
       });
 
-      // 切換到文案 tab 讓使用者複製
+      // 如果是內建表單，用 doc id 產生站內連結
+      if (formSource === "builtin") {
+        const base = window.location.origin + window.location.pathname.replace(/index\.html$/, "");
+        formUrl = `${base}?c=${docRef.id}`;
+      } else if (formSource === "google") {
+        // Google 已生成過 formUrl
+      }
+
+      // 存 formUrl 回 Firestore
+      if (formUrl) {
+        const { updateDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+        await updateDoc(docRef, { formUrl });
+      }
+
+      // 把 formUrl 塞進文案
+      window.currentFormUrl = formUrl;
+      updateCopywriter();
+
       document.getElementById("copywriter-card").scrollIntoView({ behavior: "smooth" });
-      alert(`✨ 團務「${name}」已儲存！請複製所需文案。`);
+      alert(`✨ 團務「${name}」已儲存！\n\n表單連結：\n${formUrl || "（模式 4 直接使用賣貨便連結）"}`);
     } catch (e) {
       alert("儲存失敗：" + e.message);
     }
