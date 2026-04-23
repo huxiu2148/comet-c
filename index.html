@@ -2271,6 +2271,10 @@
       el.classList.toggle("active", el.id === "section-"+section);
     });
     if (section === "groups") loadGroups();
+    if (section === "campaigns") {
+      // 直接呼叫（不依賴跨 module 事件）
+      setTimeout(() => { if (window.loadGroupsSelect) window.loadGroupsSelect(); }, 30);
+    }
     document.dispatchEvent(new CustomEvent("adminSectionChanged", { detail: section }));
   };
 
@@ -3352,7 +3356,7 @@
   // ── 團體選單 ────────────────────────────────────────────────
   let groupsCache = []; // [{id, name, color, abbr}]
 
-  async function loadGroupsSelect() {
+  window.loadGroupsSelect = async function() {
     const sel = document.getElementById("c-group");
     try {
       const snap = await getDocs(query(collection(db, "groups"), orderBy("createdAt", "asc")));
@@ -3372,7 +3376,7 @@
       });
     } catch (e) {
       console.error("載入團體失敗", e);
-      sel.innerHTML = '<option value="">載入失敗</option>';
+      sel.innerHTML = `<option value="">載入失敗：${e.code || e.message}</option>`;
     }
   }
 
