@@ -8,6 +8,7 @@
   <!-- build:1776933706 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>%F0%9F%92%AB</text></svg>" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -2130,7 +2131,12 @@
         <div class="form-card" style="margin-top:16px">
           <div class="form-card-title" style="display:flex;justify-content:space-between;align-items:center">
             <span>📋 已建立的團務</span>
-            <button class="btn btn-ghost btn-sm" onclick="loadCampaignList()">重新整理</button>
+            <div style="display:flex;gap:8px">
+              <a class="btn btn-ghost btn-sm" href="https://huxiu2148.github.io/comet-c/campaign_template.xlsx" download>⬇ 下載範本</a>
+              <button class="btn btn-ghost btn-sm" onclick="document.getElementById('campaign-import-file').click()">📤 批次匯入</button>
+              <input type="file" id="campaign-import-file" accept=".xlsx,.csv" style="display:none" onchange="importCampaigns(this)" />
+              <button class="btn btn-ghost btn-sm" onclick="loadCampaignList()">↻ 重新整理</button>
+            </div>
           </div>
           <div id="campaign-list-admin" class="campaign-admin-list">
             <div class="loading-row">點「重新整理」載入</div>
@@ -5484,6 +5490,128 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   function esc(s) {
     return String(s ?? "").replace(/[&<>"']/g, c =>
       ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  // ── 批次匯入團務（CSV / XLSX）────────────────────────────────
+  window.importCampaigns = async function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    input.value = "";
+
+    const list = document.getElementById("campaign-list-admin");
+    list.innerHTML = '<div class="loading-row">解析檔案中...</div>';
+
+    try {
+      const rows = await parseImportFile(file);
+      if (!rows.length) { list.innerHTML = '<div class="empty-row">檔案內沒有有效資料</div>'; return; }
+
+      let ok = 0, fail = 0, failMsgs = [];
+      list.innerHTML = '<div class="loading-row">匯入中...</div>';
+
+      for (const row of rows) {
+        try {
+          const name = row[0]?.trim();
+          const groupName = row[1]?.trim();
+          const mode = parseInt(row[2]) || 1;
+          const deadline = parseDateTime(row[3]);
+          const shipdate = row[4]?.trim() || "待更新";
+          const progress = row[5]?.trim() || "ongoing";
+          if (!name) { failMsgs.push("略過空白列"); fail++; continue; }
+
+          // 從 groupsCache 找對應團體（用名稱或別名比對）
+          let groupData = null;
+          if (window.groupsCache) {
+            groupData = window.groupsCache.find(g =>
+              g.name === groupName ||
+              (g.aliases || []).includes(groupName)
+            );
+          }
+          const groupId    = groupData?.id    || "";
+          const groupAbbr  = groupData?.abbr  || window.genAbbr?.(groupName || name) || "G";
+          const groupColor = groupData?.color || "#FF84C3";
+          const groupColors= groupData?.colors || [groupColor];
+
+          // 商品（從欄 7 開始，兩欄一組：名稱、售價）
+          const products = [];
+          for (let c = 6; c < row.length - 1; c += 2) {
+            const pName  = row[c]?.trim();
+            const pPrice = parseFloat(row[c+1]) || 0;
+            if (pName && pPrice) products.push({ name: pName, price: pPrice, cost: pPrice, foreignPrice: 0, specs: [], specMode: "none", hasNote: false, noteHint: "" });
+          }
+
+          // 產生 campaignId
+          const now = new Date();
+          const pad = n => String(n).padStart(2,"0");
+          const dateStr = `${String(now.getFullYear()).slice(2)}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
+          const prefix = `${groupAbbr}-${dateStr}-`;
+          // 用隨機後綴避免衝突（批次時可能同天開多團）
+          const rand = String(Math.floor(Math.random()*99)+1).padStart(2,"0");
+          const campaignId = `${prefix}${rand}`;
+
+          const base = window.location.origin + window.location.pathname.replace(/index\.html$/, "");
+          const formUrl = `${base}?c=${campaignId}`;
+
+          await setDoc(doc(db, "campaigns", campaignId), {
+            name, groupId, groupName: groupName || "", groupAbbr, groupColor, groupColors,
+            mode, deadline, shipdate, progress,
+            products, discounts: [],
+            formUrl, formSource: "builtin",
+            status: "open",
+            currency: "KRW", markup: 18,
+            createdAt: serverTimestamp(),
+          });
+          ok++;
+        } catch(e) {
+          fail++;
+          failMsgs.push(`「${row[0]}」失敗：${e.message}`);
+        }
+      }
+
+      await window.loadCampaignList();
+      const msg = `✅ 匯入完成！成功 ${ok} 筆${fail ? `，失敗 ${fail} 筆` : ""}`;
+      if (failMsgs.length) alert(msg + "\n\n" + failMsgs.join("\n"));
+      else alert(msg);
+    } catch(e) {
+      list.innerHTML = `<div class="empty-row" style="color:var(--danger)">解析失敗：${e.message}</div>`;
+    }
+  };
+
+  // 解析 XLSX 或 CSV
+  async function parseImportFile(file) {
+    const ext = file.name.split(".").pop().toLowerCase();
+    if (ext === "csv") {
+      const text = await file.text();
+      return text.split("\n")
+        .slice(2) // 跳過標題和說明列
+        .map(l => l.split(",").map(c => c.replace(/^"|"$/g,"").trim()))
+        .filter(r => r[0]);
+    }
+    // XLSX：用 SheetJS
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const XLSX = window.XLSX;
+          if (!XLSX) { reject(new Error("SheetJS 未載入，請使用 CSV 格式")); return; }
+          const wb = XLSX.read(new Uint8Array(e.target.result), { type:"array" });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          const data = XLSX.utils.sheet_to_json(ws, { header:1, defval:"" });
+          resolve(data.slice(2).filter(r => r[0])); // 跳過標題+說明
+        } catch(err) { reject(err); }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  // 解析日期時間字串
+  function parseDateTime(str) {
+    if (!str) return "";
+    const s = String(str).trim();
+    // 格式：2025/08/15 22:00 或 2025-08-15T22:00
+    const m = s.match(/(\d{4})[/\-](\d{1,2})[/\-](\d{1,2})(?:\s+(\d{1,2}):(\d{2}))?/);
+    if (!m) return s;
+    const [,y,mo,d,h="22",mi="00"] = m;
+    return `${y}-${mo.padStart(2,"0")}-${d.padStart(2,"0")}T${h.padStart(2,"0")}:${mi}`;
   }
 
   // ── 已建立團務列表 ──────────────────────────────────────────
