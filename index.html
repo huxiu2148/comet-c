@@ -2,6 +2,10 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <!-- build:1776933706 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>%F0%9F%92%AB</text></svg>" />
@@ -852,6 +856,23 @@
     .toggle-switch input:checked + .toggle-track { background:var(--pink); }
     .toggle-switch input:checked + .toggle-track::before { transform:translateX(18px); }
 
+
+    /* 會員管理卡片 */
+    .member-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 10px;
+      box-shadow: var(--shadow);
+    }
+    .member-card-header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .member-card-edit {
+      display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;
+    }
+
     /* 會員管理列表 */
     .members-list { display:flex; flex-direction:column; gap:8px; }
     .member-row {
@@ -862,6 +883,74 @@
     }
     .member-name { font-weight:700; }
     .member-email { color:var(--text-muted); font-family:monospace; font-size:12px; }
+
+
+    /* ══ 訂單管理 ══ */
+    .order-admin-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .oa-header { display:flex; justify-content:space-between; align-items:flex-start; }
+    .oa-campaign { font-size:14px; font-weight:700; }
+    .oa-user { font-size:12px; color:var(--text-muted); margin-top:2px; }
+    .oa-items { font-size:13px; color:var(--text); }
+    .oa-meta { font-size:12px; color:var(--text-muted); }
+    .oa-footer { display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted);
+                 padding-top:8px; border-top:1px dashed var(--border); }
+    .oa-amount { font-size:15px; font-weight:700; color:var(--pink); }
+    .oa-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .oa-detail { background:#fff8fb; border-radius:8px; padding:10px 14px; margin-top:4px; }
+    .order-status-badge {
+      font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px;
+      background:#f0f0f0; color:var(--text-muted);
+    }
+    .status-pending   { background:#fff0d9; color:#b36d0f; }
+    .status-paid      { background:#e1f5ee; color:#2d7a5f; }
+    .status-cancelled { background:#fff0f4; color:var(--danger); }
+
+    /* ══ 記帳 ══ */
+    .finance-tabs { display:flex; gap:6px; margin-bottom:16px; }
+    .finance-panel { display:none; }
+    .finance-panel.active { display:block; }
+    .ledger-row {
+      display:flex; align-items:center; gap:10px;
+      padding:10px 14px;
+      background:var(--surface);
+      border:1.5px solid var(--border);
+      border-radius:var(--radius);
+      margin-bottom:8px;
+    }
+    .ledger-type-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .ledger-summary {
+      display:flex; gap:20px; flex-wrap:wrap;
+      padding:14px 16px;
+      background:linear-gradient(135deg,#fff0f7,#fff8e0);
+      border-radius:var(--radius);
+      margin-top:12px;
+      font-size:13px;
+    }
+    .finance-stat-row {
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px;
+      margin-bottom:20px;
+    }
+    .finance-stat {
+      background:var(--surface); border:1.5px solid var(--border);
+      border-radius:var(--radius); padding:14px 16px;
+    }
+    .finance-stat-label { font-size:12px; color:var(--text-muted); margin-bottom:4px; }
+    .finance-stat-val { font-size:20px; font-weight:800; background:var(--grad);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .finance-stat-sub { font-size:11px; color:var(--text-muted); margin-top:4px; }
+    .finance-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .finance-table th { padding:8px 12px; text-align:left; font-size:12px;
+      color:var(--text-muted); border-bottom:1.5px solid var(--border); font-weight:600; }
+    .finance-table td { padding:10px 12px; border-bottom:1px dashed var(--border); }
+    .finance-table tr:last-child td { border-bottom:none; }
 
     /* ══ 使用者下單系統 ══════════════════════════════════════════ */
 
@@ -2012,19 +2101,55 @@
 
       </div>
 
-      <!-- 訂單管理（下一階段） -->
+      <!-- 訂單管理 -->
       <div class="admin-section" id="section-orders">
-        <div class="placeholder-card">
-          <h2>📋 訂單管理</h2>
-          <p>即將開發</p>
+        <div class="section-header">
+          <h2 class="section-title">📋 訂單管理</h2>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select class="form-input" id="orders-filter-campaign" style="font-size:13px;width:200px" onchange="loadAdminOrders()">
+              <option value="">全部團務</option>
+            </select>
+            <select class="form-input" id="orders-filter-status" style="font-size:13px;width:120px" onchange="loadAdminOrders()">
+              <option value="">全部狀態</option>
+              <option value="pending">待確認</option>
+              <option value="paid">已付款</option>
+              <option value="cancelled">已取消</option>
+            </select>
+            <button class="btn btn-primary btn-sm" onclick="exportOrders()">匯出 CSV</button>
+          </div>
         </div>
+        <div id="admin-orders-list"></div>
       </div>
 
-      <!-- 記帳（下一階段） -->
+      <!-- 記帳 -->
       <div class="admin-section" id="section-finance">
-        <div class="placeholder-card">
-          <h2>💰 記帳</h2>
-          <p>即將開發</p>
+        <div class="finance-tabs">
+          <button class="copy-tab active" data-ft="ledger"  onclick="switchFinanceTab('ledger')">📒 收支記錄</button>
+          <button class="copy-tab"         data-ft="monthly" onclick="switchFinanceTab('monthly')">📊 月報表</button>
+          <button class="copy-tab"         data-ft="profit"  onclick="switchFinanceTab('profit')">💹 各團收益</button>
+        </div>
+
+        <!-- 收支記錄 -->
+        <div class="finance-panel active" id="ft-ledger">
+          <div class="section-header" style="margin-top:16px">
+            <h3 class="section-title" style="font-size:16px">收支記錄</h3>
+            <button class="btn btn-primary btn-sm" onclick="openLedgerModal()">＋ 新增記錄</button>
+          </div>
+          <div id="ledger-list"></div>
+        </div>
+
+        <!-- 月報表 -->
+        <div class="finance-panel" id="ft-monthly">
+          <div style="margin-top:16px" id="monthly-content">
+            <div class="loading-row">載入中...</div>
+          </div>
+        </div>
+
+        <!-- 各團收益 -->
+        <div class="finance-panel" id="ft-profit">
+          <div style="margin-top:16px" id="profit-content">
+            <div class="loading-row">載入中...</div>
+          </div>
         </div>
       </div>
 
@@ -2127,6 +2252,55 @@
   </div>
 </div>
 
+
+
+<!-- 記帳新增 Modal -->
+<div class="modal-backdrop" id="modal-ledger" style="display:none" onclick="closeLedgerModal(event)">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <h3 class="modal-title">💰 新增收支記錄</h3>
+      <button class="modal-close" onclick="closeLedgerModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">類型</label>
+        <div class="mode-grid" style="grid-template-columns:1fr 1fr">
+          <label class="mode-option" data-ledger-type="income">
+            <input type="radio" name="ledger-type" value="income" checked />
+            <span class="mode-icon">💰</span><span class="mode-name">收款</span>
+          </label>
+          <label class="mode-option" data-ledger-type="expense">
+            <input type="radio" name="ledger-type" value="expense" />
+            <span class="mode-icon">🛒</span><span class="mode-name">支出（購貨）</span>
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">金額 NT$ <span class="required">*</span></label>
+        <input class="form-input" id="ledger-amount" type="number" min="0" placeholder="0" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">關聯團務</label>
+        <select class="form-input" id="ledger-campaign">
+          <option value="">無（一般收支）</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">說明</label>
+        <input class="form-input" id="ledger-note" type="text" placeholder="例：收到匯款、購買商品" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">日期</label>
+        <input class="form-input" id="ledger-date" type="date" />
+      </div>
+      <p class="form-error" id="ledger-error"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeLedgerModal()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveLedger()">儲存</button>
+    </div>
+  </div>
+</div>
 
 <!-- 手動新增會員 Modal -->
 <div class="modal-backdrop" id="modal-member" style="display:none" onclick="closeMemberModal(event)">
@@ -4712,25 +4886,66 @@
   }
 
   function renderMemberRow(uid, data) {
-    const row = document.createElement("div");
-    row.className = "member-row";
-    row.style.gridTemplateColumns = "1fr 1fr 1fr auto auto";
+    const card = document.createElement("div");
+    card.className = "member-card";
+    card.id = `member-card-${uid}`;
     const profile = data.profile || {};
-    row.innerHTML = `
-      <span class="member-name">${esc(data.displayName || profile.nickname || "—")}</span>
-      <span class="member-email">${esc(data.email || "—")}</span>
-      <span style="font-size:12px;color:var(--text-muted)">${esc(profile.contact || "—")}</span>
-      <span class="role-badge ${data.role || 'user'}" style="display:inline-block">${data.role === "admin" ? "✦ 管理者" : "會員"}</span>
-      ${data.isManual ? `<button class="btn btn-danger btn-sm" onclick="deleteMember('${uid}','${esc(data.displayName || data.email || "")}')">刪除</button>` : "<span></span>"}`;
-    return row;
+    const nickname = profile.nickname || data.displayName || "";
+    const contact  = profile.contact  || "";
+    card.innerHTML = `
+      <div class="member-card-header">
+        <div>
+          <div class="member-name">${esc(data.displayName || nickname || "—")}</div>
+          <div class="member-email">${esc(data.email || "—")}</div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="role-badge ${data.role || 'user'}" style="display:inline-block">
+            ${data.role === "admin" ? "✦ 管理者" : "會員"}
+          </span>
+          <button class="btn btn-danger btn-sm" onclick="deleteMember('${uid}','${esc(data.displayName || data.email || "")}')">刪除</button>
+        </div>
+      </div>
+      <div class="member-card-edit">
+        <div class="form-group" style="flex:1">
+          <label class="form-label" style="font-size:11px">社群暱稱</label>
+          <input class="form-input" id="m-nick-${uid}" type="text" value="${esc(nickname)}"
+                 placeholder="社群顯示名稱" style="font-size:13px" />
+        </div>
+        <div class="form-group" style="flex:1">
+          <label class="form-label" style="font-size:11px">聯絡帳號</label>
+          <input class="form-input" id="m-contact-${uid}" type="text" value="${esc(contact)}"
+                 placeholder="LINE ID 或電話" style="font-size:13px" />
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="saveMemberProfile('${uid}')"
+                style="align-self:flex-end">儲存</button>
+      </div>`;
+    return card;
   }
 
-  window.deleteMember = async function(uid, name) {
-    if (!confirm(`確定刪除「${name}」嗎？`)) return;
+  window.saveMemberProfile = async function(uid) {
+    const nick    = document.getElementById(`m-nick-${uid}`)?.value.trim() || "";
+    const contact = document.getElementById(`m-contact-${uid}`)?.value.trim() || "";
     try {
-      const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-      await deleteDoc(doc(db, "users", uid));
-      await loadMembers();
+      await setDoc(doc(db, "users", uid),
+        { profile: { nickname: nick, contact }, displayName: nick },
+        { merge: true });
+      const card = document.getElementById(`member-card-${uid}`);
+      if (card) {
+        const nameEl = card.querySelector(".member-name");
+        if (nameEl) nameEl.textContent = nick || "—";
+      }
+      // 短暫顯示成功
+      const btn = document.querySelector(`#member-card-${uid} .btn-primary`);
+      if (btn) { btn.textContent = "✓"; setTimeout(() => btn.textContent = "儲存", 1500); }
+    } catch (e) { alert("儲存失敗：" + e.message); }
+  };
+
+  window.deleteMember = async function(uid, name) {
+    if (!confirm(`確定刪除「${name}」嗎？\n此操作無法復原。`)) return;
+    try {
+      const { deleteDoc: _del } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+      await _del(doc(db, "users", uid));
+      document.getElementById(`member-card-${uid}`)?.remove();
     } catch (e) { alert("刪除失敗：" + e.message); }
   };
 
@@ -4926,3 +5141,423 @@
 
 </body>
 </html>
+
+<!-- ── 訂單管理 JS ── -->
+<script type="module">
+  import { db } from "./auth.js";
+  import {
+    collection, doc, updateDoc, getDocs, setDoc,
+    query, orderBy, where, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const ORDER_STATUS = {
+    pending:   "⏳ 待確認",
+    paid:      "✅ 已付款",
+    cancelled: "❌ 已取消",
+  };
+
+  const PROGRESS_LABEL = {
+    ongoing:"🟢 進行中", closed:"🟡 已收單", shipping:"🔵 官方出貨中",
+    warehouse:"🔵 到集運", returning:"🔵 運回中", arrived:"🟣 已抵台", done:"⚪ 結束"
+  };
+
+  // ── 初始化：切到 orders 時載入 ──────────────────────────────
+  const _origSwitch = window.switchAdminSection;
+  window.switchAdminSection = function(section) {
+    _origSwitch(section);
+    if (section === "orders") { loadCampaignFilter(); loadAdminOrders(); }
+    if (section === "finance") initFinance();
+  };
+
+  // ── 團務篩選選單 ─────────────────────────────────────────────
+  async function loadCampaignFilter() {
+    const sel = document.getElementById("orders-filter-campaign");
+    if (!sel || sel.options.length > 1) return;
+    try {
+      const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt","desc")));
+      snap.forEach(d => {
+        const opt = document.createElement("option");
+        opt.value = d.id;
+        opt.textContent = `${d.data().name} (${d.id})`;
+        sel.appendChild(opt);
+      });
+    } catch(e) { console.warn(e); }
+  }
+
+  // ── 載入訂單列表 ─────────────────────────────────────────────
+  window.loadAdminOrders = async function() {
+    const list = document.getElementById("admin-orders-list");
+    if (!list) return;
+    list.innerHTML = '<div class="loading-row">載入中...</div>';
+    const campaignId = document.getElementById("orders-filter-campaign")?.value;
+    const status     = document.getElementById("orders-filter-status")?.value;
+    try {
+      let q = query(collection(db, "orders"), orderBy("createdAt","desc"));
+      const snap = await getDocs(q);
+      let orders = [];
+      snap.forEach(d => orders.push({ id: d.id, ...d.data() }));
+      if (campaignId) orders = orders.filter(o => o.campaignId === campaignId);
+      if (status)     orders = orders.filter(o => (o.paymentStatus || "pending") === status);
+      if (!orders.length) { list.innerHTML = '<div class="empty-row">沒有符合的訂單</div>'; return; }
+      list.innerHTML = "";
+      orders.forEach(o => list.appendChild(renderOrderCard(o)));
+    } catch(e) {
+      list.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
+    }
+  };
+
+  function renderOrderCard(o) {
+    const card = document.createElement("div");
+    card.className = "order-admin-card";
+    card.id = `oadmin-${o.id}`;
+    const date = o.createdAt?.toDate
+      ? o.createdAt.toDate().toLocaleString("zh-TW")
+      : "—";
+    const items = (o.items || []).map(it => {
+      const spec = it.specSummary ? ` (${it.specSummary})` : "";
+      return `${it.name}${spec} ×${it.qty}`;
+    }).join("、");
+    const status = o.paymentStatus || "pending";
+    const mode = ["","匯款","代收","登記","賣貨便"][o.paymentType] || "—";
+
+    card.innerHTML = `
+      <div class="oa-header">
+        <div>
+          <div class="oa-campaign">${esc(o.campaignName || o.campaignId)}</div>
+          <div class="oa-user">${esc(o.nickname || o.email)} · ${esc(o.contact || "")}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <span class="order-status-badge status-${status}">${ORDER_STATUS[status] || status}</span>
+          <span style="font-size:12px;color:var(--text-muted)">${mode}</span>
+        </div>
+      </div>
+      <div class="oa-items">${esc(items)}</div>
+      ${o.passport ? `<div class="oa-meta">護照：${esc(o.passport)}</div>` : ""}
+      ${o.returnInfo ? `<div class="oa-meta" style="color:#4caf50">✓ 回傳：${esc(o.returnInfo)}</div>` : ""}
+      <div class="oa-footer">
+        <span class="oa-date">${date}</span>
+        <span class="oa-amount">NT$${(o.totalAmount||0).toLocaleString()}</span>
+      </div>
+      <div class="oa-actions">
+        <select class="form-input" id="oa-status-${o.id}" style="font-size:12px;width:130px" onchange="updateOrderStatus('${o.id}',this.value)">
+          <option value="pending"   ${status==="pending"   ? "selected":""}>⏳ 待確認</option>
+          <option value="paid"      ${status==="paid"      ? "selected":""}>✅ 已付款</option>
+          <option value="cancelled" ${status==="cancelled" ? "selected":""}>❌ 已取消</option>
+        </select>
+        ${o.paymentType === 3 && status !== "paid" ? `
+          <button class="btn btn-primary btn-sm" onclick="upgradeToTransfer('${o.id}')">升級為匯款</button>` : ""}
+        <button class="btn btn-ghost btn-sm" onclick="toggleOrderDetail('${o.id}')">詳情</button>
+      </div>
+      <div class="oa-detail" id="oa-detail-${o.id}" style="display:none">
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.8">
+          <div>信箱：${esc(o.email || "—")}</div>
+          <div>訂單ID：${esc(o.id)}</div>
+          ${(o.items||[]).map(it => {
+            const specStr = Object.entries(it.specs||{}).filter(([,v])=>v).map(([k,v])=>`${k}:${v}`).join(" ");
+            return `<div>• ${esc(it.name)} ${specStr ? `(${specStr})` : ""} ×${it.qty} = NT$${it.subtotal?.toLocaleString()}</div>`;
+          }).join("")}
+          ${o.discountAmount ? `<div style="color:var(--pink)">折扣 -NT$${o.discountAmount.toLocaleString()}</div>` : ""}
+        </div>
+      </div>`;
+    return card;
+  }
+
+  window.toggleOrderDetail = function(id) {
+    const el = document.getElementById(`oa-detail-${id}`);
+    if (el) el.style.display = el.style.display === "none" ? "block" : "none";
+  };
+
+  window.updateOrderStatus = async function(orderId, status) {
+    try {
+      await updateDoc(doc(db, "orders", orderId), { paymentStatus: status });
+      const badge = document.querySelector(`#oadmin-${orderId} .order-status-badge`);
+      if (badge) {
+        badge.textContent = ORDER_STATUS[status] || status;
+        badge.className = `order-status-badge status-${status}`;
+      }
+    } catch(e) { alert("更新失敗：" + e.message); }
+  };
+
+  // 登記模式升級為匯款
+  window.upgradeToTransfer = async function(orderId) {
+    // 取得該訂單的團務匯款帳號
+    const snap = await getDocs(query(collection(db, "orders"), where("__name__","==",orderId)));
+    // 改成直接 getDoc
+    const { getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const oSnap = await getDoc(doc(db, "orders", orderId));
+    if (!oSnap.exists()) return;
+    const o = oSnap.data();
+    const cSnap = await getDoc(doc(db, "campaigns", o.campaignId));
+    const bankAccounts = cSnap.data()?.bankAccounts || [];
+    if (!bankAccounts.length) { alert("此團務未設定匯款帳號，請先在開團系統新增帳號"); return; }
+    await updateDoc(doc(db, "orders", orderId), {
+      paymentType: 1,
+      upgradedToTransfer: true,
+      bankAccounts,
+    });
+    alert("✅ 已升級為匯款，使用者下次查看訂單時將看到匯款帳號");
+    await loadAdminOrders();
+  };
+
+  // 匯出 CSV
+  window.exportOrders = async function() {
+    const list = document.getElementById("admin-orders-list");
+    const cards = list?.querySelectorAll(".order-admin-card");
+    if (!cards?.length) { alert("沒有可匯出的訂單"); return; }
+    const rows = [["訂單ID","團務","暱稱","信箱","聯絡","商品","金額","折扣","付款狀態","回傳資訊","時間"]];
+    const snap = await getDocs(query(collection(db, "orders"), orderBy("createdAt","desc")));
+    snap.forEach(d => {
+      const o = d.data();
+      const items = (o.items||[]).map(it=>`${it.name}×${it.qty}`).join("+");
+      const date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleDateString("zh-TW") : "";
+      rows.push([d.id, o.campaignId, o.nickname||"", o.email||"", o.contact||"",
+                 items, o.totalAmount||0, o.discountAmount||0,
+                 o.paymentStatus||"pending", o.returnInfo||"", date]);
+    });
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+    const blob = new Blob(["\uFEFF"+csv], { type:"text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `orders_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  };
+
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c =>
+      ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+</script>
+
+<!-- ── 記帳 JS ── -->
+<script type="module">
+  import { db } from "./auth.js";
+  import {
+    collection, doc, addDoc, getDocs, deleteDoc,
+    query, orderBy, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ── 記帳頁籤切換 ─────────────────────────────────────────────
+  window.switchFinanceTab = function(tab) {
+    document.querySelectorAll(".finance-panel").forEach(p => p.classList.toggle("active", p.id === `ft-${tab}`));
+    document.querySelectorAll("[data-ft]").forEach(b => b.classList.toggle("active", b.dataset.ft === tab));
+    if (tab === "monthly") renderMonthly();
+    if (tab === "profit")  renderProfit();
+    if (tab === "ledger")  loadLedger();
+  };
+
+  window.initFinance = function() { loadLedger(); };
+
+  // ── 收支記錄 ─────────────────────────────────────────────────
+  let ledgerData = [];
+
+  async function loadLedger() {
+    const list = document.getElementById("ledger-list");
+    if (!list) return;
+    list.innerHTML = '<div class="loading-row">載入中...</div>';
+    try {
+      const snap = await getDocs(query(collection(db, "ledger"), orderBy("date","desc")));
+      ledgerData = [];
+      snap.forEach(d => ledgerData.push({ id: d.id, ...d.data() }));
+      renderLedgerList();
+    } catch(e) { list.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`; }
+  }
+
+  function renderLedgerList() {
+    const list = document.getElementById("ledger-list");
+    if (!list) return;
+    if (!ledgerData.length) { list.innerHTML = '<div class="empty-row">尚無記錄</div>'; return; }
+    let totalIncome = 0, totalExpense = 0;
+    list.innerHTML = ledgerData.map(l => {
+      const isIncome = l.type === "income";
+      if (isIncome) totalIncome += l.amount || 0;
+      else totalExpense += l.amount || 0;
+      return `
+        <div class="ledger-row">
+          <span class="ledger-type-dot" style="background:${isIncome ? "#4caf50" : "var(--pink)"}"></span>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">${l.note || (isIncome ? "收款" : "支出")}</div>
+            <div style="font-size:11px;color:var(--text-muted)">${l.campaignId || "一般"} · ${l.date || "—"}</div>
+          </div>
+          <span style="font-size:14px;font-weight:700;color:${isIncome ? "#4caf50" : "var(--danger)"}">
+            ${isIncome ? "+" : "-"}NT$${(l.amount||0).toLocaleString()}
+          </span>
+          <button class="product-remove" onclick="deleteLedger('${l.id}')">✕</button>
+        </div>`;
+    }).join("") + `
+      <div class="ledger-summary">
+        <span>收入 <strong style="color:#4caf50">+NT$${totalIncome.toLocaleString()}</strong></span>
+        <span>支出 <strong style="color:var(--danger)">-NT$${totalExpense.toLocaleString()}</strong></span>
+        <span>淨利 <strong style="color:var(--pink)">NT$${(totalIncome-totalExpense).toLocaleString()}</strong></span>
+      </div>`;
+  }
+
+  window.openLedgerModal = async function() {
+    document.getElementById("modal-ledger").style.display = "flex";
+    document.getElementById("ledger-error").textContent = "";
+    document.getElementById("ledger-amount").value = "";
+    document.getElementById("ledger-note").value = "";
+    document.getElementById("ledger-date").value = new Date().toISOString().slice(0,10);
+    // 載入團務選單
+    const sel = document.getElementById("ledger-campaign");
+    sel.innerHTML = '<option value="">無（一般收支）</option>';
+    try {
+      const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt","desc")));
+      snap.forEach(d => {
+        const opt = document.createElement("option");
+        opt.value = d.id;
+        opt.textContent = `${d.data().name} (${d.id})`;
+        sel.appendChild(opt);
+      });
+    } catch(e) {}
+    // 類型按鈕
+    document.querySelectorAll("[data-ledger-type]").forEach(opt => {
+      opt.addEventListener("click", () => {
+        document.querySelectorAll("[data-ledger-type]").forEach(o => o.classList.remove("selected"));
+        opt.classList.add("selected");
+        opt.querySelector("input").checked = true;
+      });
+    });
+    document.querySelector("[data-ledger-type='income']")?.classList.add("selected");
+  };
+
+  window.closeLedgerModal = function(e) {
+    if (e && e.target !== document.getElementById("modal-ledger")) return;
+    document.getElementById("modal-ledger").style.display = "none";
+  };
+
+  window.saveLedger = async function() {
+    const type   = document.querySelector('input[name="ledger-type"]:checked')?.value || "income";
+    const amount = parseFloat(document.getElementById("ledger-amount").value) || 0;
+    const note   = document.getElementById("ledger-note").value.trim();
+    const cid    = document.getElementById("ledger-campaign").value;
+    const date   = document.getElementById("ledger-date").value;
+    const errEl  = document.getElementById("ledger-error");
+    if (!amount) { errEl.textContent = "請填寫金額"; return; }
+    try {
+      await addDoc(collection(db, "ledger"), {
+        type, amount, note, campaignId: cid || null, date,
+        createdAt: serverTimestamp()
+      });
+      document.getElementById("modal-ledger").style.display = "none";
+      await loadLedger();
+    } catch(e) { errEl.textContent = "儲存失敗：" + e.message; }
+  };
+
+  window.deleteLedger = async function(id) {
+    if (!confirm("確定刪除這筆記錄？")) return;
+    try {
+      await deleteDoc(doc(db, "ledger", id));
+      ledgerData = ledgerData.filter(l => l.id !== id);
+      renderLedgerList();
+    } catch(e) { alert("刪除失敗：" + e.message); }
+  };
+
+  // ── 月報表 ──────────────────────────────────────────────────
+  async function renderMonthly() {
+    const el = document.getElementById("monthly-content");
+    if (!el) return;
+    el.innerHTML = '<div class="loading-row">計算中...</div>';
+    try {
+      const snap = await getDocs(query(collection(db, "ledger"), orderBy("date","asc")));
+      const monthly = {};
+      snap.forEach(d => {
+        const l = d.data();
+        const month = (l.date || "").slice(0,7); // YYYY-MM
+        if (!month) return;
+        if (!monthly[month]) monthly[month] = { income:0, expense:0 };
+        if (l.type === "income") monthly[month].income += l.amount || 0;
+        else monthly[month].expense += l.amount || 0;
+      });
+
+      // 從 2025-07 開始計算平均
+      const START = "2025-07";
+      const allMonths = Object.keys(monthly).filter(m => m >= START).sort();
+      const totalIncome  = allMonths.reduce((s,m) => s + monthly[m].income, 0);
+      const totalExpense = allMonths.reduce((s,m) => s + monthly[m].expense, 0);
+      const avgRevenue   = allMonths.length ? Math.round(totalIncome / allMonths.length) : 0;
+
+      el.innerHTML = `
+        <div class="finance-stat-row">
+          <div class="finance-stat">
+            <div class="finance-stat-label">平均月營收</div>
+            <div class="finance-stat-val">NT$${avgRevenue.toLocaleString()}</div>
+            <div class="finance-stat-sub">2025/07 起，共 ${allMonths.length} 個月</div>
+          </div>
+          <div class="finance-stat">
+            <div class="finance-stat-label">累計收入</div>
+            <div class="finance-stat-val" style="color:#4caf50">NT$${totalIncome.toLocaleString()}</div>
+          </div>
+          <div class="finance-stat">
+            <div class="finance-stat-label">累計支出</div>
+            <div class="finance-stat-val" style="color:var(--danger)">NT$${totalExpense.toLocaleString()}</div>
+          </div>
+          <div class="finance-stat">
+            <div class="finance-stat-label">累計淨利</div>
+            <div class="finance-stat-val" style="color:var(--pink)">NT$${(totalIncome-totalExpense).toLocaleString()}</div>
+          </div>
+        </div>
+        <table class="finance-table">
+          <thead><tr><th>月份</th><th>收入</th><th>支出</th><th>淨利</th></tr></thead>
+          <tbody>
+            ${[...allMonths].reverse().map(m => `
+              <tr>
+                <td>${m}</td>
+                <td style="color:#4caf50">+${monthly[m].income.toLocaleString()}</td>
+                <td style="color:var(--danger)">-${monthly[m].expense.toLocaleString()}</td>
+                <td style="color:var(--pink);font-weight:700">${(monthly[m].income-monthly[m].expense).toLocaleString()}</td>
+              </tr>`).join("")}
+          </tbody>
+        </table>`;
+    } catch(e) { el.innerHTML = `<div class="empty-row" style="color:var(--danger)">${e.message}</div>`; }
+  }
+
+  // ── 各團收益 ─────────────────────────────────────────────────
+  async function renderProfit() {
+    const el = document.getElementById("profit-content");
+    if (!el) return;
+    el.innerHTML = '<div class="loading-row">計算中...</div>';
+    try {
+      const [ledgerSnap, orderSnap] = await Promise.all([
+        getDocs(query(collection(db, "ledger"))),
+        getDocs(query(collection(db, "orders"))),
+      ]);
+      // 依團務統計
+      const campaignStats = {};
+      ledgerSnap.forEach(d => {
+        const l = d.data();
+        if (!l.campaignId) return;
+        if (!campaignStats[l.campaignId]) campaignStats[l.campaignId] = { income:0, expense:0, name: l.campaignId };
+        if (l.type === "income") campaignStats[l.campaignId].income += l.amount || 0;
+        else campaignStats[l.campaignId].expense += l.amount || 0;
+      });
+      // 從訂單補充收入（付款確認的訂單金額）
+      orderSnap.forEach(d => {
+        const o = d.data();
+        if (o.paymentStatus !== "paid") return;
+        if (!campaignStats[o.campaignId]) campaignStats[o.campaignId] = { income:0, expense:0, name: o.campaignName || o.campaignId };
+        else if (!campaignStats[o.campaignId].name || campaignStats[o.campaignId].name === o.campaignId)
+          campaignStats[o.campaignId].name = o.campaignName || o.campaignId;
+      });
+
+      const campaigns = Object.entries(campaignStats).sort((a,b) => (b[1].income-b[1].expense)-(a[1].income-a[1].expense));
+      const totalProfit = campaigns.reduce((s,[,v]) => s + v.income - v.expense, 0);
+
+      el.innerHTML = `
+        <div class="ledger-summary" style="margin-bottom:16px">
+          <span>總收益 <strong style="color:var(--pink)">NT$${totalProfit.toLocaleString()}</strong></span>
+        </div>
+        <table class="finance-table">
+          <thead><tr><th>團務</th><th>收入</th><th>支出</th><th>淨利</th></tr></thead>
+          <tbody>
+            ${campaigns.map(([cid, v]) => `
+              <tr>
+                <td style="font-size:12px">${v.name}<br><span style="color:var(--text-muted);font-size:10px">${cid}</span></td>
+                <td style="color:#4caf50">+${v.income.toLocaleString()}</td>
+                <td style="color:var(--danger)">-${v.expense.toLocaleString()}</td>
+                <td style="font-weight:700;color:${v.income-v.expense>=0?"var(--pink)":"var(--danger)"}">${(v.income-v.expense).toLocaleString()}</td>
+              </tr>`).join("")}
+          </tbody>
+        </table>`;
+    } catch(e) { el.innerHTML = `<div class="empty-row" style="color:var(--danger)">${e.message}</div>`; }
+  }
+</script>
