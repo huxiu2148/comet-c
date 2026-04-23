@@ -5515,8 +5515,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           const mode = parseInt(row[2]) || 1;
           const deadline = parseDateTime(row[3]);
           const shipdate = row[4]?.trim() || "待更新";
-          const progress = row[5]?.trim() || "ongoing";
+          const createdAtRaw = row[5]?.trim();   // 欄 F：建立時間
+          const progress = row[6]?.trim() || "ongoing"; // 欄 G：進度
           if (!name) { failMsgs.push("略過空白列"); fail++; continue; }
+          // 解析建立時間（若無填寫就用現在）
+          const createdAtDate = createdAtRaw ? new Date(createdAtRaw.replace(/\//g,"-")) : new Date();
 
           // 從 groupsCache 找對應團體（用名稱或別名比對）
           let groupData = null;
@@ -5531,9 +5534,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           const groupColor = groupData?.color || "#FF84C3";
           const groupColors= groupData?.colors || [groupColor];
 
-          // 商品（從欄 7 開始，兩欄一組：名稱、售價）
+          // 商品（從欄 8 開始，即 index 7，兩欄一組：名稱、售價）
           const products = [];
-          for (let c = 6; c < row.length - 1; c += 2) {
+          for (let c = 7; c < row.length - 1; c += 2) {
             const pName  = row[c]?.trim();
             const pPrice = parseFloat(row[c+1]) || 0;
             if (pName && pPrice) products.push({ name: pName, price: pPrice, cost: pPrice, foreignPrice: 0, specs: [], specMode: "none", hasNote: false, noteHint: "" });
@@ -5558,7 +5561,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
             formUrl, formSource: "builtin",
             status: "open",
             currency: "KRW", markup: 18,
-            createdAt: serverTimestamp(),
+            createdAt: isNaN(createdAtDate) ? serverTimestamp() : createdAtDate,
           });
           ok++;
         } catch(e) {
