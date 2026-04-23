@@ -2461,8 +2461,10 @@
     const members = (window._openGroupMembers || [])
       .map(m => typeof m === "string" ? { display: m, aliases: [] } : m)
       .filter(m => m.display);
-    const abbr = abbrInput || genAbbr(name);
-    const colors = [...groupColors];
+    const aliasesRaw = document.getElementById("input-group-aliases")?.value || "";
+    const aliases    = aliasesRaw.split(",").map(a => a.trim()).filter(a => a);
+    const abbr       = abbrInput || genAbbr(name);
+    const colors     = [...groupColors];
     const color = colors[0];
     const errEl = document.getElementById("group-form-error");
     const btn   = document.getElementById("btn-save-group");
