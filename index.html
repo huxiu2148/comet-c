@@ -496,6 +496,287 @@
 
     .form-error { font-size: 13px; color: var(--danger); min-height: 18px; }
 
+
+    /* 使用者子分頁 */
+    .user-subnav {
+      display: flex; gap: 6px; margin-bottom: 24px; flex-wrap: wrap;
+    }
+
+    .user-section { display: none; }
+    .user-section.active { display: block; }
+
+    /* 團購活動卡片 */
+    .campaign-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .campaign-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .campaign-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(255,132,195,0.15);
+    }
+
+    .campaign-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: var(--card-color, var(--grad));
+    }
+
+    .campaign-card-name {
+      font-size: 16px; font-weight: 700;
+      color: var(--text); margin-bottom: 10px;
+    }
+
+    .campaign-card-meta {
+      font-size: 12px; color: var(--text-muted);
+      display: flex; flex-direction: column; gap: 4px;
+      margin-bottom: 12px;
+    }
+
+    .campaign-card-mode {
+      display: inline-block;
+      font-size: 11px; font-weight: 600;
+      padding: 3px 10px; border-radius: 20px;
+      background: #fff0f7; color: #c4447a;
+    }
+
+    .campaign-card-expired {
+      background: #f4f4f4; color: #888;
+    }
+
+    /* 下單頁面 */
+    .order-form-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .back-btn {
+      background: none; border: none;
+      color: var(--text-muted); cursor: pointer;
+      font-size: 13px; padding: 4px 0;
+      margin-bottom: 16px;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+
+    .back-btn:hover { color: var(--pink); }
+
+    .order-header {
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+      border-bottom: 1.5px solid var(--border);
+    }
+
+    .order-title {
+      font-size: 20px; font-weight: 700;
+      background: var(--grad);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+
+    .order-info-row {
+      font-size: 13px; color: var(--text-muted);
+      display: flex; gap: 16px; flex-wrap: wrap;
+    }
+
+    /* 商品選擇列 */
+    .order-product-item {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .order-product-item.has-qty {
+      border-color: var(--pink);
+      background: #fff8fb;
+    }
+
+    .opi-name { font-size: 14px; font-weight: 600; color: var(--text); }
+    .opi-price { font-size: 13px; color: var(--text-muted); }
+    .opi-price strong { color: var(--pink); font-weight: 700; }
+
+    .qty-control {
+      display: flex; align-items: center; gap: 4px;
+    }
+
+    .qty-btn {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 16px; font-weight: 700;
+      color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .qty-btn:hover:not(:disabled) {
+      border-color: var(--pink); color: var(--pink);
+    }
+
+    .qty-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .qty-num {
+      font-size: 14px; font-weight: 700;
+      min-width: 24px; text-align: center;
+      color: var(--text);
+    }
+
+    .opi-subtotal {
+      font-size: 13px; font-weight: 700;
+      color: var(--pink);
+      min-width: 70px; text-align: right;
+    }
+
+    /* 總計 */
+    .order-total-row {
+      display: flex; justify-content: space-between;
+      align-items: center; padding: 14px 0;
+      border-top: 2px solid var(--pink);
+      margin-top: 16px;
+    }
+
+    .total-label { font-size: 14px; font-weight: 600; }
+    .total-amount {
+      font-size: 22px; font-weight: 800;
+      background: var(--grad);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* 成功畫面 */
+    .order-success {
+      text-align: center; padding: 40px 24px;
+    }
+
+    .order-success-icon {
+      font-size: 56px;
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    .order-success-title {
+      font-size: 20px; font-weight: 700;
+      color: var(--text); margin-bottom: 6px;
+    }
+
+    .order-success-sub {
+      font-size: 13px; color: var(--text-muted);
+      margin-bottom: 24px; line-height: 1.8;
+    }
+
+    .order-success-info {
+      background: #fff8fb;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: left;
+      font-size: 13px; line-height: 1.9;
+      margin-bottom: 16px;
+    }
+
+    .order-success-info strong {
+      color: var(--pink); font-family: monospace;
+    }
+
+    .bank-display {
+      background: var(--surface);
+      border: 1.5px dashed var(--pink);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      margin-top: 8px;
+      font-family: monospace;
+      font-size: 13px;
+    }
+
+    .bank-display-name { font-weight: 700; color: var(--text); }
+    .bank-display-account { color: var(--pink); letter-spacing: 1px; }
+
+    /* 回傳資訊表單 */
+    .feedback-form {
+      background: #fff8fb;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-top: 12px;
+    }
+
+    .feedback-form-title {
+      font-size: 13px; font-weight: 700;
+      color: var(--text); margin-bottom: 8px;
+    }
+
+    /* 我的訂單列表 */
+    .my-order-item {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+
+    .moi-header {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; margin-bottom: 10px;
+    }
+
+    .moi-name { font-size: 15px; font-weight: 700; color: var(--text); }
+    .moi-date { font-size: 12px; color: var(--text-muted); }
+
+    .moi-status {
+      display: inline-block;
+      font-size: 11px; font-weight: 600;
+      padding: 3px 10px; border-radius: 20px;
+      background: #fff0f7; color: #c4447a;
+    }
+
+    .moi-status.done { background: #e8f5e9; color: #2e7d32; }
+    .moi-status.cancel { background: #fde7e7; color: var(--danger); }
+
+    .moi-items {
+      font-size: 13px; color: var(--text-muted);
+      line-height: 1.8;
+      padding: 8px 0;
+    }
+
+    .moi-foot {
+      display: flex; justify-content: space-between;
+      align-items: center;
+      border-top: 1px dashed var(--border);
+      padding-top: 10px; margin-top: 8px;
+    }
+
+    .moi-amount {
+      font-size: 15px; font-weight: 700; color: var(--pink);
+    }
+
     /* ── 下單系統 placeholder ── */
     .orders-hero {
       text-align: center;
@@ -519,6 +800,302 @@
       .login-card { padding: 36px 22px; }
       .user-name { display: none; }
       .tab-btn { padding: 8px 12px; font-size: 13px; }
+    }
+
+
+    /* ══ 使用者下單系統 ══════════════════════════════════════════ */
+
+    .user-subnav {
+      display: flex; gap: 6px; margin-bottom: 24px;
+    }
+
+    .user-section { display: none; }
+    .user-section.active { display: block; }
+
+    /* 團務卡片（使用者視角） */
+    .campaign-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex; flex-direction: column; gap: 10px;
+      position: relative; overflow: hidden;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: box-shadow 0.15s, transform 0.15s;
+    }
+
+    .campaign-card:hover { box-shadow: 0 4px 20px rgba(255,132,195,0.18); transform: translateY(-2px); }
+
+    .campaign-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: var(--cc-color, var(--grad));
+    }
+
+    .cc-group-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 20px;
+      background: var(--cc-tag-bg, #fff0f7);
+      color: var(--cc-color, var(--pink));
+      width: fit-content;
+    }
+
+    .cc-name { font-size: 15px; font-weight: 700; color: var(--text); }
+
+    .cc-meta {
+      font-size: 12px; color: var(--text-muted);
+      display: flex; flex-direction: column; gap: 2px;
+    }
+
+    .cc-id { font-family: monospace; font-size: 11px; }
+
+    .cc-progress {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 11px; padding: 2px 8px;
+      background: #e1f5ee; color: #2d7a5f;
+      border-radius: 20px; width: fit-content;
+    }
+
+    .cc-progress.closed   { background: #fff0d9; color: #b36d0f; }
+    .cc-progress.shipping { background: #e4f0ff; color: #2d5ba8; }
+    .cc-progress.arrived  { background: #efe4ff; color: #6a3fbf; }
+    .cc-progress.done     { background: #f0f0f0; color: #666; }
+
+    /* 下單頁 */
+    .order-view {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .order-header {
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+      border-bottom: 1.5px solid var(--border);
+    }
+
+    .order-title {
+      font-size: 20px; font-weight: 700;
+      background: var(--grad);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+    }
+
+    .order-meta {
+      font-size: 12px; color: var(--text-muted);
+      display: flex; gap: 12px; flex-wrap: wrap;
+      font-family: monospace;
+    }
+
+    /* 商品選擇項 */
+    .order-product {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .order-product:last-child { border-bottom: none; }
+
+    .op-info { display: flex; flex-direction: column; gap: 2px; }
+    .op-name { font-size: 14px; font-weight: 600; }
+    .op-price { font-size: 13px; color: var(--pink); font-weight: 700; }
+
+    .op-qty {
+      display: flex; align-items: center; gap: 6px;
+      background: #fff0f7;
+      border-radius: 20px; padding: 4px;
+    }
+
+    .op-qty-btn {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      border: none;
+      background: var(--surface);
+      color: var(--pink);
+      font-size: 14px; font-weight: 700;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+
+    .op-qty-btn:hover:not(:disabled) { background: var(--pink); color: #fff; }
+    .op-qty-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .op-qty-val {
+      min-width: 28px; text-align: center;
+      font-size: 14px; font-weight: 700; color: var(--text);
+    }
+
+    .op-subtotal {
+      font-size: 14px; font-weight: 700;
+      color: var(--text);
+      min-width: 80px; text-align: right;
+    }
+
+    /* 總計 */
+    .order-total {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 2px solid var(--border);
+      display: flex; justify-content: space-between;
+      align-items: center;
+    }
+
+    .order-total-label { font-size: 14px; font-weight: 600; color: var(--text-muted); }
+
+    .order-total-val {
+      font-size: 22px; font-weight: 800;
+      background: var(--grad);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* 使用者資料 */
+    .profile-section {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1.5px dashed var(--border);
+    }
+
+    .profile-title {
+      font-size: 14px; font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--text);
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .profile-saved-hint {
+      font-size: 12px; color: #4caf50;
+      margin-top: 8px;
+    }
+
+    /* 下單按鈕 */
+    .order-submit {
+      width: 100%;
+      padding: 14px;
+      margin-top: 20px;
+      font-size: 15px;
+      border-radius: 30px;
+    }
+
+    /* 訂單完成頁 */
+    .order-success {
+      text-align: center;
+      padding: 32px 20px;
+    }
+
+    .order-success-icon {
+      font-size: 52px;
+      margin-bottom: 12px;
+    }
+
+    .order-success-title {
+      font-size: 20px; font-weight: 800;
+      margin-bottom: 8px;
+      background: var(--grad);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .order-success-note {
+      font-size: 14px; color: var(--text-muted);
+      line-height: 1.7; margin-bottom: 20px;
+    }
+
+    .payment-info {
+      background: #fff8fb;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      text-align: left;
+      margin: 16px auto;
+      max-width: 500px;
+    }
+
+    .payment-info-title {
+      font-size: 14px; font-weight: 700;
+      color: var(--pink);
+      margin-bottom: 10px;
+    }
+
+    .payment-bank-row {
+      display: flex; justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--border);
+      font-size: 13px;
+    }
+
+    .payment-bank-row:last-child { border-bottom: none; }
+
+    .payment-bank-name { font-weight: 600; }
+    .payment-bank-account { font-family: monospace; color: var(--text-muted); }
+
+    .payment-callback {
+      background: #fff0f7;
+      border: 1.5px solid var(--pink);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-top: 16px;
+    }
+
+    .payment-callback-title {
+      font-size: 13px; font-weight: 700;
+      color: var(--pink);
+      margin-bottom: 8px;
+    }
+
+    /* 訂單列表（我的訂單） */
+    .myorder-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 12px;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+
+    .myorder-header {
+      display: flex; justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap; gap: 8px;
+    }
+
+    .myorder-title {
+      font-size: 15px; font-weight: 700;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .myorder-items {
+      font-size: 13px; color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .myorder-footer {
+      display: flex; justify-content: space-between;
+      align-items: center;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border);
+      font-size: 12px;
+    }
+
+    .myorder-amount {
+      font-size: 15px; font-weight: 700;
+      color: var(--pink);
     }
 
     /* ══ 開團系統 ══════════════════════════════════════════════ */
@@ -964,10 +1541,27 @@
 
     <!-- 下單系統 -->
     <div class="tab-panel active" id="tab-orders">
-      <div class="orders-hero">
-        <div class="orders-hero-title">COMET💫 代購</div>
-        <p class="orders-hero-sub">目前開放中的團購活動將顯示於此<br>敬請期待</p>
+
+      <!-- 使用者子分頁 -->
+      <div class="user-subnav" id="user-subnav">
+        <button class="subnav-btn active" data-usub="browse"  onclick="switchUserSub('browse')">🛒 團購活動</button>
+        <button class="subnav-btn"         data-usub="myorder" onclick="switchUserSub('myorder')">📋 我的訂單</button>
       </div>
+
+      <!-- 瀏覽/下單 -->
+      <div class="user-section active" id="usec-browse">
+        <div id="browse-content">
+          <div class="loading-row">載入中...</div>
+        </div>
+      </div>
+
+      <!-- 我的訂單 -->
+      <div class="user-section" id="usec-myorder">
+        <div id="myorder-content">
+          <div class="loading-row">載入中...</div>
+        </div>
+      </div>
+
     </div>
 
     <!-- 管理後台 -->
@@ -1015,8 +1609,16 @@
               <div class="form-card-title">📋 團務基本資料</div>
 
               <div class="form-group">
+                <label class="form-label">所屬團體 <span class="required">*</span></label>
+                <select class="form-input" id="c-group">
+                  <option value="">載入中...</option>
+                </select>
+              </div>
+
+              <div class="form-group">
                 <label class="form-label">團務名稱 <span class="required">*</span></label>
                 <input class="form-input" id="c-name" type="text" placeholder="例：韓國直送第三團" />
+                <span class="fee-hint" id="c-id-preview" style="display:none">團務 ID：<strong id="c-id-preview-val"></strong></span>
               </div>
 
               <div class="form-group">
@@ -1976,7 +2578,7 @@
     const payFooter = selectedMode === "1" ? "\n\n匯款完成後請在此記事本留下匯款帳戶末五碼" : "";
     const memo   = name+"\n\n💰商品金額\n"+itemLines+"\n\n表單連結："+formUrl+"\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n\u{16999}跟團前請先詳閱記事本重要貼文裡的注意事項\n\u{16999}填單即視同已閱讀並同意所有內容"+payFooter+"\n謝謝";
     const note   = name+"\n\n💰商品金額\n"+itemLinesNoFx+"\n\n表單連結："+formUrl+"\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n\u{16999}跟團前請先詳閱記事本重要貼文裡的注意事項\n\u{16999}填單即視同已閱讀並同意所有內容"+payFooter+"\n謝謝";
-    const social = "#代購 "+name+"\n\n💰商品金額\n"+itemLinesNoFx+"\n\n✓以上需二補 收單時間："+deadline+"\n\u{16999}欲跟團者請加入社群填單匯款\n🔗："+(formUrl || "https://reurl.cc/EQ1rLk")+"\n\n有任何問題都歡迎詢問 謝謝～";
+    const social = "#代購 "+name+"\n\n💰商品金額\n"+itemLinesNoFx+"\n\n✓以上需二補 收單時間："+deadline+"\n\u{16999}欲跟團者請加入社群填單匯款\n🔗：https://reurl.cc/EQ1rLk\n\n有任何問題都歡迎詢問 謝謝～";
 
     document.getElementById("txt-memo").value   = memo;
     document.getElementById("txt-note").value   = note;
@@ -1999,12 +2601,17 @@
 
   // ── 生成文案 & 儲存團務 ──────────────────────────────────────
   window.generateAll = async function() {
+    const groupId = document.getElementById("c-group").value;
     const name = document.getElementById("c-name").value.trim();
     const mode = document.querySelector('input[name="c-mode"]:checked')?.value;
+    if (!groupId) { alert("請選擇所屬團體"); return; }
     if (!name) { alert("請填寫團務名稱"); return; }
     if (!mode) { alert("請選擇付款模式"); return; }
     const products = getProductData();
     if (!products.length) { alert("請新增至少一項商品並填入金額"); return; }
+
+    const groupData = groupsCache.find(g => g.id === groupId);
+    const campaignId = await generateCampaignId(groupData.abbr);
 
     updateCopywriter();
 
@@ -2051,36 +2658,31 @@
 
       extraData.formSource = formSource;
 
-      // 先儲存到 Firestore
-      const docRef = await addDoc(collection(db, "campaigns"), {
+      // 先產生內建表單連結（用 campaignId）
+      if (formSource === "builtin") {
+        const base = window.location.origin + window.location.pathname.replace(/index\.html$/, "");
+        formUrl = `${base}?c=${campaignId}`;
+      }
+
+      // 用指定的 campaignId 建立文件
+      await setDoc(doc(db, "campaigns", campaignId), {
+        groupId, groupAbbr: groupData.abbr, groupName: groupData.name, groupColor: groupData.color,
         name, mode: parseInt(mode), deadline, shipdate,
         currency, markup,
         products: products.map(p => ({ name: p.name, foreignPrice: p.price, cost: p.cost, price: p.sell })),
         status: "open",
+        progress: "ongoing", // 進度狀態：ongoing/closed/shipping/warehouse/returning/arrived/done
+        formUrl,
         createdAt: serverTimestamp(),
         ...extraData,
       });
-
-      // 如果是內建表單，用 doc id 產生站內連結
-      if (formSource === "builtin") {
-        const base = window.location.origin + window.location.pathname.replace(/index\.html$/, "");
-        formUrl = `${base}?c=${docRef.id}`;
-      } else if (formSource === "google") {
-        // Google 已生成過 formUrl
-      }
-
-      // 存 formUrl 回 Firestore
-      if (formUrl) {
-        const { updateDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-        await updateDoc(docRef, { formUrl });
-      }
 
       // 把 formUrl 塞進文案
       window.currentFormUrl = formUrl;
       updateCopywriter();
 
       document.getElementById("copywriter-card").scrollIntoView({ behavior: "smooth" });
-      alert(`✨ 團務「${name}」已儲存！\n\n表單連結：\n${formUrl || "（模式 4 直接使用賣貨便連結）"}`);
+      alert(`✨ 團務「${name}」已儲存！\n\n團務 ID：${campaignId}\n\n表單連結：\n${formUrl || "（模式 4 直接使用賣貨便連結）"}`);
     } catch (e) {
       alert("儲存失敗：" + e.message);
     }
@@ -2140,13 +2742,1050 @@
     updateCopywriter();
   });
 
-  // 進入開團系統時載入關鍵字
+  // 進入開團系統時載入關鍵字 + 團體選單
   document.addEventListener("adminSectionChanged", (e) => {
     if (e.detail === "campaigns") {
       if (rates.KRW === null) fetchRates();
       loadGroupKeywords();
+      loadGroupsSelect();
     }
   });
+
+  // ── 團體選單 ────────────────────────────────────────────────
+  let groupsCache = []; // [{id, name, color, abbr}]
+
+  async function loadGroupsSelect() {
+    const sel = document.getElementById("c-group");
+    try {
+      const snap = await getDocs(query(collection(db, "groups"), orderBy("createdAt", "asc")));
+      groupsCache = [];
+      sel.innerHTML = '<option value="">— 請選擇 —</option>';
+      snap.forEach(d => {
+        const data = d.data();
+        // 自動產生英文縮寫（取團體名前 3 字母或使用者自填的 abbr）
+        const abbr = (data.abbr || genAbbr(data.name)).toUpperCase();
+        groupsCache.push({ id: d.id, name: data.name, color: data.color, abbr });
+        const opt = document.createElement("option");
+        opt.value = d.id;
+        opt.textContent = `${data.name} (${abbr})`;
+        opt.dataset.abbr = abbr;
+        opt.dataset.color = data.color;
+        sel.appendChild(opt);
+      });
+    } catch (e) {
+      console.error("載入團體失敗", e);
+      sel.innerHTML = '<option value="">載入失敗</option>';
+    }
+  }
+
+  // 從中文名自動取英文縮寫（取拼音首字母失敗就用 Hash）
+  function genAbbr(name) {
+    // 若名稱本身含英數（如 NCT、BTS），優先取出
+    const en = name.match(/[A-Za-z0-9]+/g);
+    if (en) return en.join("").slice(0, 4);
+    // 否則用名稱 hash 取 3 位
+    let h = 0;
+    for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) & 0xFFFF;
+    return "G" + h.toString(36).toUpperCase().slice(0, 3);
+  }
+
+  // ── 產生團務 ID：{ABBR}-{YYMMDD}-{NN} ─────────────────────────
+  async function generateCampaignId(groupAbbr) {
+    const now = new Date();
+    const pad = n => String(n).padStart(2, "0");
+    const dateStr = `${String(now.getFullYear()).slice(2)}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
+    const prefix = `${groupAbbr}-${dateStr}-`;
+
+    // 查今天這個團體已開過幾團
+    const snap = await getDocs(collection(db, "campaigns"));
+    let maxSeq = 0;
+    snap.forEach(d => {
+      if (d.id.startsWith(prefix)) {
+        const seq = parseInt(d.id.slice(prefix.length)) || 0;
+        if (seq > maxSeq) maxSeq = seq;
+      }
+    });
+    const seqStr = pad(maxSeq + 1);
+    return `${prefix}${seqStr}`;
+  }
+
+  // 團體變動時，預覽 ID
+  async function refreshIdPreview() {
+    const sel = document.getElementById("c-group");
+    const opt = sel.options[sel.selectedIndex];
+    const preview = document.getElementById("c-id-preview");
+    const previewVal = document.getElementById("c-id-preview-val");
+    if (!opt || !opt.value) {
+      preview.style.display = "none";
+      return;
+    }
+    const abbr = opt.dataset.abbr;
+    try {
+      const id = await generateCampaignId(abbr);
+      previewVal.textContent = id;
+      preview.style.display = "inline";
+    } catch (e) {
+      preview.style.display = "none";
+    }
+  }
+
+  document.getElementById("c-group")?.addEventListener("change", refreshIdPreview);
+</script>
+
+
+<!-- ── 使用者下單系統 ── -->
+<script type="module">
+  import { db, auth } from "./auth.js";
+  import {
+    collection, doc, addDoc, updateDoc, setDoc, getDocs, getDoc,
+    serverTimestamp, query, orderBy, where
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ── 子分頁切換 ────────────────────────────────────────────────
+  window.switchUserSub = function(sub) {
+    document.querySelectorAll(".user-subnav .subnav-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.usub === sub);
+    });
+    document.querySelectorAll(".user-section").forEach(s => {
+      s.classList.toggle("active", s.id === `usec-${sub}`);
+    });
+    if (sub === "browse")  renderCampaignList();
+    if (sub === "myorder") renderMyOrders();
+  };
+
+  // ── 判斷是否為管理者 ─────────────────────────────────────────
+  async function isAdmin() {
+    const u = auth.currentUser;
+    if (!u) return false;
+    try {
+      const snap = await getDoc(doc(db, "users", u.uid));
+      return snap.exists() && snap.data().role === "admin";
+    } catch { return false; }
+  }
+
+  // ── 團購活動列表 ─────────────────────────────────────────────
+  async function renderCampaignList() {
+    const el = document.getElementById("browse-content");
+    el.innerHTML = '<div class="loading-row">載入中...</div>';
+
+    try {
+      // 檢查是否有 ?c=xxx 參數（深連結到特定團務）
+      const urlId = new URLSearchParams(location.search).get("c");
+      if (urlId) {
+        await renderOrderPage(urlId);
+        return;
+      }
+
+      const q = query(collection(db, "campaigns"), orderBy("createdAt", "desc"));
+      const snap = await getDocs(q);
+
+      // 載入團體顏色
+      const groupSnap = await getDocs(collection(db, "groups"));
+      const groupsByName = {};
+      groupSnap.forEach(d => { groupsByName[d.data().name] = d.data().color; });
+
+      if (snap.empty) {
+        el.innerHTML = '<div class="placeholder-card"><h2>目前無開放團購</h2><p>敬請期待</p></div>';
+        return;
+      }
+
+      const now = new Date();
+      const cards = [];
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.status === "closed" || data.status === "ended") return;
+        const deadline = data.deadline ? new Date(data.deadline) : null;
+        const expired = deadline && deadline < now;
+        if (expired) return; // 過期不顯示給使用者
+
+        // 團體色：看團務名稱是否包含某個團體名
+        let cardColor = null;
+        for (const [name, color] of Object.entries(groupsByName)) {
+          if (data.name.includes(name)) { cardColor = color; break; }
+        }
+
+        const modeNames = { 1:"匯款", 2:"代收", 3:"登記", 4:"賣貨便" };
+        const modeLabel = modeNames[data.mode] || "";
+        const deadlineText = deadline
+          ? `收單：${deadline.getMonth()+1}/${deadline.getDate()} ${String(deadline.getHours()).padStart(2,"0")}:${String(deadline.getMinutes()).padStart(2,"0")}`
+          : "";
+        const shipText = data.shipdate || "待更新";
+
+        cards.push(`
+          <div class="campaign-card" ${cardColor ? `style="--card-color:${cardColor}"` : ""} onclick="openCampaign('${d.id}')">
+            <div class="campaign-card-name">${escH(data.name)}</div>
+            <div class="campaign-card-meta">
+              <span>${deadlineText}</span>
+              <span>出貨：${escH(shipText)}</span>
+            </div>
+            <span class="campaign-card-mode">${modeLabel}</span>
+          </div>`);
+      });
+
+      if (!cards.length) {
+        el.innerHTML = '<div class="placeholder-card"><h2>目前無開放團購</h2><p>敬請期待</p></div>';
+        return;
+      }
+      el.innerHTML = `<div class="campaign-grid">${cards.join("")}</div>`;
+    } catch (e) {
+      el.innerHTML = `<div class="placeholder-card" style="color:var(--danger)">載入失敗：${e.message}</div>`;
+    }
+  }
+
+  window.openCampaign = function(id) {
+    // 用 URL 參數記住，重新整理時能保留
+    history.pushState({}, "", `?c=${id}`);
+    renderOrderPage(id);
+  };
+
+  window.closeCampaign = function() {
+    history.pushState({}, "", location.pathname);
+    renderCampaignList();
+  };
+
+  // ── 下單頁面 ──────────────────────────────────────────────────
+  async function renderOrderPage(campaignId) {
+    const el = document.getElementById("browse-content");
+    el.innerHTML = '<div class="loading-row">載入中...</div>';
+
+    try {
+      const snap = await getDoc(doc(db, "campaigns", campaignId));
+      if (!snap.exists()) {
+        el.innerHTML = '<div class="placeholder-card"><h2>找不到此團務</h2><button class="btn btn-ghost btn-sm" onclick="closeCampaign()">← 回列表</button></div>';
+        return;
+      }
+      const campaign = snap.data();
+
+      // 模式 4（賣貨便）直接顯示跳轉頁面
+      if (campaign.mode === 4) {
+        el.innerHTML = `
+          <button class="back-btn" onclick="closeCampaign()">← 返回團購活動</button>
+          <div class="order-form-card">
+            <div class="order-header">
+              <div class="order-title">${escH(campaign.name)}</div>
+              <div class="order-info-row">
+                <span>此團務使用賣貨便下單</span>
+              </div>
+            </div>
+            <div class="order-success">
+              <span class="order-success-icon">🛍️</span>
+              <div class="order-success-title">請點擊下方連結前往賣貨便下單</div>
+              <a class="btn btn-primary" href="${escH(campaign.buyshipUrl || "#")}" target="_blank" style="margin-top:16px;display:inline-block">
+                前往賣貨便 →
+              </a>
+            </div>
+          </div>`;
+        return;
+      }
+
+      // 載入使用者資料（用來自動帶入）
+      const u = auth.currentUser;
+      let userProfile = {};
+      if (u) {
+        const uSnap = await getDoc(doc(db, "users", u.uid));
+        if (uSnap.exists()) userProfile = uSnap.data().profile || {};
+      }
+
+      // 檢查是否過期
+      const deadline = campaign.deadline ? new Date(campaign.deadline) : null;
+      const now = new Date();
+      const expired = deadline && deadline < now;
+
+      const modeNames = { 1:"匯款", 2:"代收", 3:"登記" };
+
+      el.innerHTML = `
+        <button class="back-btn" onclick="closeCampaign()">← 返回團購活動</button>
+
+        <div class="order-form-card">
+          <div class="order-header">
+            <div class="order-title">${escH(campaign.name)}</div>
+            <div class="order-info-row">
+              <span>付款模式：${modeNames[campaign.mode] || ""}</span>
+              ${deadline ? `<span>收單：${deadline.getMonth()+1}/${deadline.getDate()} ${String(deadline.getHours()).padStart(2,"0")}:${String(deadline.getMinutes()).padStart(2,"0")}</span>` : ""}
+              <span>出貨：${escH(campaign.shipdate || "待更新")}</span>
+            </div>
+          </div>
+
+          ${expired ? '<div class="placeholder-card" style="color:var(--danger);margin-bottom:20px">此團務已截止收單</div>' : ''}
+
+          <!-- 商品選擇 -->
+          <div class="form-card-title" style="margin-bottom:12px;border:none;padding:0">選擇商品</div>
+          <div id="order-products">
+            ${campaign.products.map((p, i) => `
+              <div class="order-product-item" id="opi-${i}">
+                <div>
+                  <div class="opi-name">${escH(p.name)}</div>
+                  <div class="opi-price">NT$<strong>${p.price.toLocaleString()}</strong></div>
+                </div>
+                <div class="qty-control">
+                  <button class="qty-btn" onclick="changeQty(${i}, -1)">−</button>
+                  <span class="qty-num" id="qty-${i}">0</span>
+                  <button class="qty-btn" onclick="changeQty(${i}, 1)">＋</button>
+                </div>
+                <div class="opi-subtotal" id="subtotal-${i}">NT$0</div>
+              </div>
+            `).join("")}
+          </div>
+
+          <div class="order-total-row">
+            <span class="total-label">總金額</span>
+            <span class="total-amount" id="order-total">NT$0</span>
+          </div>
+
+          <!-- 使用者資料 -->
+          <div class="form-card-title" style="margin:24px 0 12px;border:none;padding:0">聯絡資料</div>
+          <div class="form-group">
+            <label class="form-label">Email <span class="required">*</span></label>
+            <input class="form-input" id="u-email" type="email" value="${escH(userProfile.email || u?.email || "")}" readonly style="background:#fff8fb" />
+          </div>
+          <div class="form-group" style="margin-top:12px">
+            <label class="form-label">社群暱稱 <span class="required">*</span></label>
+            <input class="form-input" id="u-nickname" type="text" placeholder="LINE 社群顯示的名字" value="${escH(userProfile.nickname || u?.displayName || "")}" />
+          </div>
+          <div class="form-group" style="margin-top:12px">
+            <label class="form-label">聯絡帳號 <span class="required">*</span></label>
+            <input class="form-input" id="u-contact" type="text" placeholder="例：LINE ID、IG" value="${escH(userProfile.contact || "")}" />
+          </div>
+
+          <div class="form-group" style="margin-top:12px">
+            <label class="form-label">備註（選填）</label>
+            <input class="form-input" id="u-note" type="text" placeholder="特殊需求或留言" />
+          </div>
+
+          <div class="campaign-actions" style="margin-top:20px">
+            <button class="btn btn-primary" id="btn-submit-order" ${expired ? "disabled" : ""} onclick="submitOrder('${campaignId}')">
+              ${expired ? "已截止" : "✨ 送出訂單"}
+            </button>
+          </div>
+        </div>`;
+
+      // 暫存當前團務資料供計算用
+      window.__currentCampaign = campaign;
+      window.__currentCampaignId = campaignId;
+      window.__orderQuantities = new Array(campaign.products.length).fill(0);
+    } catch (e) {
+      el.innerHTML = `<div class="placeholder-card" style="color:var(--danger)">載入失敗：${e.message}</div>`;
+    }
+  }
+
+  window.changeQty = function(idx, delta) {
+    const qs = window.__orderQuantities;
+    qs[idx] = Math.max(0, qs[idx] + delta);
+    const products = window.__currentCampaign.products;
+    document.getElementById(`qty-${idx}`).textContent = qs[idx];
+    document.getElementById(`subtotal-${idx}`).textContent = `NT$${(qs[idx] * products[idx].price).toLocaleString()}`;
+    document.getElementById(`opi-${idx}`).classList.toggle("has-qty", qs[idx] > 0);
+    // 總金額
+    const total = qs.reduce((s, q, i) => s + q * products[i].price, 0);
+    document.getElementById("order-total").textContent = `NT$${total.toLocaleString()}`;
+  };
+
+  window.submitOrder = async function(campaignId) {
+    const u = auth.currentUser;
+    if (!u) { alert("請先登入"); return; }
+
+    const campaign = window.__currentCampaign;
+    const qs = window.__orderQuantities;
+
+    // 商品
+    const items = qs.map((q, i) => q > 0 ? {
+      name: campaign.products[i].name,
+      price: campaign.products[i].price,
+      qty: q,
+      subtotal: q * campaign.products[i].price,
+    } : null).filter(Boolean);
+
+    if (!items.length) { alert("請至少選擇一項商品"); return; }
+
+    const nickname = document.getElementById("u-nickname").value.trim();
+    const contact  = document.getElementById("u-contact").value.trim();
+    const note     = document.getElementById("u-note").value.trim();
+    if (!nickname || !contact) { alert("請填寫社群暱稱與聯絡帳號"); return; }
+
+    const total = items.reduce((s, it) => s + it.subtotal, 0);
+    const btn = document.getElementById("btn-submit-order");
+    btn.disabled = true; btn.textContent = "送出中...";
+
+    try {
+      // 儲存使用者 profile（下次自動帶入）
+      await setDoc(doc(db, "users", u.uid), {
+        profile: { email: u.email, nickname, contact }
+      }, { merge: true });
+
+      // 建立訂單
+      const orderRef = await addDoc(collection(db, "orders"), {
+        campaignId,
+        campaignName: campaign.name,
+        campaignMode: campaign.mode,
+        userId: u.uid,
+        userEmail: u.email,
+        nickname, contact, note,
+        items, total,
+        status: "pending",       // 訂單狀態
+        paidAmount: 0,           // 已付金額
+        dueAmount: total,        // 待付金額
+        checked: false,          // 對帳狀態
+        feedback: "",            // 使用者回傳資訊（帳號末五碼 / 貨運單號）
+        createdAt: serverTimestamp(),
+      });
+
+      // 顯示下單成功頁
+      showOrderSuccess(campaign, orderRef.id, total, items);
+    } catch (e) {
+      alert("送出失敗：" + e.message);
+      btn.disabled = false;
+      btn.textContent = "✨ 送出訂單";
+    }
+  };
+
+  function showOrderSuccess(campaign, orderId, total, items) {
+    const el = document.getElementById("browse-content");
+    const mode = campaign.mode;
+    let modeBlock = "";
+
+    if (mode === 1) {
+      // 匯款：顯示帳號清單 + 末五碼回傳
+      const banksHtml = (campaign.bankAccounts || []).map(b => `
+        <div class="bank-display">
+          <div class="bank-display-name">${escH(b.name)}</div>
+          <div class="bank-display-account">${escH(b.account)}</div>
+        </div>`).join("");
+
+      modeBlock = `
+        <div class="order-success-info">
+          <div style="margin-bottom:8px">請匯款 <strong>NT$${total.toLocaleString()}</strong> 至以下帳號（擇一）：</div>
+          ${banksHtml}
+        </div>
+        <div class="feedback-form">
+          <div class="feedback-form-title">💳 回傳匯款資訊</div>
+          <select class="form-input" id="fb-bank" style="margin-bottom:8px">
+            <option value="">選擇匯款銀行</option>
+            ${(campaign.bankAccounts || []).map(b => `<option value="${escH(b.name)}">${escH(b.name)}</option>`).join("")}
+          </select>
+          <input class="form-input" id="fb-last5" type="text" placeholder="帳號末五碼" maxlength="5" />
+          <button class="btn btn-primary btn-sm" style="margin-top:10px;width:100%" onclick="submitFeedback('${orderId}', 1)">送出</button>
+        </div>`;
+    } else if (mode === 2) {
+      // 代收：顯示地址 + 貨運單號回傳
+      modeBlock = `
+        <div class="order-success-info">
+          <div style="margin-bottom:8px">請將商品寄至集運倉地址：</div>
+          <div class="bank-display">
+            <div class="bank-display-account">${escH(campaign.warehouse || "（地址待填）")}</div>
+          </div>
+        </div>
+        <div class="feedback-form">
+          <div class="feedback-form-title">📦 回傳貨運單號</div>
+          <input class="form-input" id="fb-tracking" type="text" placeholder="貨運單號" />
+          <button class="btn btn-primary btn-sm" style="margin-top:10px;width:100%" onclick="submitFeedback('${orderId}', 2)">送出</button>
+        </div>`;
+    } else if (mode === 3) {
+      // 登記：提示關注社群
+      modeBlock = `
+        <div class="order-success-info">
+          <div style="line-height:2">
+            您已成功登記此團購！<br>
+            請關注社群公告，若購買成功將通知您回到此頁面完成匯款。
+          </div>
+        </div>`;
+    }
+
+    el.innerHTML = `
+      <button class="back-btn" onclick="closeCampaign()">← 返回團購活動</button>
+      <div class="order-form-card">
+        <div class="order-success">
+          <span class="order-success-icon">✨</span>
+          <div class="order-success-title">訂單送出成功！</div>
+          <div class="order-success-sub">團務：${escH(campaign.name)}<br>訂單編號：${orderId.slice(-8).toUpperCase()}</div>
+          ${modeBlock}
+        </div>
+      </div>`;
+  }
+
+  window.submitFeedback = async function(orderId, mode) {
+    let feedback = "";
+    if (mode === 1) {
+      const bank = document.getElementById("fb-bank").value;
+      const last5 = document.getElementById("fb-last5").value.trim();
+      if (!bank || !last5) { alert("請選擇銀行並填寫末五碼"); return; }
+      if (!/^\d{5}$/.test(last5)) { alert("末五碼需為 5 位數字"); return; }
+      feedback = `${bank} / ${last5}`;
+    } else if (mode === 2) {
+      const tracking = document.getElementById("fb-tracking").value.trim();
+      if (!tracking) { alert("請填寫貨運單號"); return; }
+      feedback = tracking;
+    }
+
+    try {
+      await updateDoc(doc(db, "orders", orderId), { feedback });
+      alert("已送出！感謝您的配合 ✨");
+    } catch (e) { alert("送出失敗：" + e.message); }
+  };
+
+  // ── 我的訂單列表 ─────────────────────────────────────────────
+  async function renderMyOrders() {
+    const el = document.getElementById("myorder-content");
+    const u = auth.currentUser;
+    if (!u) { el.innerHTML = '<div class="placeholder-card">請先登入</div>'; return; }
+
+    el.innerHTML = '<div class="loading-row">載入中...</div>';
+    try {
+      const q = query(
+        collection(db, "orders"),
+        where("userId", "==", u.uid)
+      );
+      const snap = await getDocs(q);
+
+      if (snap.empty) {
+        el.innerHTML = '<div class="placeholder-card"><h2>尚無訂單</h2><p>去看看團購活動吧～</p></div>';
+        return;
+      }
+
+      // 依建立時間排序（由新到舊）
+      const orders = [];
+      snap.forEach(d => orders.push({ id: d.id, ...d.data() }));
+      orders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+      const statusMap = {
+        pending:      { label: "訂單進行中",  cls: "" },
+        collecting:   { label: "已收單",       cls: "" },
+        shipping:     { label: "官方出貨中",  cls: "" },
+        warehouse:    { label: "已到集運",    cls: "" },
+        returning:    { label: "運回中",       cls: "" },
+        arrived:      { label: "已抵台",       cls: "" },
+        done:         { label: "團務結束",    cls: "done" },
+        cancelled:    { label: "已取消",       cls: "cancel" },
+      };
+
+      el.innerHTML = orders.map(o => {
+        const st = statusMap[o.status] || { label: o.status, cls: "" };
+        const date = o.createdAt?.toDate ? o.createdAt.toDate() : new Date();
+        const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
+        const itemsText = o.items.map(it => `${it.name} × ${it.qty}`).join("、");
+
+        return `
+          <div class="my-order-item">
+            <div class="moi-header">
+              <div>
+                <div class="moi-name">${escH(o.campaignName || "")}</div>
+                <div class="moi-date">${dateStr}</div>
+              </div>
+              <span class="moi-status ${st.cls}">${st.label}</span>
+            </div>
+            <div class="moi-items">${escH(itemsText)}</div>
+            ${o.feedback ? `<div class="moi-items" style="color:var(--pink)">已回傳：${escH(o.feedback)}</div>` : ""}
+            <div class="moi-foot">
+              <span style="font-size:12px;color:var(--text-muted)">訂單編號 ${o.id.slice(-8).toUpperCase()}</span>
+              <span class="moi-amount">NT$${o.total.toLocaleString()}</span>
+            </div>
+          </div>`;
+      }).join("");
+    } catch (e) {
+      el.innerHTML = `<div class="placeholder-card" style="color:var(--danger)">載入失敗：${e.message}</div>`;
+    }
+  }
+
+  function escH(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c =>
+      ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  // ── 主分頁切換時觸發對應載入 ────────────────────────────────
+  const _origTab = window.switchTab;
+  window.switchTab = function(tabName) {
+    _origTab(tabName);
+    if (tabName === "orders") {
+      const activeSub = document.querySelector(".user-subnav .subnav-btn.active")?.dataset.usub || "browse";
+      if (activeSub === "browse")  renderCampaignList();
+      if (activeSub === "myorder") renderMyOrders();
+    }
+  };
+
+  // ── 首次登入後自動載入（auth 狀態變化時處理） ───────────────
+  // 用 interval 等 auth 就緒
+  const _ready = setInterval(() => {
+    if (auth.currentUser) {
+      clearInterval(_ready);
+      // 若網址有 ?c= 參數，直接進入下單頁
+      const urlId = new URLSearchParams(location.search).get("c");
+      if (urlId) renderOrderPage(urlId);
+      else renderCampaignList();
+    }
+  }, 300);
+</script>
+
+
+<!-- ── 使用者下單系統 ── -->
+<script type="module">
+  import { db, auth } from "./auth.js";
+  import {
+    collection, doc, addDoc, getDoc, getDocs, setDoc,
+    query, where, orderBy, serverTimestamp, onSnapshot
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const PROGRESS_LABEL = {
+    ongoing:   "🟢 團務進行中",
+    closed:    "🟡 已收單",
+    shipping:  "🔵 官方出貨中",
+    warehouse: "🔵 到集運",
+    returning: "🔵 運回中",
+    arrived:   "🟣 已抵台",
+    done:      "⚪ 團務結束",
+  };
+
+  // ══ 子分頁切換 ═══════════════════════════════════════════════
+  window.switchUserSection = function(section) {
+    // 更新按鈕狀態
+    document.querySelectorAll(".user-subnav .subnav-btn").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.usection === section);
+    });
+    // 切換區塊
+    document.querySelectorAll(".user-section").forEach(el => {
+      const shown = el.id === `user-section-${section}`;
+      el.classList.toggle("active", shown);
+      el.style.display = shown ? "block" : "none";
+    });
+
+    if (section === "campaigns") loadCampaigns();
+    if (section === "myorders")  loadMyOrders();
+  };
+
+  // ══ 進入頁面：檢查 URL 有沒有 ?c=xxxx ═══════════════════════
+  async function checkInitialRoute() {
+    const params = new URLSearchParams(location.search);
+    const campaignId = params.get("c");
+    if (campaignId) {
+      await openCampaign(campaignId);
+    } else {
+      loadCampaigns();
+    }
+  }
+
+  // 等使用者登入後再執行
+  onAuthStateChanged(auth, (user) => {
+    if (user) checkInitialRoute();
+  });
+
+  // ══ 載入團務列表 ═════════════════════════════════════════════
+  async function loadCampaigns() {
+    const list = document.getElementById("campaigns-list");
+    list.innerHTML = '<div class="loading-row">載入中...</div>';
+    try {
+      const snap = await getDocs(
+        query(collection(db, "campaigns"), orderBy("createdAt", "desc"))
+      );
+      if (snap.empty) {
+        list.innerHTML = '<div class="empty-row">目前沒有開放中的團務</div>';
+        return;
+      }
+      list.innerHTML = "";
+      snap.forEach(d => list.appendChild(renderCampaignCard(d.id, d.data())));
+    } catch (e) {
+      list.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
+    }
+  }
+
+  function renderCampaignCard(id, data) {
+    const card = document.createElement("div");
+    card.className = "campaign-card";
+    card.style.setProperty("--cc-color", data.groupColor || "#FF84C3");
+    card.style.setProperty("--cc-tag-bg", hexToRGBA(data.groupColor || "#FF84C3", 0.12));
+
+    const progress = data.progress || "ongoing";
+    const deadline = data.deadline
+      ? new Date(data.deadline).toLocaleString("zh-TW", { month:"numeric", day:"numeric", hour:"2-digit", minute:"2-digit" })
+      : "";
+
+    card.innerHTML = `
+      <span class="cc-group-tag">● ${escHtmlU(data.groupName || "—")}</span>
+      <div class="cc-name">${escHtmlU(data.name)}</div>
+      <span class="cc-progress ${progress}">${PROGRESS_LABEL[progress] || progress}</span>
+      <div class="cc-meta">
+        <span class="cc-id">${id}</span>
+        ${deadline ? `<span>收單：${deadline}</span>` : ""}
+      </div>`;
+    card.addEventListener("click", () => openCampaign(id));
+    return card;
+  }
+
+  function hexToRGBA(hex, alpha) {
+    const v = hex.replace("#","");
+    const r = parseInt(v.slice(0,2),16);
+    const g = parseInt(v.slice(2,4),16);
+    const b = parseInt(v.slice(4,6),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+
+  // ══ 開啟單一團務下單頁 ═══════════════════════════════════════
+  let currentCampaign = null;
+  const cart = {}; // { productIndex: qty }
+
+  async function openCampaign(campaignId) {
+    switchUserSection("campaigns"); // 先顯示列表
+    // 再切到下單頁
+    document.querySelectorAll(".user-section").forEach(el => {
+      el.classList.remove("active");
+      el.style.display = "none";
+    });
+    const orderSection = document.getElementById("user-section-order");
+    orderSection.classList.add("active");
+    orderSection.style.display = "block";
+
+    const view = document.getElementById("order-view");
+    view.innerHTML = '<div class="loading-row">載入中...</div>';
+
+    try {
+      const snap = await getDoc(doc(db, "campaigns", campaignId));
+      if (!snap.exists()) {
+        view.innerHTML = '<div class="empty-row" style="color:var(--danger)">找不到此團務</div>';
+        return;
+      }
+      currentCampaign = { id: campaignId, ...snap.data() };
+      Object.keys(cart).forEach(k => delete cart[k]);
+
+      // 如果是賣貨便模式，直接跳轉
+      if (currentCampaign.mode === 4 && currentCampaign.buyshipUrl) {
+        view.innerHTML = `
+          <div class="order-success">
+            <div class="order-success-icon">🛍️</div>
+            <div class="order-success-title">賣貨便團購</div>
+            <p class="order-success-note">此團務使用賣貨便下單，請點下方連結前往購買。</p>
+            <a class="btn btn-primary" href="${escHtmlU(currentCampaign.buyshipUrl)}" target="_blank" rel="noopener">前往賣貨便 →</a>
+          </div>`;
+        return;
+      }
+
+      renderOrderForm();
+    } catch (e) {
+      view.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
+    }
+  }
+
+  function renderOrderForm() {
+    const c = currentCampaign;
+    const view = document.getElementById("order-view");
+
+    const productsHtml = c.products.map((p, i) => `
+      <div class="order-product">
+        <div class="op-info">
+          <div class="op-name">${escHtmlU(p.name)}</div>
+          <div class="op-price">NT$${p.price.toLocaleString()}</div>
+        </div>
+        <div class="op-qty">
+          <button class="op-qty-btn" onclick="changeQty(${i}, -1)">−</button>
+          <span class="op-qty-val" id="qty-${i}">0</span>
+          <button class="op-qty-btn" onclick="changeQty(${i}, 1)">＋</button>
+        </div>
+        <div class="op-subtotal" id="subtotal-${i}">NT$0</div>
+      </div>
+    `).join("");
+
+    const progress = c.progress || "ongoing";
+
+    view.innerHTML = `
+      <div class="order-view">
+        <div class="order-header">
+          <div class="order-title">${escHtmlU(c.name)}</div>
+          <div class="order-meta">
+            <span>● ${escHtmlU(c.groupName || "")}</span>
+            <span>${c.id}</span>
+            <span class="cc-progress ${progress}" style="margin:0">${PROGRESS_LABEL[progress]}</span>
+          </div>
+        </div>
+
+        ${productsHtml}
+
+        <div class="order-total">
+          <span class="order-total-label">總金額</span>
+          <span class="order-total-val" id="order-total">NT$0</span>
+        </div>
+
+        <div class="profile-section">
+          <div class="profile-title">👤 聯絡資訊</div>
+          <div class="profile-grid">
+            <div class="form-group">
+              <label class="form-label">電子信箱 <span class="required">*</span></label>
+              <input class="form-input" id="p-email" type="email" placeholder="you@example.com" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">社群暱稱 <span class="required">*</span></label>
+              <input class="form-input" id="p-nickname" type="text" placeholder="LINE 社群顯示名" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">聯絡帳號</label>
+              <input class="form-input" id="p-contact" type="text" placeholder="LINE ID 或電話" />
+            </div>
+          </div>
+          <div class="profile-saved-hint" id="profile-saved-hint" style="display:none">
+            ✓ 已自動帶入上次填寫的資料
+          </div>
+        </div>
+
+        <button class="btn btn-primary order-submit" onclick="submitOrder()">確認下單</button>
+      </div>`;
+
+    loadUserProfile();
+  }
+
+  async function loadUserProfile() {
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (!snap.exists()) return;
+      const data = snap.data();
+      const profile = data.profile || {};
+      const emailInput = document.getElementById("p-email");
+      const nickInput  = document.getElementById("p-nickname");
+      const contactInput = document.getElementById("p-contact");
+      if (emailInput) emailInput.value = profile.email || user.email || "";
+      if (nickInput)  nickInput.value  = profile.nickname || user.displayName || "";
+      if (contactInput) contactInput.value = profile.contact || "";
+      if (profile.nickname || profile.contact) {
+        document.getElementById("profile-saved-hint").style.display = "block";
+      }
+    } catch (e) { console.warn("載入 profile 失敗", e); }
+  }
+
+  window.changeQty = function(idx, delta) {
+    const curr = cart[idx] || 0;
+    const next = Math.max(0, curr + delta);
+    if (next === 0) delete cart[idx]; else cart[idx] = next;
+
+    const p = currentCampaign.products[idx];
+    document.getElementById(`qty-${idx}`).textContent = next;
+    document.getElementById(`subtotal-${idx}`).textContent = `NT$${(next * p.price).toLocaleString()}`;
+
+    let total = 0;
+    Object.entries(cart).forEach(([i, q]) => {
+      total += currentCampaign.products[i].price * q;
+    });
+    document.getElementById("order-total").textContent = `NT$${total.toLocaleString()}`;
+  };
+
+  window.submitOrder = async function() {
+    const user = auth.currentUser;
+    if (!user) { alert("請先登入"); return; }
+
+    if (!Object.keys(cart).length) { alert("請至少選擇一項商品"); return; }
+
+    const email    = document.getElementById("p-email").value.trim();
+    const nickname = document.getElementById("p-nickname").value.trim();
+    const contact  = document.getElementById("p-contact").value.trim();
+    if (!email || !nickname) { alert("請填寫電子信箱和社群暱稱"); return; }
+
+    const items = Object.entries(cart).map(([i, q]) => {
+      const p = currentCampaign.products[parseInt(i)];
+      return { name: p.name, qty: q, price: p.price, subtotal: p.price * q };
+    });
+    const total = items.reduce((s, x) => s + x.subtotal, 0);
+
+    const btn = document.querySelector(".order-submit");
+    btn.disabled = true; btn.textContent = "送出中...";
+
+    try {
+      await addDoc(collection(db, "orders"), {
+        campaignId: currentCampaign.id,
+        campaignName: currentCampaign.name,
+        groupName: currentCampaign.groupName,
+        userId: user.uid,
+        email, nickname, contact,
+        items, totalAmount: total,
+        paymentType: currentCampaign.mode,
+        paymentStatus: "pending",
+        verifyStatus: "unverified",
+        returnInfo: "",
+        createdAt: serverTimestamp(),
+      });
+
+      // 儲存使用者 profile 方便下次帶入
+      await setDoc(doc(db, "users", user.uid),
+        { profile: { email, nickname, contact }, lastLogin: new Date() },
+        { merge: true });
+
+      renderOrderSuccess(total);
+    } catch (e) {
+      alert("下單失敗：" + e.message);
+      btn.disabled = false; btn.textContent = "確認下單";
+    }
+  };
+
+  function renderOrderSuccess(total) {
+    const c = currentCampaign;
+    const view = document.getElementById("order-view");
+
+    let paymentBlock = "";
+
+    if (c.mode === 1 && c.bankAccounts) {
+      // 匯款模式
+      const banks = c.bankAccounts.map(b => `
+        <div class="payment-bank-row">
+          <span class="payment-bank-name">${escHtmlU(b.name)}</span>
+          <span class="payment-bank-account">${escHtmlU(b.account)}</span>
+        </div>`).join("");
+      paymentBlock = `
+        <div class="payment-info">
+          <div class="payment-info-title">💰 匯款帳號（擇一匯款）</div>
+          ${banks}
+        </div>
+        <div class="payment-callback">
+          <div class="payment-callback-title">匯款完成後請回來這裡回傳</div>
+          <div class="form-group">
+            <label class="form-label">匯款銀行代碼</label>
+            <input class="form-input" id="r-bank" type="text" placeholder="例：013" />
+          </div>
+          <div class="form-group" style="margin-top:8px">
+            <label class="form-label">帳戶末五碼</label>
+            <input class="form-input" id="r-last5" type="text" maxlength="5" placeholder="12345" />
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="submitReturnInfo('transfer')">回傳匯款資訊</button>
+        </div>`;
+    } else if (c.mode === 2 && c.warehouse) {
+      // 代收模式
+      paymentBlock = `
+        <div class="payment-info">
+          <div class="payment-info-title">📦 集運倉地址</div>
+          <div style="font-size:13px;line-height:1.7">${escHtmlU(c.warehouse)}</div>
+        </div>
+        <div class="payment-callback">
+          <div class="payment-callback-title">寄出後請回來填寫貨運單號</div>
+          <div class="form-group">
+            <label class="form-label">貨運單號</label>
+            <input class="form-input" id="r-tracking" type="text" placeholder="單號" />
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="submitReturnInfo('tracking')">回傳單號</button>
+        </div>`;
+    } else if (c.mode === 3) {
+      // 登記模式
+      paymentBlock = `
+        <div class="payment-info">
+          <div class="payment-info-title">📝 已為您完成登記</div>
+          <div style="font-size:13px;line-height:1.7">請關注社群消息。若購買成功會通知您，再回到本頁面完成匯款。</div>
+        </div>`;
+    }
+
+    view.innerHTML = `
+      <div class="order-success">
+        <div class="order-success-icon">✨</div>
+        <div class="order-success-title">下單成功！</div>
+        <p class="order-success-note">
+          總金額：<strong style="color:var(--pink)">NT$${total.toLocaleString()}</strong>
+        </p>
+        ${paymentBlock}
+        <button class="btn btn-ghost btn-sm" style="margin-top:16px" onclick="switchUserSection('myorders')">查看我的訂單</button>
+      </div>`;
+
+    window._lastSubmittedOrderTotal = total;
+  }
+
+  // ══ 回傳匯款資訊／貨運單號 ════════════════════════════════════
+  window.submitReturnInfo = async function(type) {
+    const user = auth.currentUser;
+    if (!user) return;
+    let info = "";
+    if (type === "transfer") {
+      const bank  = document.getElementById("r-bank").value.trim();
+      const last5 = document.getElementById("r-last5").value.trim();
+      if (!bank || !last5) { alert("請填寫完整資訊"); return; }
+      info = `銀行代碼 ${bank} / 末五碼 ${last5}`;
+    } else if (type === "tracking") {
+      info = document.getElementById("r-tracking").value.trim();
+      if (!info) { alert("請填寫貨運單號"); return; }
+    }
+
+    try {
+      // 找到剛剛的訂單
+      const qSnap = await getDocs(query(
+        collection(db, "orders"),
+        where("userId", "==", user.uid),
+        where("campaignId", "==", currentCampaign.id),
+        orderBy("createdAt", "desc")
+      ));
+      if (qSnap.empty) { alert("找不到訂單"); return; }
+      const latest = qSnap.docs[0];
+      await setDoc(doc(db, "orders", latest.id), {
+        returnInfo: info,
+        returnType: type,
+        returnAt: serverTimestamp(),
+      }, { merge: true });
+      alert("✨ 已回傳！");
+    } catch (e) {
+      alert("回傳失敗：" + e.message);
+    }
+  };
+
+  // ══ 我的訂單 ═════════════════════════════════════════════════
+  async function loadMyOrders() {
+    const list = document.getElementById("myorders-list");
+    const user = auth.currentUser;
+    if (!user) { list.innerHTML = '<div class="empty-row">請先登入</div>'; return; }
+
+    list.innerHTML = '<div class="loading-row">載入中...</div>';
+    try {
+      const snap = await getDocs(query(
+        collection(db, "orders"),
+        where("userId", "==", user.uid),
+        orderBy("createdAt", "desc")
+      ));
+      if (snap.empty) {
+        list.innerHTML = '<div class="empty-row">尚無訂單</div>';
+        return;
+      }
+
+      // 同步抓出所有相關團務的當前狀態
+      const campaignIds = [...new Set(snap.docs.map(d => d.data().campaignId))];
+      const campaignMap = {};
+      for (const cid of campaignIds) {
+        const cSnap = await getDoc(doc(db, "campaigns", cid));
+        if (cSnap.exists()) campaignMap[cid] = cSnap.data();
+      }
+
+      list.innerHTML = "";
+      snap.forEach(d => {
+        const data = d.data();
+        const campaign = campaignMap[data.campaignId] || {};
+        list.appendChild(renderMyOrderCard(d.id, data, campaign));
+      });
+    } catch (e) {
+      list.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
+    }
+  }
+
+  function renderMyOrderCard(orderId, data, campaign) {
+    const card = document.createElement("div");
+    card.className = "myorder-card";
+    const progress = campaign.progress || "ongoing";
+    const itemsText = (data.items || []).map(it => `${it.name} × ${it.qty}`).join("、");
+    const createdStr = data.createdAt?.toDate
+      ? data.createdAt.toDate().toLocaleString("zh-TW")
+      : "—";
+
+    card.innerHTML = `
+      <div class="myorder-header">
+        <div>
+          <div class="myorder-title">
+            <span style="width:8px;height:8px;border-radius:50%;background:${campaign.groupColor || '#FF84C3'};display:inline-block"></span>
+            ${escHtmlU(data.campaignName)}
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);font-family:monospace;margin-top:2px">${data.campaignId}</div>
+        </div>
+        <span class="cc-progress ${progress}">${PROGRESS_LABEL[progress]}</span>
+      </div>
+      <div class="myorder-items">${escHtmlU(itemsText)}</div>
+      ${data.returnInfo ? `<div style="font-size:12px;color:#4caf50">✓ 已回傳：${escHtmlU(data.returnInfo)}</div>` : ""}
+      <div class="myorder-footer">
+        <span style="color:var(--text-muted)">${createdStr}</span>
+        <span class="myorder-amount">NT$${data.totalAmount.toLocaleString()}</span>
+      </div>`;
+    return card;
+  }
+
+  // ── 工具 ──
+  function escHtmlU(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c =>
+      ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
 </script>
 
 </body>
