@@ -1699,7 +1699,7 @@
 
     <!-- 主分頁標籤 -->
     <div class="tabs" id="tabs">
-      <button class="tab-btn active" data-tab="orders" onclick="switchTab('orders')">團購活動</button>
+      <button class="tab-btn active" data-tab="orders" onclick="switchTab('orders')">所有團務</button>
       <button class="tab-btn admin-only" data-tab="admin" onclick="switchTab('admin')">管理後台</button>
     </div>
 
@@ -2016,33 +2016,50 @@
 
 <!-- 新增/編輯團體 Modal -->
 <div class="modal-backdrop" id="modal-group" style="display:none" onclick="closeGroupModal(event)">
-  <div class="modal">
+  <div class="modal" style="max-width:480px">
     <div class="modal-header">
       <h3 class="modal-title" id="modal-group-title">新增團體</h3>
       <button class="modal-close" onclick="closeGroupModal()">✕</button>
     </div>
     <div class="modal-body">
+
+      <!-- 團體名稱 -->
       <div class="form-group">
         <label class="form-label">團體名稱 <span class="required">*</span></label>
-        <input class="form-input" id="input-group-name" type="text" placeholder="例：登山社" maxlength="20" />
+        <input class="form-input" id="input-group-name" type="text" placeholder="例：SHINee、RIIZE" maxlength="30" />
       </div>
+
+      <!-- 縮寫 -->
       <div class="form-group">
-        <label class="form-label">代表顏色 <span class="required">*</span></label>
-        <div class="color-picker-row">
-          <input class="color-input" id="input-group-color" type="color" value="#FF84C3" />
-          <input class="form-input" id="input-group-color-hex" type="text" value="#FF84C3" placeholder="#FF84C3" maxlength="7" style="width:100px;font-family:monospace" />
-        </div>
-        <div class="color-presets">
-          <button class="color-preset" style="background:#FF84C3" onclick="setColor('#FF84C3')"></button>
-          <button class="color-preset" style="background:#FF9E23" onclick="setColor('#FF9E23')"></button>
-          <button class="color-preset" style="background:#E1E668" onclick="setColor('#E1E668')"></button>
-          <button class="color-preset" style="background:#ff6eb4" onclick="setColor('#ff6eb4')"></button>
-          <button class="color-preset" style="background:#a78bfa" onclick="setColor('#a78bfa')"></button>
-          <button class="color-preset" style="background:#60c4f8" onclick="setColor('#60c4f8')"></button>
-          <button class="color-preset" style="background:#6ee7b7" onclick="setColor('#6ee7b7')"></button>
-          <button class="color-preset" style="background:#f87171" onclick="setColor('#f87171')"></button>
+        <label class="form-label">團務 ID 縮寫</label>
+        <input class="form-input" id="input-group-abbr" type="text"
+               placeholder="留空自動產生（例：RZ、SHINee）" maxlength="10" style="font-family:monospace" />
+        <span class="fee-hint">英文數字，用於團務 ID 前綴（例：RZ-260423-01）</span>
+      </div>
+
+      <!-- 多色漸層 -->
+      <div class="form-group">
+        <label class="form-label">代表顏色 <span class="required">*</span>
+          <span class="fee-hint" style="font-weight:400;margin-left:6px">可新增多色做漸層</span>
+        </label>
+        <div id="color-list" class="color-list"></div>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="addColorSlot()"
+                style="align-self:flex-start;margin-top:6px">＋ 新增顏色</button>
+        <div class="color-preview-box">
+          <span class="color-preview-label">預覽：</span>
+          <span class="color-preview" id="color-preview"></span>
         </div>
       </div>
+
+      <!-- 成員清單 -->
+      <div class="form-group">
+        <label class="form-label">成員清單</label>
+        <div id="members-input-list" class="spec-options"></div>
+        <button class="btn-add-spec-option" type="button" onclick="addMemberInput()"
+                style="margin-top:4px">＋ 新增成員</button>
+        <span class="fee-hint">開團時規格輸入「分成員」會自動帶入此清單</span>
+      </div>
+
       <p class="form-error" id="group-form-error"></p>
     </div>
     <div class="modal-footer">
@@ -2051,7 +2068,6 @@
     </div>
   </div>
 </div>
-
 
 <!-- 匯款帳號管理 Modal -->
 <div class="modal-backdrop" id="modal-bank" style="display:none" onclick="closeBankManager(event)">
@@ -2357,25 +2373,26 @@
   };
 
   window.openGroupModal = function(id=null, name="", colors=null, abbr="", members=[]) {
-    window._openGroupMembersData = members;
     editingGroupId = id;
+    // 先設資料
+    if (typeof colors === "string" && colors) groupColors = [colors];
+    else if (Array.isArray(colors) && colors.length) groupColors = [...colors];
+    else groupColors = ["#FF84C3"];
+    window._openGroupMembers = Array.isArray(members) ? [...members] : [];
+    // 顯示 Modal
     document.getElementById("modal-group-title").textContent = id ? "編輯團體" : "新增團體";
     document.getElementById("modal-group").style.display = "flex";
+    // DOM 就緒後再填值
     requestAnimationFrame(() => {
       const nameEl = document.getElementById("input-group-name");
       const abbrEl = document.getElementById("input-group-abbr");
       if (nameEl) nameEl.value = name;
       if (abbrEl) abbrEl.value = abbr;
-      // 載入成員清單
-      window._openGroupMembers = window._openGroupMembersData || [];
-      renderMemberInputList();
-    if (typeof colors === "string" && colors) groupColors = [colors];
-    else if (Array.isArray(colors) && colors.length) groupColors = [...colors];
-    else groupColors = ["#FF84C3"];
       document.getElementById("group-form-error").textContent = "";
       renderColorList();
       updateColorPreview();
-      setTimeout(() => document.getElementById("input-group-name")?.focus(), 50);
+      renderMemberInputList();
+      setTimeout(() => nameEl?.focus(), 50);
     });
   };
 
@@ -2683,11 +2700,7 @@
       </div>
       <div class="product-result" id="p-result-${id}"></div>
       <div class="product-extra">
-        <div class="product-extra-row">
-          <label class="form-label" style="font-size:12px">規格設定</label>
-          <button class="btn-add-spec" type="button" onclick="addSpecGroup(${id})">＋ 新增規格</button>
-        </div>
-        <div id="p-specs-${id}" class="specs-container"></div>
+
         <div class="product-extra-row" style="margin-top:6px">
           <label class="form-label" style="font-size:12px">需要填寫說明</label>
           <label class="toggle-switch">
