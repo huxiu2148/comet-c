@@ -1264,37 +1264,63 @@
   // ── 匯率 ──────────────────────────────────────────────────────
   let rates = { KRW: null, JPY: null, CNY: null, USD: null };
 
+  const LABELS = { KRW:"韓幣", JPY:"日幣", CNY:"人民幣", USD:"美金" };
+
   window.fetchRates = async function() {
-    const ids = { KRW:"korean-won", JPY:"japanese-yen", CNY:"chinese-yuan", USD:"united-states-dollar" };
-    const labels = { KRW:"韓幣", JPY:"日幣", CNY:"人民幣", USD:"美金" };
-    for (const [code, slug] of Object.entries(ids)) {
+    // 重置 UI
+    Object.keys(LABELS).forEach(code => {
       const el = document.getElementById(`rate-${code}`);
-      el.textContent = `${labels[code]} 載入中...`;
+      el.textContent = `${LABELS[code]} 載入中...`;
       el.className = "rate-item";
-      try {
-        const res = await fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${slug}.json`);
-        const data = await res.json();
-        const twdKey = Object.keys(data[slug]).find(k => k === "twd" || k === "TWD");
-        if (twdKey) {
-          rates[code] = data[slug][twdKey];
-          el.textContent = `${labels[code]} ${rates[code].toFixed(4)}`;
+    });
+
+    try {
+      // Frankfurter API：歐洲央行資料，免費無需 key，支援 CORS
+      // 一次拿回所有幣別對 TWD 的匯率
+      const res = await fetch("https://api.frankfurter.app/latest?from=TWD&to=KRW,JPY,CNY,USD");
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      // data.rates = { KRW: 43.21, JPY: 4.52, CNY: 0.22, USD: 0.031 }
+      // 這是「1 TWD = X 外幣」，我們要「1 外幣 = X TWD」→ 取倒數
+      Object.keys(LABELS).forEach(code => {
+        const el = document.getElementById(`rate-${code}`);
+        if (data.rates[code]) {
+          rates[code] = 1 / data.rates[code];
+          el.textContent = `${LABELS[code]} ${rates[code].toFixed(4)}`;
           el.className = "rate-item loaded";
-        } else { throw new Error("no TWD"); }
-      } catch {
-        // 備用 API
-        try {
-          const res2 = await fetch(`https://api.exchangerate-api.com/v4/latest/TWD`);
-          const data2 = await res2.json();
-          const base = data2.rates[code];
-          if (base) {
-            rates[code] = 1 / base;
-            el.textContent = `${labels[code]} ${rates[code].toFixed(4)}`;
-            el.className = "rate-item loaded";
-          } else throw new Error();
-        } catch {
-          el.textContent = `${labels[code]} 無法取得`;
+        } else {
+          el.textContent = `${LABELS[code]} 無資料`;
           el.className = "rate-item error";
         }
+      });
+    } catch (err) {
+      console.error("Frankfurter 失敗：", err);
+      // 備用：Open Exchange Rates 的免費端點（不需 key，僅限 USD base）
+      // 先抓 USD/TWD，再用交叉匯率換算
+      try {
+        const r2 = await fetch("https://open.er-api.com/v6/latest/USD");
+        if (!r2.ok) throw new Error(`HTTP ${r2.status}`);
+        const d2 = await r2.json();
+        const usdToTwd = d2.rates["TWD"];
+        Object.keys(LABELS).forEach(code => {
+          const el = document.getElementById(`rate-${code}`);
+          const usdToCode = d2.rates[code];
+          if (usdToTwd && usdToCode) {
+            rates[code] = usdToTwd / usdToCode; // 1 外幣 = ? TWD
+            el.textContent = `${LABELS[code]} ${rates[code].toFixed(4)}`;
+            el.className = "rate-item loaded";
+          } else {
+            el.textContent = `${LABELS[code]} 無資料`;
+            el.className = "rate-item error";
+          }
+        });
+      } catch (err2) {
+        console.error("備用 API 也失敗：", err2);
+        Object.keys(LABELS).forEach(code => {
+          const el = document.getElementById(`rate-${code}`);
+          el.textContent = `${LABELS[code]} 無法取得`;
+          el.className = "rate-item error";
+        });
       }
     }
     recalcAll();
