@@ -825,7 +825,7 @@
             <span class="rate-item" id="rate-CNY">人民幣 載入中...</span>
             <span class="rate-item" id="rate-USD">美金 載入中...</span>
           </div>
-          <button class="rate-refresh" onclick="fetchRates()" title="重新整理匯率">↻</button>
+          <button class="rate-refresh" id="btn-fetch-rates" title="重新整理匯率">↻</button>
         </div>
 
         <!-- 兩欄佈局：左=開團表單，右=商品試算 -->
@@ -1016,7 +1016,7 @@
         <label class="form-label">代表顏色 <span class="required">*</span></label>
         <div class="color-picker-row">
           <input class="color-input" id="input-group-color" type="color" value="#FF84C3" />
-          <span class="color-hint" id="color-hint">#FF84C3</span>
+          <input class="form-input" id="input-group-color-hex" type="text" value="#FF84C3" placeholder="#FF84C3" maxlength="7" style="width:100px;font-family:monospace" />
         </div>
         <div class="color-presets">
           <button class="color-preset" style="background:#FF84C3" onclick="setColor('#FF84C3')"></button>
@@ -1128,9 +1128,10 @@
       btn.classList.toggle("active", btn.dataset.section === section);
     });
     document.querySelectorAll(".admin-section").forEach(el => {
-      el.classList.toggle("active", el.id === `section-${section}`);
+      el.classList.toggle("active", el.id === "section-"+section);
     });
     if (section === "groups") loadGroups();
+    document.dispatchEvent(new CustomEvent("adminSectionChanged", { detail: section }));
   };
 
   window.loadGroups = async function() {
@@ -1175,7 +1176,7 @@
     document.getElementById("modal-group-title").textContent = id ? "編輯團體" : "新增團體";
     document.getElementById("input-group-name").value = name;
     document.getElementById("input-group-color").value = color;
-    document.getElementById("color-hint").textContent = color;
+    document.getElementById("input-group-color-hex").value = color;
     document.getElementById("group-form-error").textContent = "";
     document.getElementById("modal-group").style.display = "flex";
     setTimeout(() => document.getElementById("input-group-name").focus(), 50);
@@ -1189,16 +1190,31 @@
 
   window.setColor = function(hex) {
     document.getElementById("input-group-color").value = hex;
-    document.getElementById("color-hint").textContent = hex;
+    document.getElementById("input-group-color-hex").value = hex;
   };
 
+  // color picker → 更新 hex 文字框
   document.getElementById("input-group-color").addEventListener("input", function() {
-    document.getElementById("color-hint").textContent = this.value;
+    document.getElementById("input-group-color-hex").value = this.value;
+  });
+
+  // hex 文字框 → 更新 color picker（驗證後才更新）
+  document.getElementById("input-group-color-hex").addEventListener("input", function() {
+    const val = this.value.trim();
+    if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+      document.getElementById("input-group-color").value = val;
+      this.style.borderColor = "var(--pink)";
+    } else {
+      this.style.borderColor = "var(--danger)";
+    }
   });
 
   window.saveGroup = async function() {
-    const name  = document.getElementById("input-group-name").value.trim();
-    const color = document.getElementById("input-group-color").value;
+    const name    = document.getElementById("input-group-name").value.trim();
+    const hexInput = document.getElementById("input-group-color-hex").value.trim();
+    const color   = /^#[0-9A-Fa-f]{6}$/.test(hexInput)
+      ? hexInput
+      : document.getElementById("input-group-color").value;
     const errEl = document.getElementById("group-form-error");
     const btn   = document.getElementById("btn-save-group");
     if (!name) { errEl.textContent = "請填寫團體名稱"; return; }
@@ -1285,11 +1301,9 @@
   };
 
   // 頁面切換到開團系統時自動載入匯率
-  const origSwitch = window.switchAdminSection;
-  window.switchAdminSection = function(section) {
-    origSwitch(section);
-    if (section === "campaigns" && rates.KRW === null) fetchRates();
-  };
+  document.addEventListener("adminSectionChanged", (e) => {
+    if (e.detail === "campaigns" && rates.KRW === null) fetchRates();
+  });
 
   // ── 商品列表管理 ─────────────────────────────────────────────
   let productRows = [];
@@ -1453,48 +1467,10 @@
     ).join("
 ");
 
-    const memo = `${name}
-
-💰商品金額
-${itemLines}
-
-表單連結：
-收單時間：${deadline}
-官方出貨時間：${shipdate}
-
-✓以上都可以接受再跟團 需二補
-𖦹跟團前請先詳閱記事本重要貼文裡的注意事項
-𖦹填單即視同已閱讀並同意所有內容
-
-匯款完成後請在此記事本留下匯款帳戶末五碼
-謝謝`;
-
-    const note = `${name}
-
-💰商品金額
-${itemLinesNoFx}
-
-表單連結：
-收單時間：${deadline}
-官方出貨時間：${shipdate}
-
-✓以上都可以接受再跟團 需二補
-𖦹跟團前請先詳閱記事本重要貼文裡的注意事項
-𖦹填單即視同已閱讀並同意所有內容
-
-匯款完成後請在此記事本留下匯款帳戶末五碼
-謝謝`;
-
-    const social = `#代購 ${name}
-
-💰商品金額
-${itemLinesNoFx}
-
-✓以上需二補 收單時間：${deadline}
-𖦹欲跟團者請加入社群填單匯款
-🔗：https://reurl.cc/EQ1rLk
-
-有任何問題都歡迎詢問 謝謝～`;
+    const S = "𖬹";
+    const memo   = name+"\n\n💰商品金額\n"+itemLines+"\n\n表單連結：\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n"+S+"跟團前請先詳閱記事本重要貼文裡的注意事項\n"+S+"填單即視同已閱讀並同意所有內容\n\n匯款完成後請在此記事本留下匯款帳戶末五碼\n謝謝";
+    const note   = name+"\n\n💰商品金額\n"+itemLinesNoFx+"\n\n表單連結：\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n"+S+"跟團前請先詳閱記事本重要貼文裡的注意事項\n"+S+"填單即視同已閱讀並同意所有內容\n\n匯款完成後請在此記事本留下匯款帳戶末五碼\n謝謝";
+    const social = "#代購 "+name+"\n\n💰商品金額\n"+itemLinesNoFx+"\n\n✓以上需二補 收單時間："+deadline+"\n"+S+"欲跟團者請加入社群填單匯款\n🔗：https://reurl.cc/EQ1rLk\n\n有任何問題都歡迎詢問 謝謝～";
 
     document.getElementById("txt-memo").value   = memo;
     document.getElementById("txt-note").value   = note;
@@ -1571,7 +1547,55 @@ ${itemLinesNoFx}
     document.getElementById("calc-results").style.display = "none";
     document.getElementById("copywriter-card").style.display = "none";
     setDefaultDeadline();
+    applyNameColor("");
   };
+
+  // ── btn-fetch-rates 綁定（避免 module 時序問題）────────────────
+  document.getElementById("btn-fetch-rates")?.addEventListener("click", () => fetchRates());
+
+  // ── 團務名稱顏色聯動 ─────────────────────────────────────────
+  // 載入所有團體（含關鍵字/名稱），比對團務名稱後自動套色
+  import { getDocs as _getDocs, collection as _col } from
+    "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  let groupKeywords = []; // [{ keywords:["關鍵字"], color:"#xxx" }]
+
+  async function loadGroupKeywords() {
+    try {
+      const snap = await _getDocs(_col(db, "groups"));
+      groupKeywords = [];
+      snap.forEach(d => {
+        const data = d.data();
+        // 關鍵字：團體名稱本身（之後可擴充成員列表）
+        groupKeywords.push({ keywords: [data.name], color: data.color });
+      });
+    } catch(e) { console.warn("載入團體失敗", e); }
+  }
+
+  function applyNameColor(name) {
+    const bar = document.getElementById("rate-bar");
+    if (!name) { bar.style.borderColor = "var(--border)"; return; }
+    const matched = groupKeywords.find(g =>
+      g.keywords.some(kw => name.includes(kw))
+    );
+    bar.style.borderColor = matched ? matched.color : "var(--border)";
+    // 同時把整個開團表單頂部色條換色
+    const card = document.querySelector("#section-campaigns .campaign-form-col .form-card");
+    if (card) card.style.borderColor = matched ? matched.color : "var(--border)";
+  }
+
+  document.getElementById("c-name")?.addEventListener("input", function() {
+    applyNameColor(this.value);
+    updateCopywriter();
+  });
+
+  // 進入開團系統時載入關鍵字
+  document.addEventListener("adminSectionChanged", (e) => {
+    if (e.detail === "campaigns") {
+      if (rates.KRW === null) fetchRates();
+      loadGroupKeywords();
+    }
+  });
 </script>
 
 </body>
