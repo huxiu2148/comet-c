@@ -1699,7 +1699,7 @@
 
     <!-- 主分頁標籤 -->
     <div class="tabs" id="tabs">
-      <button class="tab-btn active" data-tab="orders" onclick="switchTab('orders')">所有團務</button>
+      <button class="tab-btn active" data-tab="orders" onclick="switchTab('orders')">團務相關</button>
       <button class="tab-btn admin-only" data-tab="admin" onclick="switchTab('admin')">管理後台</button>
     </div>
 
@@ -1708,7 +1708,7 @@
 
       <!-- 使用者子分頁 -->
       <div class="user-subnav" id="user-subnav">
-        <button class="subnav-btn active" data-usub="browse"  onclick="switchUserSub('browse')">🛒 團購活動</button>
+        <button class="subnav-btn active" data-usub="browse"  onclick="switchUserSub('browse')">🛒 所有團務</button>
         <button class="subnav-btn"         data-usub="myorder" onclick="switchUserSub('myorder')">📋 我的訂單</button>
       </div>
 
@@ -2311,6 +2311,7 @@
 
   function renderColorList() {
     const list = document.getElementById("color-list");
+    if (!list) { console.warn("color-list not found"); return; }
     list.innerHTML = "";
     groupColors.forEach((hex, idx) => {
       const row = document.createElement("div");
@@ -2401,6 +2402,17 @@
     document.getElementById("modal-group").style.display = "none";
     editingGroupId = null;
   };
+
+
+  // 縮寫邏輯：全英數保留全名，中文用 hash
+  function genAbbr(name) {
+    if (/^[A-Za-z0-9\s]+$/.test(name.trim())) {
+      return name.replace(/\s+/g, "").slice(0, 10);
+    }
+    let h = 0;
+    for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) & 0xFFFF;
+    return "G" + h.toString(36).toUpperCase().slice(0, 3);
+  }
 
   window.saveGroup = async function() {
     const name = document.getElementById("input-group-name").value.trim();
@@ -2700,24 +2712,22 @@
       </div>
       <div class="product-result" id="p-result-${id}"></div>
       <div class="product-extra">
-
-        <div class="product-extra-row" style="margin-top:6px">
-          <label class="form-label" style="font-size:12px">需要填寫說明</label>
-          <label class="toggle-switch">
-            <input type="checkbox" id="p-hasnote-${id}" />
-            <span class="toggle-track"></span>
-          </label>
+        <div class="product-extra-row">
+          <label class="form-label" style="font-size:12px;white-space:nowrap">規格標示</label>
+          <input class="form-input" id="p-spec-text-${id}" type="text"
+                 placeholder="例：分成員　或　S/M, 黑/白　（空白=無規格）"
+                 oninput="updateSpecPreview(${id})"
+                 style="font-size:12px" />
         </div>
-        <input class="form-input" id="p-note-hint-${id}" type="text"
-               placeholder="說明提示（例：請填寫成員名字）" style="display:none;margin-top:4px" />
+        <div id="p-spec-preview-${id}" class="spec-preview" style="display:none"></div>
+        <div class="product-extra-row" style="margin-top:6px">
+          <label class="form-label" style="font-size:12px;white-space:nowrap">說明文字</label>
+          <input class="form-input" id="p-note-hint-${id}" type="text"
+                 placeholder="例：共20款隨機5張（顯示在商品名下，空白=不顯示）"
+                 style="font-size:12px" />
+        </div>
       </div>`;
     list.appendChild(div);
-
-    // toggle 說明欄
-    document.getElementById(`p-hasnote-${id}`).addEventListener("change", function() {
-      document.getElementById(`p-note-hint-${id}`).style.display = this.checked ? "block" : "none";
-    });
-
     document.getElementById(`p-name-${id}`).focus();
   };
 
@@ -3296,20 +3306,7 @@
     }
   }
 
-  // 縮寫邏輯：
-  // 1. 若有手動填寫的 abbr → 直接用
-  // 2. 若名稱全為英數（SHINee/RIIZE/BTS）→ 全名保留
-  // 3. 否則（中文）→ hash 縮寫
-  function genAbbr(name) {
-    if (/^[A-Za-z0-9\s]+$/.test(name.trim())) {
-      // 全英數：保留全名，去空格，最多10字
-      return name.replace(/\s+/g, "").slice(0, 10);
-    }
-    // 中文或混合：用 hash
-    let h = 0;
-    for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) & 0xFFFF;
-    return "G" + h.toString(36).toUpperCase().slice(0, 3);
-  }
+  // genAbbr 已移至團體管理 script 區塊
 
   // ── 產生團務 ID：{ABBR}-{YYMMDD}-{NN} ─────────────────────────
   async function generateCampaignId(groupAbbr) {
