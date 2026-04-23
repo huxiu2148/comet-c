@@ -803,6 +803,66 @@
     }
 
 
+
+    /* ══ 商品規格設定（開團）══ */
+    .product-extra { padding: 8px 4px 4px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 6px; }
+    .product-extra-row { display: flex; align-items: center; justify-content: space-between; }
+    .product-extra-section { margin-top: 10px; }
+    .spec-group { background: #fff8fb; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px; margin-bottom: 8px; }
+    .spec-group-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .spec-options { display: flex; flex-direction: column; gap: 4px; margin-bottom: 4px; }
+    .spec-option-row { display: flex; align-items: center; gap: 6px; }
+    .specs-container { display: flex; flex-direction: column; gap: 6px; }
+    .btn-add-spec { font-size:12px; font-weight:600; color:var(--pink); background:none; border:1.5px dashed var(--pink); border-radius:12px; padding:3px 10px; cursor:pointer; }
+    .btn-add-spec:hover { background:#fff0f7; }
+    .btn-add-spec-option { font-size:11px; color:var(--text-muted); background:none; border:none; cursor:pointer; padding:2px 0; }
+    .btn-add-spec-option:hover { color:var(--pink); }
+
+    /* 折扣列 */
+    .discount-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+
+    /* 折扣資訊顯示（下單頁）*/
+    .discount-info { background:#fff8fb; border:1.5px solid var(--border); border-radius:var(--radius); padding:12px 16px; margin-top:8px; }
+    .discount-info-title { font-size:13px; font-weight:700; color:var(--pink); margin-bottom:6px; }
+    .discount-info-row { display:flex; justify-content:space-between; font-size:13px; padding:3px 0; }
+    .discount-amount { color:var(--pink); font-weight:700; }
+
+    /* 下單頁模式列 */
+    .order-mode-bar { display:flex; gap:16px; flex-wrap:wrap; font-size:12px; color:var(--text-muted); margin-top:8px; }
+    .order-mode-bar span { background:#fff8fb; border-radius:20px; padding:2px 10px; border:1px solid var(--border); }
+
+    /* 規格選擇（下單頁）*/
+    .op-extras { grid-column: 1 / -1; display:flex; flex-direction:column; gap:8px; padding: 8px 0 4px; border-top: 1px dashed var(--border); margin-top:4px; }
+    .spec-select-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .spec-select-row .form-label { min-width:80px; }
+    .spec-select-row .form-input { flex:1; min-width:120px; }
+
+    /* toggle switch */
+    .toggle-switch { position:relative; display:inline-block; width:40px; height:22px; }
+    .toggle-switch input { display:none; }
+    .toggle-track {
+      position:absolute; inset:0; background:#e0d0e0;
+      border-radius:20px; cursor:pointer; transition:background 0.2s;
+    }
+    .toggle-track::before {
+      content:''; position:absolute;
+      width:16px; height:16px; border-radius:50%; background:#fff;
+      top:3px; left:3px; transition:transform 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-track { background:var(--pink); }
+    .toggle-switch input:checked + .toggle-track::before { transform:translateX(18px); }
+
+    /* 會員管理列表 */
+    .members-list { display:flex; flex-direction:column; gap:8px; }
+    .member-row {
+      background:var(--surface); border:1.5px solid var(--border);
+      border-radius:var(--radius); padding:12px 16px;
+      display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:12px;
+      align-items:center; font-size:13px;
+    }
+    .member-name { font-weight:700; }
+    .member-email { color:var(--text-muted); font-family:monospace; font-size:12px; }
+
     /* ══ 使用者下單系統 ══════════════════════════════════════════ */
 
     .user-subnav {
@@ -840,7 +900,7 @@
       padding: 2px 10px;
       border-radius: 20px;
       background: var(--cc-tag-bg, #fff0f7);
-      color: var(--cc-color, var(--pink));
+      color: var(--cc-tag-color, var(--pink));
       width: fit-content;
     }
 
@@ -1096,6 +1156,43 @@
     .myorder-amount {
       font-size: 15px; font-weight: 700;
       color: var(--pink);
+    }
+
+
+    /* 多色漸層設定 */
+    .color-list {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+
+    .color-row {
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .color-row .color-input {
+      width: 44px; height: 36px; flex-shrink: 0;
+    }
+
+    .color-row .form-input {
+      flex: 1;
+    }
+
+    .color-preview-box {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 10px;
+      padding: 8px 12px;
+      background: #fff8fb;
+      border-radius: var(--radius);
+    }
+
+    .color-preview-label {
+      font-size: 12px; color: var(--text-muted);
+    }
+
+    .color-preview {
+      width: 60px; height: 24px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      flex: 1;
     }
 
     /* ══ 開團系統 ══════════════════════════════════════════════ */
@@ -1572,6 +1669,7 @@
         <button class="subnav-btn"         data-section="campaigns" onclick="switchAdminSection('campaigns')">📦 開團系統</button>
         <button class="subnav-btn"         data-section="orders"    onclick="switchAdminSection('orders')">📋 訂單管理</button>
         <button class="subnav-btn"         data-section="finance"   onclick="switchAdminSection('finance')">💰 記帳</button>
+        <button class="subnav-btn"         data-section="members"   onclick="switchAdminSection('members')">👤 會員管理</button>
       </div>
 
       <!-- 團體管理 -->
@@ -1761,6 +1859,15 @@
 
               <button class="btn-add-product" onclick="addProductRow()">＋ 新增商品</button>
 
+              <!-- 折扣設定 -->
+              <div class="product-extra-section">
+                <div class="product-extra-row" style="margin-bottom:6px">
+                  <label class="form-label" style="font-size:12px">折扣活動</label>
+                  <button class="btn-add-spec" type="button" onclick="addDiscountRow()">＋ 新增折扣</button>
+                </div>
+                <div id="discounts-list"></div>
+              </div>
+
               <!-- 試算結果 -->
               <div class="calc-results" id="calc-results" style="display:none">
                 <div class="calc-divider"></div>
@@ -1816,6 +1923,17 @@
         <div class="placeholder-card">
           <h2>💰 記帳</h2>
           <p>即將開發</p>
+        </div>
+      </div>
+
+      <!-- 會員管理 -->
+      <div class="admin-section" id="section-members">
+        <div class="section-header">
+          <h2 class="section-title">👤 會員管理</h2>
+          <button class="btn btn-primary btn-sm" onclick="openMemberModal()">＋ 手動新增會員</button>
+        </div>
+        <div id="members-list" class="members-list">
+          <div class="loading-row">載入中...</div>
         </div>
       </div>
 
@@ -1887,6 +2005,40 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-primary btn-sm" onclick="closeBankManager()">完成</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- 手動新增會員 Modal -->
+<div class="modal-backdrop" id="modal-member" style="display:none" onclick="closeMemberModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">👤 手動新增會員</h3>
+      <button class="modal-close" onclick="closeMemberModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">姓名</label>
+        <input class="form-input" id="member-name" type="text" placeholder="顯示名稱" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">電子信箱 <span class="required">*</span></label>
+        <input class="form-input" id="member-email" type="email" placeholder="email@example.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">社群暱稱</label>
+        <input class="form-input" id="member-nickname" type="text" placeholder="LINE 社群顯示名" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">聯絡帳號</label>
+        <input class="form-input" id="member-contact" type="text" placeholder="LINE ID 或電話" />
+      </div>
+      <p class="form-error" id="member-form-error"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeMemberModal()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveMember()">新增</button>
     </div>
   </div>
 </div>
@@ -2007,29 +2159,108 @@
   function renderGroupCard(id, data) {
     const card = document.createElement("div");
     card.className = "group-card";
-    card.style.setProperty("--group-color", data.color);
+    const colors = (data.colors && data.colors.length) ? data.colors : [data.color || "#FF84C3"];
+    const gradient = buildGradient(colors);
+    card.style.setProperty("--group-color", gradient);
+    const colorsJson = JSON.stringify(colors).replace(/"/g, "&quot;");
     card.innerHTML = `
       <div class="group-card-name">${esc(data.name)}</div>
       <div class="group-card-color">
-        <span class="color-dot" style="background:${data.color}"></span>
-        <span>${data.color}</span>
+        <span class="color-dot" style="background:${gradient}"></span>
+        <span>${colors.join(" · ")}</span>
       </div>
-      <div class="group-card-meta">建立於 ${fmtDate(data.createdAt)}</div>
+
       <div class="group-card-actions">
-        <button class="btn btn-ghost btn-sm" onclick="openGroupModal('${id}','${esc(data.name)}','${data.color}')">編輯</button>
+        <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${id}" data-name="${esc(data.name)}" data-colors="${colorsJson}">編輯</button>
         <button class="btn btn-danger btn-sm" onclick="deleteGroup('${id}','${esc(data.name)}')">刪除</button>
       </div>`;
+    // 綁定編輯按鈕（避免 onclick 字串中帶陣列出錯）
+    card.querySelector('[data-action="edit"]').addEventListener("click", (ev) => {
+      const btn = ev.currentTarget;
+      const colors = JSON.parse(btn.dataset.colors.replace(/&quot;/g, '"'));
+      openGroupModal(btn.dataset.id, btn.dataset.name, colors);
+    });
     return card;
   }
 
   let editingGroupId = null;
 
-  window.openGroupModal = function(id=null, name="", color="#FF84C3") {
+  // 顏色清單管理
+  let groupColors = ["#FF84C3"]; // 當前編輯的顏色陣列
+
+  function renderColorList() {
+    const list = document.getElementById("color-list");
+    list.innerHTML = "";
+    groupColors.forEach((hex, idx) => {
+      const row = document.createElement("div");
+      row.className = "color-row";
+      row.innerHTML = `
+        <input class="color-input" type="color" value="${hex}" data-idx="${idx}" />
+        <input class="form-input color-hex-input" type="text" value="${hex}" data-idx="${idx}" maxlength="7" style="font-family:monospace" />
+        ${groupColors.length > 1 ? `<button class="product-remove" type="button" data-idx="${idx}" data-action="remove">✕</button>` : ""}`;
+      list.appendChild(row);
+    });
+
+    // 綁定事件
+    list.querySelectorAll('input[type="color"]').forEach(inp => {
+      inp.addEventListener("input", () => {
+        const i = parseInt(inp.dataset.idx);
+        groupColors[i] = inp.value;
+        list.querySelectorAll(`.color-hex-input[data-idx="${i}"]`)[0].value = inp.value;
+        updateColorPreview();
+      });
+    });
+    list.querySelectorAll('.color-hex-input').forEach(inp => {
+      inp.addEventListener("input", () => {
+        const val = inp.value.trim();
+        if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+          const i = parseInt(inp.dataset.idx);
+          groupColors[i] = val;
+          list.querySelectorAll(`input[type="color"][data-idx="${i}"]`)[0].value = val;
+          inp.style.borderColor = "var(--pink)";
+          updateColorPreview();
+        } else {
+          inp.style.borderColor = "var(--danger)";
+        }
+      });
+    });
+    list.querySelectorAll('[data-action="remove"]').forEach(btn => {
+      btn.addEventListener("click", () => {
+        groupColors.splice(parseInt(btn.dataset.idx), 1);
+        renderColorList();
+        updateColorPreview();
+      });
+    });
+  }
+
+  function updateColorPreview() {
+    const preview = document.getElementById("color-preview");
+    preview.style.background = buildGradient(groupColors);
+  }
+
+  function buildGradient(colors) {
+    if (!colors || colors.length === 0) return "#FF84C3";
+    if (colors.length === 1) return colors[0];
+    return `linear-gradient(135deg, ${colors.join(", ")})`;
+  }
+
+  window.addColorSlot = function() {
+    if (groupColors.length >= 4) { alert("最多 4 個顏色"); return; }
+    groupColors.push("#FF9E23");
+    renderColorList();
+    updateColorPreview();
+  };
+
+  window.openGroupModal = function(id=null, name="", colors=null) {
     editingGroupId = id;
     document.getElementById("modal-group-title").textContent = id ? "編輯團體" : "新增團體";
     document.getElementById("input-group-name").value = name;
-    document.getElementById("input-group-color").value = color;
-    document.getElementById("input-group-color-hex").value = color;
+    // 支援舊資料（colors 是字串）與新資料（colors 是陣列）
+    if (typeof colors === "string" && colors) groupColors = [colors];
+    else if (Array.isArray(colors) && colors.length) groupColors = [...colors];
+    else groupColors = ["#FF84C3"];
+    renderColorList();
+    updateColorPreview();
     document.getElementById("group-form-error").textContent = "";
     document.getElementById("modal-group").style.display = "flex";
     setTimeout(() => document.getElementById("input-group-name").focus(), 50);
@@ -2041,42 +2272,20 @@
     editingGroupId = null;
   };
 
-  window.setColor = function(hex) {
-    document.getElementById("input-group-color").value = hex;
-    document.getElementById("input-group-color-hex").value = hex;
-  };
-
-  // color picker → 更新 hex 文字框
-  document.getElementById("input-group-color").addEventListener("input", function() {
-    document.getElementById("input-group-color-hex").value = this.value;
-  });
-
-  // hex 文字框 → 更新 color picker（驗證後才更新）
-  document.getElementById("input-group-color-hex").addEventListener("input", function() {
-    const val = this.value.trim();
-    if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
-      document.getElementById("input-group-color").value = val;
-      this.style.borderColor = "var(--pink)";
-    } else {
-      this.style.borderColor = "var(--danger)";
-    }
-  });
-
   window.saveGroup = async function() {
-    const name    = document.getElementById("input-group-name").value.trim();
-    const hexInput = document.getElementById("input-group-color-hex").value.trim();
-    const color   = /^#[0-9A-Fa-f]{6}$/.test(hexInput)
-      ? hexInput
-      : document.getElementById("input-group-color").value;
+    const name = document.getElementById("input-group-name").value.trim();
+    const colors = [...groupColors];
+    const color = colors[0]; // 保留 color 欄位給舊資料相容
     const errEl = document.getElementById("group-form-error");
     const btn   = document.getElementById("btn-save-group");
     if (!name) { errEl.textContent = "請填寫團體名稱"; return; }
+    if (!colors.length) { errEl.textContent = "請至少設一個顏色"; return; }
     btn.disabled = true; btn.textContent = "儲存中..."; errEl.textContent = "";
     try {
       if (editingGroupId) {
-        await updateDoc(doc(db, "groups", editingGroupId), { name, color });
+        await updateDoc(doc(db, "groups", editingGroupId), { name, colors, color });
       } else {
-        await addDoc(collection(db, "groups"), { name, color, createdAt: serverTimestamp() });
+        await addDoc(collection(db, "groups"), { name, colors, color, createdAt: serverTimestamp() });
       }
       document.getElementById("modal-group").style.display = "none";
       editingGroupId = null;
@@ -2355,10 +2564,86 @@
         <input class="form-input" id="p-override-${id}" type="number" placeholder="自動" min="0" oninput="overrideRow(${id})" />
         <button class="product-reset btn-sm btn-ghost" onclick="resetOverride(${id})" title="恢復自動計算">↻</button>
       </div>
-      <div class="product-result" id="p-result-${id}"></div>`;
+      <div class="product-result" id="p-result-${id}"></div>
+      <div class="product-extra">
+        <div class="product-extra-row">
+          <label class="form-label" style="font-size:12px">規格設定</label>
+          <button class="btn-add-spec" type="button" onclick="addSpecGroup(${id})">＋ 新增規格</button>
+        </div>
+        <div id="p-specs-${id}" class="specs-container"></div>
+        <div class="product-extra-row" style="margin-top:6px">
+          <label class="form-label" style="font-size:12px">需要填寫說明</label>
+          <label class="toggle-switch">
+            <input type="checkbox" id="p-hasnote-${id}" />
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <input class="form-input" id="p-note-hint-${id}" type="text"
+               placeholder="說明提示（例：請填寫成員名字）" style="display:none;margin-top:4px" />
+      </div>`;
     list.appendChild(div);
+
+    // toggle 說明欄
+    document.getElementById(`p-hasnote-${id}`).addEventListener("change", function() {
+      document.getElementById(`p-note-hint-${id}`).style.display = this.checked ? "block" : "none";
+    });
+
     document.getElementById(`p-name-${id}`).focus();
   };
+
+  // ── 規格設定 ──────────────────────────────────────────────────
+  const specCounters = {};
+
+  window.addSpecGroup = function(productId) {
+    if (!specCounters[productId]) specCounters[productId] = 0;
+    specCounters[productId]++;
+    const sid = specCounters[productId];
+    const container = document.getElementById(`p-specs-${productId}`);
+    const group = document.createElement("div");
+    group.className = "spec-group";
+    group.id = `spec-group-${productId}-${sid}`;
+    group.innerHTML = `
+      <div class="spec-group-header">
+        <input class="form-input spec-name-input" type="text" placeholder="規格名（例：尺寸、顏色、成員）"
+               id="spec-name-${productId}-${sid}" style="flex:1" />
+        <button class="product-remove" type="button" onclick="removeSpecGroup(${productId},${sid})">✕</button>
+      </div>
+      <div class="spec-options" id="spec-options-${productId}-${sid}"></div>
+      <button class="btn-add-spec-option" type="button" onclick="addSpecOption(${productId},${sid})">＋ 新增選項</button>`;
+    container.appendChild(group);
+    addSpecOption(productId, sid); // 預設一個空選項
+  };
+
+  window.removeSpecGroup = function(pid, sid) {
+    document.getElementById(`spec-group-${pid}-${sid}`)?.remove();
+  };
+
+  window.addSpecOption = function(pid, sid) {
+    const opts = document.getElementById(`spec-options-${pid}-${sid}`);
+    const row = document.createElement("div");
+    row.className = "spec-option-row";
+    row.innerHTML = `
+      <input class="form-input" type="text" placeholder="選項（例：S、M、L）" style="flex:1" />
+      <button class="product-remove" type="button" onclick="this.parentElement.remove()">✕</button>`;
+    opts.appendChild(row);
+  };
+
+  // 取得單一商品的規格資料
+  function getProductSpecs(id) {
+    const container = document.getElementById(`p-specs-${id}`);
+    if (!container) return [];
+    const groups = container.querySelectorAll(".spec-group");
+    const result = [];
+    groups.forEach(g => {
+      const nameInput = g.querySelector(".spec-name-input");
+      const name = nameInput ? nameInput.value.trim() : "";
+      const opts = Array.from(g.querySelectorAll(".spec-option-row input"))
+        .map(inp => inp.value.trim())
+        .filter(v => v);
+      if (name) result.push({ name, options: opts });
+    });
+    return result;
+  }
 
   window.removeProductRow = function(id) {
     productRows = productRows.filter(r => r !== id);
@@ -2480,8 +2765,45 @@
       const cost   = Math.ceil(twd * (1 + fee));
       const autoSell = roundUpTo5(twd * (1 + fee + markup));
       const sell = overrides[id] != null ? overrides[id] : autoSell;
-      return { id, name, price, currency, cost, sell, profit: sell - cost, isManual: overrides[id] != null };
+      const specs = getProductSpecs(id);
+      const hasNote = document.getElementById(`p-hasnote-${id}`)?.checked || false;
+      const noteHint = document.getElementById(`p-note-hint-${id}`)?.value.trim() || "";
+      return { id, name, price, currency, cost, sell, profit: sell - cost,
+               isManual: overrides[id] != null, specs, hasNote, noteHint };
     }).filter(p => p.name && p.price > 0);
+  }
+
+  // ── 折扣管理 ──────────────────────────────────────────────────
+  let discountRows = [];
+  let discountCounter = 0;
+
+  window.addDiscountRow = function() {
+    discountCounter++;
+    const id = discountCounter;
+    discountRows.push(id);
+    const list = document.getElementById("discounts-list");
+    const div = document.createElement("div");
+    div.className = "discount-row";
+    div.id = `discount-row-${id}`;
+    div.innerHTML = `
+      <input class="form-input" type="text" id="d-text-${id}"
+             placeholder="折扣說明（例：買A+B折20元）" style="flex:1" />
+      <input class="form-input" type="number" id="d-amount-${id}"
+             placeholder="折NT$" min="0" style="width:90px" />
+      <button class="product-remove" type="button" onclick="removeDiscountRow(${id})">✕</button>`;
+    list.appendChild(div);
+  };
+
+  window.removeDiscountRow = function(id) {
+    discountRows = discountRows.filter(r => r !== id);
+    document.getElementById(`discount-row-${id}`)?.remove();
+  };
+
+  function getDiscounts() {
+    return discountRows.map(id => ({
+      text:   document.getElementById(`d-text-${id}`)?.value.trim() || "",
+      amount: parseFloat(document.getElementById(`d-amount-${id}`)?.value) || 0,
+    })).filter(d => d.text);
   }
 
   function updateCalcResults() {
@@ -2666,10 +2988,12 @@
 
       // 用指定的 campaignId 建立文件
       await setDoc(doc(db, "campaigns", campaignId), {
-        groupId, groupAbbr: groupData.abbr, groupName: groupData.name, groupColor: groupData.color,
+        groupId, groupAbbr: groupData.abbr, groupName: groupData.name,
+        groupColor: groupData.color, groupColors: groupData.colors || [groupData.color],
         name, mode: parseInt(mode), deadline, shipdate,
         currency, markup,
-        products: products.map(p => ({ name: p.name, foreignPrice: p.price, cost: p.cost, price: p.sell })),
+        products: products.map(p => ({ name: p.name, foreignPrice: p.price, cost: p.cost, price: p.sell, specs: p.specs || [], hasNote: p.hasNote || false, noteHint: p.noteHint || "" })),
+        discounts: getDiscounts(),
         status: "open",
         progress: "ongoing", // 進度狀態：ongoing/closed/shipping/warehouse/returning/arrived/done
         formUrl,
@@ -2693,8 +3017,11 @@
     document.getElementById("c-name").value = "";
     document.getElementById("c-shipdate").value = "";
     document.getElementById("products-list").innerHTML = "";
+    document.getElementById("discounts-list").innerHTML = "";
     productRows = []; rowCounter = 0;
+    discountRows = []; discountCounter = 0;
     Object.keys(overrides).forEach(k => delete overrides[k]);
+    Object.keys(specCounters).forEach(k => delete specCounters[k]);
     document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('selected'));
     [1,2,4].forEach(m => { const el = document.getElementById(`mode-extra-${m}`); if(el) el.style.display="none"; });
     document.getElementById("calc-results").style.display = "none";
@@ -2762,9 +3089,9 @@
       sel.innerHTML = '<option value="">— 請選擇 —</option>';
       snap.forEach(d => {
         const data = d.data();
-        // 自動產生英文縮寫（取團體名前 3 字母或使用者自填的 abbr）
         const abbr = (data.abbr || genAbbr(data.name)).toUpperCase();
-        groupsCache.push({ id: d.id, name: data.name, color: data.color, abbr });
+        const colors = (data.colors && data.colors.length) ? data.colors : [data.color || "#FF84C3"];
+        groupsCache.push({ id: d.id, name: data.name, color: data.color || colors[0], colors, abbr });
         const opt = document.createElement("option");
         opt.value = d.id;
         opt.textContent = `${data.name} (${abbr})`;
@@ -3362,9 +3689,25 @@
     }
   }
 
-  // 等使用者登入後再執行
-  onAuthStateChanged(auth, (user) => {
-    if (user) checkInitialRoute();
+  // 等使用者登入 + view-app 顯示後才執行
+  let initialRouteDone = false;
+  onAuthStateChanged(auth, async (user) => {
+    if (!user || initialRouteDone) return;
+    // 等 DOM 裡的 campaigns-list 真的可操作（view-app 顯示後）
+    const waitForDom = () => new Promise(resolve => {
+      const check = () => {
+        const el = document.getElementById("campaigns-list");
+        if (el && document.getElementById("view-app").style.display !== "none") {
+          resolve();
+        } else {
+          setTimeout(check, 50);
+        }
+      };
+      check();
+    });
+    await waitForDom();
+    initialRouteDone = true;
+    checkInitialRoute();
   });
 
   // ══ 載入團務列表 ═════════════════════════════════════════════
@@ -3389,8 +3732,13 @@
   function renderCampaignCard(id, data) {
     const card = document.createElement("div");
     card.className = "campaign-card";
-    card.style.setProperty("--cc-color", data.groupColor || "#FF84C3");
-    card.style.setProperty("--cc-tag-bg", hexToRGBA(data.groupColor || "#FF84C3", 0.12));
+    const colors = (data.groupColors && data.groupColors.length) ? data.groupColors : [data.groupColor || "#FF84C3"];
+    const gradient = colors.length > 1
+      ? `linear-gradient(135deg, ${colors.join(", ")})`
+      : colors[0];
+    card.style.setProperty("--cc-color", gradient);
+    card.style.setProperty("--cc-tag-bg", hexToRGBA(colors[0], 0.12));
+    card.style.setProperty("--cc-tag-color", colors[0]);
 
     const progress = data.progress || "ongoing";
     const deadline = data.deadline
@@ -3465,43 +3813,92 @@
   function renderOrderForm() {
     const c = currentCampaign;
     const view = document.getElementById("order-view");
-
-    const productsHtml = c.products.map((p, i) => `
-      <div class="order-product">
-        <div class="op-info">
-          <div class="op-name">${escHtmlU(p.name)}</div>
-          <div class="op-price">NT$${p.price.toLocaleString()}</div>
-        </div>
-        <div class="op-qty">
-          <button class="op-qty-btn" onclick="changeQty(${i}, -1)">−</button>
-          <span class="op-qty-val" id="qty-${i}">0</span>
-          <button class="op-qty-btn" onclick="changeQty(${i}, 1)">＋</button>
-        </div>
-        <div class="op-subtotal" id="subtotal-${i}">NT$0</div>
-      </div>
-    `).join("");
-
     const progress = c.progress || "ongoing";
+
+    // 下單模式標籤
+    const modeLabels = { 1:"🏦 匯款", 2:"📦 代收", 3:"📝 登記", 4:"🛍️ 賣貨便" };
+    const deadline = c.deadline
+      ? new Date(c.deadline).toLocaleString("zh-TW", { month:"numeric", day:"numeric", hour:"2-digit", minute:"2-digit" })
+      : "—";
+
+    // 代收護照欄位
+    const passportField = c.mode === 2 ? `
+      <div class="profile-section">
+        <div class="profile-title">🛃 收件資訊（代收）</div>
+        <div class="profile-grid">
+          <div class="form-group">
+            <label class="form-label">護照英文姓名 <span class="required">*</span></label>
+            <input class="form-input" id="p-passport" type="text" placeholder="如護照上所示（例：WANG XIAO MING）" style="text-transform:uppercase" />
+          </div>
+        </div>
+        <div class="form-card" style="margin-top:10px;font-size:13px;line-height:1.8;color:var(--text-muted)">
+          收件人：<strong id="passport-preview">（請填寫護照姓名）</strong><br>
+          收件電話：01058182588<br>
+          地址：(03779) 서울특별시 서대문구 신촌로 109<br>
+          詳細地址：신촌르메이에르타운5 지하1층 B110호 HCH
+        </div>
+      </div>` : "";
+
+    // 商品 HTML（新版：含規格選擇 + 說明欄）
+    const productsHtml = c.products.map((p, i) => {
+      const specsHtml = (p.specs || []).map((spec, si) => `
+        <div class="spec-select-row">
+          <label class="form-label" style="font-size:12px">${escHtmlU(spec.name)} <span class="required">*</span></label>
+          <select class="form-input" id="spec-${i}-${si}" style="font-size:13px">
+            <option value="">— 請選擇 —</option>
+            ${spec.options.map(o => `<option value="${escHtmlU(o)}">${escHtmlU(o)}</option>`).join("")}
+          </select>
+        </div>`).join("");
+
+      const noteHtml = p.hasNote ? `
+        <div class="spec-select-row">
+          <label class="form-label" style="font-size:12px">${p.noteHint || "備注說明"}</label>
+          <input class="form-input" id="note-${i}" type="text" placeholder="${escHtmlU(p.noteHint || "請填寫說明")}" style="font-size:13px" />
+        </div>` : "";
+
+      return `
+        <div class="order-product" id="order-product-${i}">
+          <div class="op-info">
+            <div class="op-name">${escHtmlU(p.name)}</div>
+            <div class="op-price">NT$${p.price.toLocaleString()}</div>
+          </div>
+          <div class="op-qty">
+            <button class="op-qty-btn" onclick="changeQty(${i}, -1)">−</button>
+            <span class="op-qty-val" id="qty-${i}">0</span>
+            <button class="op-qty-btn" onclick="changeQty(${i}, 1)">＋</button>
+          </div>
+          <div class="op-subtotal" id="subtotal-${i}">NT$0</div>
+          ${specsHtml || noteHtml ? `<div class="op-extras" id="op-extras-${i}" style="display:none">${specsHtml}${noteHtml}</div>` : ""}
+        </div>`;
+    }).join("");
+
+    // 折扣顯示
+    const discountsHtml = (c.discounts || []).length ? `
+      <div class="discount-info">
+        <div class="discount-info-title">🎁 折扣活動</div>
+        ${(c.discounts || []).map(d => `
+          <div class="discount-info-row">
+            <span>${escHtmlU(d.text)}</span>
+            <span class="discount-amount" id="discount-applied-${d.text.replace(/\s/g,'')}">－NT$0</span>
+          </div>`).join("")}
+      </div>` : "";
 
     view.innerHTML = `
       <div class="order-view">
-        <div class="order-header">
+        <div class="order-header" style="border-bottom-color:${c.groupColor || 'var(--border)'}">
           <div class="order-title">${escHtmlU(c.name)}</div>
           <div class="order-meta">
             <span>● ${escHtmlU(c.groupName || "")}</span>
-            <span>${c.id}</span>
             <span class="cc-progress ${progress}" style="margin:0">${PROGRESS_LABEL[progress]}</span>
+          </div>
+          <div class="order-mode-bar">
+            <span>下單模式：${modeLabels[c.mode] || "—"}</span>
+            <span>收單：${deadline}</span>
+            <span>出貨：${escHtmlU(c.shipdate || "待更新")}</span>
           </div>
         </div>
 
-        ${productsHtml}
-
-        <div class="order-total">
-          <span class="order-total-label">總金額</span>
-          <span class="order-total-val" id="order-total">NT$0</span>
-        </div>
-
-        <div class="profile-section">
+        <div class="profile-section" id="contact-section">
           <div class="profile-title">👤 聯絡資訊</div>
           <div class="profile-grid">
             <div class="form-group">
@@ -3517,8 +3914,18 @@
               <input class="form-input" id="p-contact" type="text" placeholder="LINE ID 或電話" />
             </div>
           </div>
-          <div class="profile-saved-hint" id="profile-saved-hint" style="display:none">
-            ✓ 已自動帶入上次填寫的資料
+          <div class="profile-saved-hint" id="profile-saved-hint" style="display:none">✓ 已自動帶入上次填寫的資料</div>
+        </div>
+
+        ${passportField}
+
+        <div class="profile-section">
+          <div class="profile-title">🛒 選擇商品</div>
+          ${productsHtml}
+          ${discountsHtml}
+          <div class="order-total">
+            <span class="order-total-label">總金額</span>
+            <span class="order-total-val" id="order-total">NT$0</span>
           </div>
         </div>
 
@@ -3526,6 +3933,14 @@
       </div>`;
 
     loadUserProfile();
+
+    // 護照預覽
+    if (c.mode === 2) {
+      document.getElementById("p-passport")?.addEventListener("input", function() {
+        const preview = document.getElementById("passport-preview");
+        if (preview) preview.textContent = this.value.toUpperCase() || "（請填寫護照姓名）";
+      });
+    }
   }
 
   async function loadUserProfile() {
@@ -3549,20 +3964,48 @@
   }
 
   window.changeQty = function(idx, delta) {
+    if (!currentCampaign || !currentCampaign.products) return;
     const curr = cart[idx] || 0;
     const next = Math.max(0, curr + delta);
     if (next === 0) delete cart[idx]; else cart[idx] = next;
 
     const p = currentCampaign.products[idx];
-    document.getElementById(`qty-${idx}`).textContent = next;
-    document.getElementById(`subtotal-${idx}`).textContent = `NT$${(next * p.price).toLocaleString()}`;
+    const qtyEl = document.getElementById(`qty-${idx}`);
+    const subEl = document.getElementById(`subtotal-${idx}`);
+    if (qtyEl) qtyEl.textContent = next;
+    if (subEl) subEl.textContent = `NT$${(next * p.price).toLocaleString()}`;
 
-    let total = 0;
-    Object.entries(cart).forEach(([i, q]) => {
-      total += currentCampaign.products[i].price * q;
-    });
-    document.getElementById("order-total").textContent = `NT$${total.toLocaleString()}`;
+    // 規格欄：有選購（qty>0）才顯示
+    const extrasEl = document.getElementById(`op-extras-${idx}`);
+    if (extrasEl) extrasEl.style.display = next > 0 ? "block" : "none";
+
+    updateOrderTotal();
   };
+
+  function updateOrderTotal() {
+    // 計算原始小計
+    let subTotal = 0;
+    Object.entries(cart).forEach(([i, q]) => {
+      subTotal += currentCampaign.products[parseInt(i)].price * q;
+    });
+
+    // 套用折扣
+    let totalDiscount = 0;
+    (currentCampaign.discounts || []).forEach(d => {
+      // 先確認是否觸發（簡單版：只要有任何商品就套）
+      // 細緻版日後可設定條件商品 index
+      if (Object.keys(cart).length > 0 && d.amount > 0) {
+        totalDiscount += d.amount;
+        const key = d.text.replace(/\s/g, "");
+        const el = document.getElementById(`discount-applied-${key}`);
+        if (el) el.textContent = `－NT$${d.amount.toLocaleString()}`;
+      }
+    });
+
+    const total = Math.max(0, subTotal - totalDiscount);
+    const totalEl = document.getElementById("order-total");
+    if (totalEl) totalEl.textContent = `NT$${total.toLocaleString()}`;
+  }
 
   window.submitOrder = async function() {
     const user = auth.currentUser;
@@ -3591,7 +4034,8 @@
         groupName: currentCampaign.groupName,
         userId: user.uid,
         email, nickname, contact,
-        items, totalAmount: total,
+        passport,
+        items, subTotal, discountAmount: totalDiscount, totalAmount: total,
         paymentType: currentCampaign.mode,
         paymentStatus: "pending",
         verifyStatus: "unverified",
@@ -3765,7 +4209,7 @@
       <div class="myorder-header">
         <div>
           <div class="myorder-title">
-            <span style="width:8px;height:8px;border-radius:50%;background:${campaign.groupColor || '#FF84C3'};display:inline-block"></span>
+            <span style="width:8px;height:8px;border-radius:50%;background:${(campaign.groupColors && campaign.groupColors.length > 1) ? 'linear-gradient(135deg,' + campaign.groupColors.join(',') + ')' : (campaign.groupColor || '#FF84C3')};display:inline-block"></span>
             ${escHtmlU(data.campaignName)}
           </div>
           <div style="font-size:11px;color:var(--text-muted);font-family:monospace;margin-top:2px">${data.campaignId}</div>
@@ -3783,6 +4227,96 @@
 
   // ── 工具 ──
   function escHtmlU(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c =>
+      ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+</script>
+
+
+<!-- ── 會員管理 + 登記升級匯款 ── -->
+<script type="module">
+  import { db } from "./auth.js";
+  import {
+    collection, doc, setDoc, getDocs, updateDoc,
+    query, orderBy, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ── 切換到 members 時載入列表 ──────────────────────────────
+  const origSwitchAdmin = window.switchAdminSection;
+  window.switchAdminSection = function(section) {
+    origSwitchAdmin(section);
+    if (section === "members") loadMembers();
+  };
+
+  // ── 會員列表 ──────────────────────────────────────────────
+  async function loadMembers() {
+    const list = document.getElementById("members-list");
+    list.innerHTML = '<div class="loading-row">載入中...</div>';
+    try {
+      const snap = await getDocs(query(collection(db, "users"), orderBy("createdAt", "asc")));
+      if (snap.empty) { list.innerHTML = '<div class="empty-row">尚無會員</div>'; return; }
+      list.innerHTML = "";
+      snap.forEach(d => list.appendChild(renderMemberRow(d.id, d.data())));
+    } catch (e) {
+      list.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
+    }
+  }
+
+  function renderMemberRow(uid, data) {
+    const row = document.createElement("div");
+    row.className = "member-row";
+    const profile = data.profile || {};
+    row.innerHTML = `
+      <span class="member-name">${esc(data.displayName || profile.nickname || "—")}</span>
+      <span class="member-email">${esc(data.email || "—")}</span>
+      <span>${esc(profile.contact || "—")}</span>
+      <span class="role-badge ${data.role || 'user'}" style="display:inline-block">${data.role === "admin" ? "✦ 管理者" : "會員"}</span>`;
+    return row;
+  }
+
+  // ── 手動新增會員 Modal ────────────────────────────────────
+  window.openMemberModal = function() {
+    document.getElementById("modal-member").style.display = "flex";
+    document.getElementById("member-form-error").textContent = "";
+    ["member-name","member-email","member-contact","member-nickname"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
+  };
+
+  window.closeMemberModal = function(e) {
+    if (e && e.target !== document.getElementById("modal-member")) return;
+    document.getElementById("modal-member").style.display = "none";
+  };
+
+  window.saveMember = async function() {
+    const name     = document.getElementById("member-name").value.trim();
+    const email    = document.getElementById("member-email").value.trim();
+    const contact  = document.getElementById("member-contact").value.trim();
+    const nickname = document.getElementById("member-nickname").value.trim();
+    const errEl    = document.getElementById("member-form-error");
+    if (!email) { errEl.textContent = "請填寫電子信箱"; return; }
+    errEl.textContent = "";
+    try {
+      // 用 email hash 當 uid（因為沒有實際 Google UID）
+      const uid = "manual_" + btoa(email).replace(/[^a-zA-Z0-9]/g,"").slice(0,16);
+      await setDoc(doc(db, "users", uid), {
+        displayName: name,
+        email,
+        role: "user",
+        isManual: true,
+        profile: { email, nickname: nickname || name, contact },
+        createdAt: serverTimestamp(),
+        lastLogin: new Date(),
+      }, { merge: true });
+      document.getElementById("modal-member").style.display = "none";
+      await loadMembers();
+    } catch (e) {
+      errEl.textContent = "新增失敗：" + e.message;
+    }
+  };
+
+  function esc(s) {
     return String(s ?? "").replace(/[&<>"']/g, c =>
       ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   }
