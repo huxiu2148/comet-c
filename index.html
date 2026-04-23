@@ -1430,6 +1430,22 @@
 
 
 
+
+    /* 成員勾選格 */
+    .member-check-grid {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .member-check-item {
+      display: flex; align-items: center; gap: 5px;
+      padding: 4px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.15s;
+    }
+    .member-check-item:hover { border-color: var(--pink); }
+
     /* 規格標示標籤（下單頁商品名旁） */
     .op-spec-tag {
       font-size: 11px; color: var(--pink);
@@ -2404,15 +2420,16 @@
   };
 
 
-  // 縮寫邏輯：全英數保留全名，中文用 hash
-  function genAbbr(name) {
+  // 縮寫邏輯：全英數保留全名，中文用 hash（window 全域供跨 module 使用）
+  window.genAbbr = function(name) {
     if (/^[A-Za-z0-9\s]+$/.test(name.trim())) {
       return name.replace(/\s+/g, "").slice(0, 10);
     }
     let h = 0;
     for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) & 0xFFFF;
     return "G" + h.toString(36).toUpperCase().slice(0, 3);
-  }
+  };
+  const genAbbr = window.genAbbr; // 區塊內也可直接用
 
   window.saveGroup = async function() {
     const name = document.getElementById("input-group-name").value.trim();
@@ -2759,18 +2776,59 @@
     const preview = document.getElementById(`p-spec-preview-${productId}`);
     if (!preview) return;
     if (!text.trim()) { preview.style.display = "none"; return; }
-    // 取目前選中的團體成員
+
     const groupId = document.getElementById("c-group")?.value;
     const group = groupsCache.find(g => g.id === groupId);
-    const specs = parseSpecText(text, group?.members || []);
-    preview.style.display = "flex";
-    preview.innerHTML = specs.map(s => `
-      <div class="spec-preview-group">
-        <span class="spec-preview-label">${esc(s.label)}</span>
-        <div class="spec-preview-opts">
-          ${s.options.map(o => `<span class="spec-opt-tag">${esc(o)}</span>`).join("")}
-        </div>
-      </div>`).join("");
+    const allMembers = group?.members || [];
+    const isMemberSpec = text.includes("成員") || text.toLowerCase().includes("member");
+
+    if (isMemberSpec && allMembers.length > 0) {
+      // 分成員：顯示勾選 UI，讓管理者選這個商品有哪些成員可選
+      preview.style.display = "flex";
+      const stored = window._productMemberSel || {};
+      if (!stored[productId]) stored[productId] = new Set(allMembers); // 預設全選
+      window._productMemberSel = stored;
+      const sel = stored[productId];
+      preview.innerHTML = `
+        <div style="width:100%">
+          <div style="font-size:12px;font-weight:700;color:var(--pink);margin-bottom:6px">
+            此商品可選的成員（預設全選）：
+          </div>
+          <div class="member-check-grid">
+            ${allMembers.map(m => `
+              <label class="member-check-item" style="${sel.has(m) ? 'background:#fff0f7;border-color:var(--pink)' : ''}">
+                <input type="checkbox" value="${esc(m)}"
+                       ${sel.has(m) ? 'checked' : ''}
+                       onchange="onMemberSpecToggle(${productId}, '${esc(m)}', this.checked)"
+                       style="accent-color:var(--pink)" />
+                <span style="font-size:12px">${esc(m)}</span>
+              </label>`).join("")}
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">
+            已選 ${sel.size} / ${allMembers.length} 位成員
+          </div>
+        </div>`;
+    } else {
+      // 一般規格：顯示解析結果預覽
+      const specs = parseSpecText(text, allMembers);
+      preview.style.display = "flex";
+      preview.innerHTML = specs.map(s => `
+        <div class="spec-preview-group">
+          <span class="spec-preview-label">${esc(s.label)}</span>
+          <div class="spec-preview-opts">
+            ${s.options.map(o => `<span class="spec-opt-tag">${esc(o)}</span>`).join("")}
+          </div>
+        </div>`).join("");
+    }
+  };
+
+  // 成員勾選 toggle
+  window.onMemberSpecToggle = function(productId, member, checked) {
+    const sel = window._productMemberSel?.[productId];
+    if (!sel) return;
+    if (checked) sel.add(member); else sel.delete(member);
+    // 更新「已選 N / M」顯示
+    updateSpecPreview(productId);
   };
 
   function esc(s) {
@@ -2778,12 +2836,23 @@
       ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   }
 
-  // 取得商品規格資料（供儲存用）
+  // 取得商品規格資料（供儲存用，成員規格會套用勾選過濾）
   function getProductSpecs(id) {
     const text = document.getElementById(`p-spec-text-${id}`)?.value || "";
     const groupId = document.getElementById("c-group")?.value;
     const group = groupsCache.find(g => g.id === groupId);
-    return parseSpecText(text, group?.members || []);
+    const allMembers = group?.members || [];
+    const isMemberSpec = text.includes("成員") || text.toLowerCase().includes("member");
+
+    if (isMemberSpec && allMembers.length > 0) {
+      // 用勾選的成員（若沒有設定就預設全部）
+      const sel = window._productMemberSel?.[id];
+      const members = sel && sel.size > 0
+        ? allMembers.filter(m => sel.has(m))
+        : allMembers;
+      return [{ label: text, options: members, isMember: true }];
+    }
+    return parseSpecText(text, allMembers);
   }
 
   function getProductSpecMode(id) {
@@ -3223,6 +3292,7 @@
     discountRows = []; discountCounter = 0;
     Object.keys(overrides).forEach(k => delete overrides[k]);
     Object.keys(specCounters).forEach(k => delete specCounters[k]);
+    window._productMemberSel = {};
     document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('selected'));
     [1,2,4].forEach(m => { const el = document.getElementById(`mode-extra-${m}`); if(el) el.style.display="none"; });
     document.getElementById("calc-results").style.display = "none";
@@ -3290,7 +3360,7 @@
       sel.innerHTML = '<option value="">— 請選擇 —</option>';
       snap.forEach(d => {
         const data = d.data();
-        const abbr = (data.abbr || genAbbr(data.name)).toUpperCase();
+        const abbr = (data.abbr || window.genAbbr(data.name)).toUpperCase();
         const colors = (data.colors && data.colors.length) ? data.colors : [data.color || "#FF84C3"];
         groupsCache.push({ id: d.id, name: data.name, color: data.color || colors[0], colors, abbr, members: data.members || [] });
         const opt = document.createElement("option");
