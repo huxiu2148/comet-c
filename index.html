@@ -2132,7 +2132,7 @@
           <div class="form-card-title" style="display:flex;justify-content:space-between;align-items:center">
             <span>📋 已建立的團務</span>
             <div style="display:flex;gap:8px">
-              <a class="btn btn-ghost btn-sm" href="https://huxiu2148.github.io/comet-c/campaign_template.xlsx" download>⬇ 下載範本</a>
+              <button class="btn btn-ghost btn-sm" onclick="downloadCampaignTemplate()">⬇ 下載範本</button>
               <button class="btn btn-ghost btn-sm" onclick="document.getElementById('campaign-import-file').click()">📤 批次匯入</button>
               <input type="file" id="campaign-import-file" accept=".xlsx,.csv" style="display:none" onchange="importCampaigns(this)" />
               <button class="btn btn-ghost btn-sm" onclick="loadCampaignList()">↻ 重新整理</button>
@@ -5491,6 +5491,41 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     return String(s ?? "").replace(/[&<>"']/g, c =>
       ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   }
+
+  // ── 下載範本 CSV ─────────────────────────────────────────────
+  window.downloadCampaignTemplate = function() {
+    const BOM = "\uFEFF";
+    const rows = [
+      // 標題列
+      ["團務名稱*","所屬團體名稱*","付款模式*(1匯款/2代收/3登記/4賣貨便)",
+       "收單時間*(例:2025/08/15 22:00)","官方出貨時間(空白=待更新)",
+       "建立時間*(例:2025/07/01)","進度*(ongoing/closed/shipping/warehouse/returning/arrived/done)",
+       "商品1名稱","商品1售價NT$","商品2名稱","商品2售價NT$",
+       "商品3名稱","商品3售價NT$","商品4名稱","商品4售價NT$",
+       "商品5名稱","商品5售價NT$"],
+      // 說明列
+      ["說明","填團體顯示名稱（需已在系統建立）","1=匯款 2=代收 3=登記 4=賣貨便",
+       "格式：YYYY/MM/DD HH:MM","空白自動填「待更新」",
+       "格式：YYYY/MM/DD","ongoing進行中 closed已收單 shipping出貨中 warehouse到集運 returning運回中 arrived已抵台 done結束",
+       "商品名","整數例:800","商品名","整數","商品名","整數","商品名","整數","商品名","整數"],
+      // 範例1
+      ["NCT夢想隊周邊第一團","NCT Dream","1","2025/08/15 22:00","待更新",
+       "2025/07/01","done","手機殼","800","鑰匙圈","350","","","","","",""],
+      // 範例2
+      ["SHINee回歸專輯團","SHINee","1","2025/09/01 22:00","2025/10/15",
+       "2025/08/20","arrived","正規專輯","1200","迷你專輯","850","","","","","",""],
+    ];
+    const csv = BOM + rows.map(r =>
+      r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")
+    ).join("\n");
+    const blob = new Blob([csv], { type:"text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "campaign_template.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   // ── 批次匯入團務（CSV / XLSX）────────────────────────────────
   window.importCampaigns = async function(input) {
