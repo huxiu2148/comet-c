@@ -633,6 +633,97 @@
 
     /* 商品列 */
     
+
+    /* 匯款帳號清單（開團勾選） */
+    .bank-header {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 8px;
+    }
+
+    .bank-checklist {
+      display: flex; flex-direction: column; gap: 6px;
+    }
+
+    .bank-loading, .bank-empty {
+      font-size: 13px; color: var(--text-muted);
+      text-align: center; padding: 12px;
+    }
+
+    .bank-check-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .bank-check-item:hover { border-color: var(--pink); }
+
+    .bank-check-item.checked {
+      background: #fff0f7;
+      border-color: var(--pink);
+    }
+
+    .bank-check-item input[type="checkbox"] {
+      width: 16px; height: 16px;
+      accent-color: var(--pink);
+      cursor: pointer;
+    }
+
+    .bank-check-body { flex: 1; }
+
+    .bank-check-name {
+      font-size: 13px; font-weight: 600; color: var(--text);
+    }
+
+    .bank-check-account {
+      font-size: 12px; color: var(--text-muted);
+      font-family: monospace;
+    }
+
+    /* 帳號管理 Modal */
+    .bank-list-admin {
+      display: flex; flex-direction: column; gap: 8px;
+      max-height: 300px; overflow-y: auto;
+      margin-bottom: 12px;
+    }
+
+    .bank-admin-item {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 8px; align-items: center;
+      padding: 10px 12px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .bank-admin-field {
+      font-size: 13px; color: var(--text);
+      border: none; background: transparent;
+      padding: 2px 0; outline: none;
+      font-family: monospace;
+    }
+
+    .bank-admin-field:focus { color: var(--pink); }
+
+    .bank-admin-field.name { font-weight: 600; font-family: inherit; }
+
+    .bank-add-form {
+      background: #fff8fb;
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+
+    .bank-add-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 8px;
+    }
+
     /* 代購價手動覆蓋列 */
     .product-override-row {
       grid-template-columns: 1fr 100px auto !important;
@@ -934,15 +1025,16 @@
                 </div>
               </div>
 
-              <!-- 模式 1：匯款帳號 -->
+              <!-- 模式 1：匯款帳號（多選） -->
               <div class="mode-extra" id="mode-extra-1" style="display:none">
                 <div class="form-group">
-                  <label class="form-label">匯款銀行名稱</label>
-                  <input class="form-input" id="c-bank-name" type="text" placeholder="例：玉山銀行" />
-                </div>
-                <div class="form-group">
-                  <label class="form-label">匯款帳號</label>
-                  <input class="form-input" id="c-bank-account" type="text" placeholder="完整帳號" />
+                  <div class="bank-header">
+                    <label class="form-label" style="margin:0">本次團務的匯款帳號（可多選）</label>
+                    <button class="btn btn-ghost btn-sm" onclick="openBankManager()" type="button">🏦 管理帳號</button>
+                  </div>
+                  <div id="bank-checklist" class="bank-checklist">
+                    <div class="bank-loading">載入中...</div>
+                  </div>
                 </div>
               </div>
 
@@ -1104,6 +1196,35 @@
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" onclick="closeGroupModal()">取消</button>
       <button class="btn btn-primary btn-sm" id="btn-save-group" onclick="saveGroup()">儲存</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- 匯款帳號管理 Modal -->
+<div class="modal-backdrop" id="modal-bank" style="display:none" onclick="closeBankManager(event)">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <h3 class="modal-title">🏦 匯款帳號管理</h3>
+      <button class="modal-close" onclick="closeBankManager()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="bank-list-admin" class="bank-list-admin">
+        <div class="bank-loading">載入中...</div>
+      </div>
+
+      <div class="bank-add-form">
+        <div class="form-card-title" style="font-size:13px;padding-bottom:6px;border:none">新增帳號</div>
+        <div class="bank-add-grid">
+          <input class="form-input" id="bank-add-name" type="text" placeholder="銀行（例：國泰013）" />
+          <input class="form-input" id="bank-add-account" type="text" placeholder="帳號" />
+          <button class="btn btn-primary btn-sm" onclick="addBankAccount()">新增</button>
+        </div>
+        <p class="form-error" id="bank-add-error"></p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-sm" onclick="closeBankManager()">完成</button>
     </div>
   </div>
 </div>
@@ -1328,8 +1449,158 @@
 <script type="module">
   import { db } from "./auth.js";
   import {
-    collection, addDoc, serverTimestamp
+    collection, doc, addDoc, setDoc, updateDoc, deleteDoc,
+    getDocs, getDoc, serverTimestamp, query, orderBy
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ══ 匯款帳號管理 ══════════════════════════════════════════════
+  let bankAccounts = []; // 快取
+
+  const DEFAULT_BANKS = [
+    { name: "國泰013", account: "699507161336" },
+    { name: "中信822", account: "901567858153" },
+  ];
+
+  // 確保有預設帳號（首次使用時注入）
+  async function ensureDefaultBanks() {
+    const snap = await getDocs(collection(db, "bankAccounts"));
+    if (snap.empty) {
+      for (const b of DEFAULT_BANKS) {
+        await addDoc(collection(db, "bankAccounts"), { ...b, createdAt: serverTimestamp() });
+      }
+    }
+  }
+
+  async function loadBankAccounts() {
+    try {
+      const q = query(collection(db, "bankAccounts"), orderBy("createdAt", "asc"));
+      const snap = await getDocs(q);
+      bankAccounts = [];
+      snap.forEach(d => bankAccounts.push({ id: d.id, ...d.data() }));
+    } catch (e) {
+      console.error("載入帳號失敗", e);
+      bankAccounts = [];
+    }
+  }
+
+  // 渲染「開團勾選清單」
+  async function renderBankChecklist() {
+    const container = document.getElementById("bank-checklist");
+    if (!container) return;
+    container.innerHTML = '<div class="bank-loading">載入中...</div>';
+
+    await ensureDefaultBanks();
+    await loadBankAccounts();
+
+    if (!bankAccounts.length) {
+      container.innerHTML = '<div class="bank-empty">尚無帳號，請點「管理帳號」新增</div>';
+      return;
+    }
+    container.innerHTML = "";
+    bankAccounts.forEach(b => {
+      const label = document.createElement("label");
+      label.className = "bank-check-item";
+      label.innerHTML = `
+        <input type="checkbox" value="${b.id}" onchange="toggleBankCheck(this)" />
+        <div class="bank-check-body">
+          <div class="bank-check-name">${escHtmlLocal(b.name)}</div>
+          <div class="bank-check-account">${escHtmlLocal(b.account)}</div>
+        </div>`;
+      container.appendChild(label);
+    });
+  }
+
+  window.toggleBankCheck = function(input) {
+    input.closest(".bank-check-item").classList.toggle("checked", input.checked);
+  };
+
+  function escHtmlLocal(s) {
+    return String(s).replace(/[&<>"']/g, c =>
+      ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  // ── 帳號管理 Modal ──────────────────────────────────────────
+  window.openBankManager = async function() {
+    document.getElementById("modal-bank").style.display = "flex";
+    document.getElementById("bank-add-error").textContent = "";
+    await renderBankAdminList();
+  };
+
+  window.closeBankManager = async function(e) {
+    if (e && e.target !== document.getElementById("modal-bank")) return;
+    document.getElementById("modal-bank").style.display = "none";
+    // 關閉時重新整理開團勾選清單
+    await renderBankChecklist();
+  };
+
+  async function renderBankAdminList() {
+    const container = document.getElementById("bank-list-admin");
+    container.innerHTML = '<div class="bank-loading">載入中...</div>';
+    await loadBankAccounts();
+    if (!bankAccounts.length) {
+      container.innerHTML = '<div class="bank-empty">尚無帳號</div>';
+      return;
+    }
+    container.innerHTML = "";
+    bankAccounts.forEach(b => {
+      const row = document.createElement("div");
+      row.className = "bank-admin-item";
+      row.innerHTML = `
+        <input class="bank-admin-field name" data-id="${b.id}" data-field="name"
+               value="${escHtmlLocal(b.name)}" onchange="updateBankField(this)" />
+        <input class="bank-admin-field" data-id="${b.id}" data-field="account"
+               value="${escHtmlLocal(b.account)}" onchange="updateBankField(this)" />
+        <button class="btn btn-danger btn-sm" onclick="deleteBankAccount('${b.id}','${escHtmlLocal(b.name)}')">刪除</button>`;
+      container.appendChild(row);
+    });
+  }
+
+  window.addBankAccount = async function() {
+    const name = document.getElementById("bank-add-name").value.trim();
+    const account = document.getElementById("bank-add-account").value.trim();
+    const err = document.getElementById("bank-add-error");
+    if (!name || !account) { err.textContent = "請填寫銀行與帳號"; return; }
+    err.textContent = "";
+    try {
+      await addDoc(collection(db, "bankAccounts"), { name, account, createdAt: serverTimestamp() });
+      document.getElementById("bank-add-name").value = "";
+      document.getElementById("bank-add-account").value = "";
+      await renderBankAdminList();
+    } catch (e) {
+      err.textContent = "新增失敗：" + e.message;
+    }
+  };
+
+  window.updateBankField = async function(inp) {
+    const id = inp.dataset.id;
+    const field = inp.dataset.field;
+    const val = inp.value.trim();
+    try {
+      await updateDoc(doc(db, "bankAccounts", id), { [field]: val });
+    } catch (e) {
+      alert("更新失敗：" + e.message);
+    }
+  };
+
+  window.deleteBankAccount = async function(id, name) {
+    if (!confirm(`確定要刪除「${name}」嗎？`)) return;
+    try {
+      await deleteDoc(doc(db, "bankAccounts", id));
+      await renderBankAdminList();
+    } catch (e) {
+      alert("刪除失敗：" + e.message);
+    }
+  };
+
+  // 取得勾選的帳號清單（完整資料）
+  function getSelectedBanks() {
+    const checked = document.querySelectorAll('#bank-checklist input[type="checkbox"]:checked');
+    return Array.from(checked).map(cb => {
+      const b = bankAccounts.find(x => x.id === cb.value);
+      return b ? { name: b.name, account: b.account } : null;
+    }).filter(Boolean);
+  }
+
 
   // ── 匯率 ──────────────────────────────────────────────────────
   let rates = { KRW: null, JPY: null, CNY: null, USD: null };
@@ -1570,7 +1841,7 @@
 
   // ── 付款模式切換 ─────────────────────────────────────────────
   document.querySelectorAll('.mode-option').forEach(opt => {
-    opt.addEventListener('click', () => {
+    opt.addEventListener('click', async () => {
       document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('selected'));
       opt.classList.add('selected');
       opt.querySelector('input').checked = true;
@@ -1581,6 +1852,10 @@
       const val = opt.dataset.mode;
       const extra = document.getElementById(`mode-extra-${val}`);
       if (extra) extra.style.display = "flex";
+
+      // 選擇匯款模式時載入帳號清單
+      if (val === "1") await renderBankChecklist();
+
       updateCopywriter();
     });
   });
@@ -1621,9 +1896,9 @@
     }
     document.getElementById("copywriter-card").style.display = "block";
 
-    const itemLines = products.map((p, i) => `${i+1}. NT$${p.sell.toLocaleString()}｜${p.price.toLocaleString()} ${p.currency}\u3000${p.name}`).join("\n");
+    const itemLines = products.map((p, i) => `${i+1}. ${p.name} NT$${p.sell.toLocaleString()}｜${p.price.toLocaleString()} ${p.currency}`).join("\n");
 
-    const itemLinesNoFx = products.map((p, i) => `${i+1}. NT$${p.sell.toLocaleString()} ${p.name}`).join("\n");
+    const itemLinesNoFx = products.map((p, i) => `${i+1}. ${p.name} NT$${p.sell.toLocaleString()}`).join("\n");
 
     const memo   = name+"\n\n💰商品金額\n"+itemLines+"\n\n表單連結：\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n\u{16999}跟團前請先詳閱記事本重要貼文裡的注意事項\n\u{16999}填單即視同已閱讀並同意所有內容\n\n匯款完成後請在此記事本留下匯款帳戶末五碼\n謝謝";
     const note   = name+"\n\n💰商品金額\n"+itemLinesNoFx+"\n\n表單連結：\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n\u{16999}跟團前請先詳閱記事本重要貼文裡的注意事項\n\u{16999}填單即視同已閱讀並同意所有內容\n\n匯款完成後請在此記事本留下匯款帳戶末五碼\n謝謝";
@@ -1668,8 +1943,9 @@
 
       const extraData = {};
       if (mode === "1") {
-        extraData.bankName    = document.getElementById("c-bank-name").value;
-        extraData.bankAccount = document.getElementById("c-bank-account").value;
+        const selected = getSelectedBanks();
+        if (!selected.length) { alert("匯款模式請至少勾選一個帳號"); return; }
+        extraData.bankAccounts = selected;
       } else if (mode === "2") {
         extraData.warehouse = document.getElementById("c-warehouse").value;
       } else if (mode === "4") {
