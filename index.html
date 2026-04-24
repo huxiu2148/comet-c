@@ -2695,7 +2695,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-06 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-08 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -5856,6 +5856,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           const deadline       = deadlineDate ? toDatetimeLocal(deadlineDate) : "";
           const shipdate       = cell(row, columnMap.shipdate) || "待更新";
           const createdAtDate  = parseImportedDate(cellRaw(row, columnMap.createdAt));
+          console.log('[import] 建立時間 raw:', cellRaw(row, columnMap.createdAt), '→ parsed:', createdAtDate);
           const progress       = cell(row, columnMap.progress) || "ongoing";
           if (!name) { failMsgs.push("略過空白列"); fail++; continue; }
           // 用「日期欄位裡的字串」當成 ID 自動產生用的 raw（保留 YYYY/MM/DD 形狀）
