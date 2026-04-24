@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-15 -->
+  <!-- build:20260424-16 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2713,7 +2713,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-15 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-16 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -5633,7 +5633,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     snap.forEach(d => warehouses.push({ id: d.id, ...d.data() }));
   }
 
-  async function renderWarehouseChecklist() {
+  window.renderWarehouseChecklist = async function() {
     const container = document.getElementById("warehouse-checklist");
     if (!container) return;
     container.innerHTML = '<div class="bank-loading">載入中...</div>';
@@ -5931,20 +5931,20 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       // 標題列
       ["團務ID(空白自動產生)","團務名稱*","所屬團體名稱*","付款模式*(1匯款/2代收/3登記/4賣貨便)",
        "收單時間*(例:2025/08/15 22:00)","官方出貨時間(空白=待更新)",
-       "建立時間*(例:2025/07/01)","進度*(ongoing/closed/shipping/warehouse/returning/arrived/done)",
+       "建立時間*(例:2025/07/01)","進度*(ongoing/closed/shipping/warehouse/returning/arrived/done)","表單連結(空白=自動生成內建表單)","賣貨便連結(模式4才需要填)",
        "商品1名稱","商品1售價NT$","商品2名稱","商品2售價NT$",
        "商品3名稱","商品3售價NT$", "商品4名稱","商品4售價NT$", "商品5名稱","商品5售價NT$", "商品6名稱","商品6售價NT$", "商品7名稱","商品7售價NT$", "商品8名稱","商品8售價NT$", "商品9名稱","商品9售價NT$", "商品10名稱","商品10售價NT$", "商品11名稱","商品11售價NT$", "商品12名稱","商品12售價NT$", "商品13名稱","商品13售價NT$", "商品14名稱","商品14售價NT$", "商品15名稱","商品15售價NT$", "商品16名稱","商品16售價NT$", "商品17名稱","商品17售價NT$", "商品18名稱","商品18售價NT$", "商品19名稱","商品19售價NT$", "商品20名稱","商品20售價NT$", "商品21名稱","商品21售價NT$", "商品22名稱","商品22售價NT$", "商品23名稱","商品23售價NT$", "商品24名稱","商品24售價NT$", "商品25名稱","商品25售價NT$", "商品26名稱","商品26售價NT$", "商品27名稱","商品27售價NT$", "商品28名稱","商品28售價NT$", "商品29名稱","商品29售價NT$", "商品30名稱","商品30售價NT$", "商品31名稱","商品31售價NT$", "商品32名稱","商品32售價NT$", "商品33名稱","商品33售價NT$", "商品34名稱","商品34售價NT$", "商品35名稱","商品35售價NT$", "商品36名稱","商品36售價NT$", "商品37名稱","商品37售價NT$", "商品38名稱","商品38售價NT$", "商品39名稱","商品39售價NT$", "商品40名稱","商品40售價NT$"],
       // 說明列
       ["留空自動產生，或填入自訂ID","說明","填團體顯示名稱（需已在系統建立）","1=匯款 2=代收 3=登記 4=賣貨便",
        "格式：YYYY/MM/DD HH:MM","空白自動填「待更新」",
-       "格式：YYYY/MM/DD","ongoing進行中 closed已收單 shipping出貨中 warehouse到集運 returning運回中 arrived已抵台 done結束",
+       "格式：YYYY/MM/DD","ongoing進行中 closed已收單 shipping出貨中 warehouse到集運 returning運回中 arrived已抵台 done結束","空白自動產生","僅付款模式4使用",
        "商品名","整數例:800","商品名","整數","商品名","整數","商品名","整數","商品名","整數"],
       // 範例1
       ["NCT-250815-01","NCT夢想隊周邊第一團","NCT Dream","1","2025/08/15 22:00","待更新",
-       "2025/07/01","done","手機殼","800","鑰匙圈","350","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""],
+       "2025/07/01","done","","","手機殼","800","鑰匙圈","350","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""],
       // 範例2
       ["SHINee-250901-01","SHINee回歸專輯團","SHINee","1","2025/09/01 22:00","2025/10/15",
-       "2025/08/20","arrived","正規專輯","1200","迷你專輯","850","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""],
+       "2025/08/20","arrived","","","正規專輯","1200","迷你專輯","850","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""],
     ];
     const csv = BOM + rows.map(r =>
       r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")
@@ -6039,6 +6039,10 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
             }
           }
 
+          // 讀取 formUrl 和 buyshipUrl
+          const importedFormUrl = cell(row, columnMap.formUrl)   || "";
+          const importedBuyship = cell(row, columnMap.buyshipUrl) || "";
+
           // 團務ID：優先用自訂，否則自動產生
           let campaignId = customId;
           if (!campaignId) {
@@ -6069,11 +6073,17 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           const base = window.location.origin + window.location.pathname.replace(/index\.html$/, "");
           const formUrl = `${base}?c=${campaignId}`;
 
+          // formUrl：用填入的 > 自動生成內建連結
+          const finalFormUrl = importedFormUrl || (base + "?c=" + campaignId);
+          const finalBuyship = importedBuyship || "";
+
           await setDoc(doc(db, "campaigns", campaignId), {
             name, groupId, groupName: groupName || "", groupAbbr, groupColor, groupColors,
             mode, deadline, shipdate, progress,
             products, discounts: [],
-            formUrl, formSource: "builtin",
+            formUrl: finalFormUrl,
+            buyshipUrl: finalBuyship,
+            formSource: importedFormUrl ? "custom" : "builtin",
             status: "open",
             currency: "KRW", markup: 18,
             createdAt: createdAtDate || serverTimestamp(),
@@ -6189,6 +6199,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const map = {
       customId: -1, name: -1, groupName: -1, mode: -1,
       deadline: -1, shipdate: -1, createdAt: -1, progress: -1,
+      formUrl: -1, buyshipUrl: -1,
       products: []
     };
     const productNames  = new Map(); // slot 編號 → 欄位 index
@@ -6214,7 +6225,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       else if (map.deadline  === -1 && /(收單時間|收單|截止時間|截止|deadline|enddate)/.test(h))         map.deadline   = idx;
       else if (map.shipdate  === -1 && /(出貨時間|出貨日|出貨|shipdate|shippingdate)/.test(h))           map.shipdate   = idx;
       else if (map.createdAt === -1 && /(建立時間|開團時間|建立日期|開團日期|createdat|createtime)/.test(h)) map.createdAt = idx;
-      else if (map.progress  === -1 && /(進度|狀態|progress|status)/.test(h))                            map.progress   = idx;
+      else if (map.progress   === -1 && /(進度|狀態|progress|status)/.test(h))                            map.progress   = idx;
+      else if (map.formUrl   === -1 && /(表單連結|formurl|form)/.test(h))                                  map.formUrl    = idx;
+      else if (map.buyshipUrl === -1 && /(賣貨便|buyship|buyshipurl)/.test(h))                             map.buyshipUrl = idx;
     });
 
     // 按商品編號小到大組成對應，名稱與售價兩欄都要存在才採用
@@ -6232,9 +6245,10 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const map = {
       customId: 0, name: 1, groupName: 2, mode: 3,
       deadline: 4, shipdate: 5, createdAt: 6, progress: 7,
+      formUrl: 8, buyshipUrl: 9,
       products: []
     };
-    for (let c = 8; c < sampleRowLen - 1; c += 2) {
+    for (let c = 10; c < sampleRowLen - 1; c += 2) {
       map.products.push({ nameIdx: c, priceIdx: c + 1 });
     }
     return map;
