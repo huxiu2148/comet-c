@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-12 -->
+  <!-- build:20260424-13 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2698,7 +2698,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-12 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-13 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -4172,6 +4172,33 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   };
 
   // ── 下單頁面 ──────────────────────────────────────────────────
+  // 即時解析商品名稱裡的規格（不依賴 Firestore 的 specs 欄位）
+  function parseSpecLocal(specText) {
+    if (!specText) return [];
+    if (specText.includes("成員") || specText.toLowerCase().includes("member")) {
+      // 成員規格：從 groupsCache 找，或回傳空讓下單頁提示
+      return [{ label: specText, options: [], isMember: true }];
+    }
+    return specText.split(",").map(g => g.trim()).filter(g => g).map(g => {
+      const opts = g.split("/").map(o => o.trim()).filter(o => o);
+      return { label: g, options: opts.length > 1 ? opts : [g] };
+    });
+  }
+
+  function getProductSpecs(p) {
+    // 優先用已儲存的 specs，否則從名稱即時解析
+    if (p.specs && p.specs.length) return p.specs;
+    if (p.specText) return parseSpecLocal(p.specText);
+    // 從商品名稱括號解析
+    const m = p.name.match(/\(([^)]+)\)\s*$/);
+    return m ? parseSpecLocal(m[1]) : [];
+  }
+
+  function getDisplayName(p) {
+    // 顯示名稱去掉括號規格部分
+    return p.name.replace(/\([^)]+\)\s*$/, '').trim() || p.name;
+  }
+
   async function renderOrderPage(campaignId) {
     const el = document.getElementById("browse-content");
     el.innerHTML = '<div class="loading-row">載入中...</div>';
@@ -4240,9 +4267,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           <div class="form-card-title" style="margin-bottom:12px;border:none;padding:0">選擇商品</div>
           <div id="order-products">
             ${campaign.products.map((p, i) => `
-              <div class="order-product-item" id="opi-${i}">
+              <div class="order-product-item" id="opi-${i}" data-idx="${i}">
                 <div style="flex:1">
-                  <div class="opi-name">${escH(p.name)}</div>
+                  <div class="opi-name">${escH(getDisplayName(p))}</div>
                   ${p.noteHint ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">${escH(p.noteHint)}</div>` : ""}
                   <div class="opi-price">NT$<strong>${p.price.toLocaleString()}</strong></div>
                 </div>
@@ -4252,17 +4279,20 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
                   <button class="qty-btn" onclick="changeQty(${i}, 1)">＋</button>
                 </div>
                 <div class="opi-subtotal" id="subtotal-${i}">NT$0</div>
-                ${(p.specs && p.specs.length) ? `
-                <div class="opi-specs" id="opi-specs-${i}" style="grid-column:1/-1;display:none">
-                  ${p.specs.map((spec, si) => `
-                    <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
-                      <span style="font-size:12px;color:var(--text-muted);min-width:50px">${escH(spec.label||spec.name||"")}</span>
-                      <select class="form-input" id="spec-sel-${i}-${si}" style="font-size:12px">
-                        <option value="">— 請選擇 —</option>
-                        ${(spec.options||[]).map(o => `<option value="${escH(o)}">${escH(o)}</option>`).join("")}
-                      </select>
-                    </div>`).join("")}
-                </div>` : ""}
+                ${(() => {
+                  const specs = getProductSpecs(p);
+                  if (!specs.length) return "";
+                  return `<div class="opi-specs" id="opi-specs-${i}" style="grid-column:1/-1;display:none">
+                    ${specs.map((spec, si) => `
+                      <div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
+                        <span style="font-size:12px;color:var(--text-muted);min-width:50px">${escH(spec.label||"")}</span>
+                        <select class="form-input" id="spec-sel-${i}-${si}" style="font-size:12px;min-width:100px">
+                          <option value="">— 選擇 —</option>
+                          ${(spec.options||[]).map(o => `<option value="${escH(o)}">${escH(o)}</option>`).join("")}
+                        </select>
+                      </div>`).join("")}
+                  </div>`;
+                })()}
               </div>
             `).join("")}
           </div>
