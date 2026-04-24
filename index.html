@@ -928,6 +928,46 @@
     .lpb-cost  { color:var(--text-muted); }
     .lpb-price { color:var(--pink); font-weight:700; }
 
+
+    /* ══ 下單管理 ══ */
+    .purchase-stats {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr));
+      gap: 10px; margin-bottom: 16px;
+    }
+    .pstat {
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: var(--radius); padding: 10px 14px; text-align: center;
+    }
+    .pstat-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+    .pstat-val   { font-size: 16px; font-weight: 800;
+      background: var(--grad); -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent; background-clip: text; }
+
+    .purchase-row {
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: var(--radius); padding: 12px 16px;
+      margin-bottom: 8px; display: flex; gap: 12px;
+      align-items: flex-start; flex-wrap: wrap;
+    }
+    .purchase-row:hover { border-color: var(--pink); }
+    .pu-main { flex: 1; min-width: 200px; }
+    .pu-items { font-size: 14px; font-weight: 700; }
+    .pu-campaign { font-size: 11px; color: var(--pink); margin-top: 2px; }
+    .pu-meta {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .pu-chip {
+      font-size: 11px; padding: 2px 8px;
+      background: #fff0f7; border-radius: 20px;
+      color: var(--text-muted);
+    }
+    .pu-chip.green { background: #e1f5ee; color: #2d7a5f; }
+    .pu-chip.blue  { background: #e4f0ff; color: #2d5ba8; }
+    .pu-chip.orange{ background: #fff0d9; color: #b36d0f; }
+    .pu-amount { font-size: 15px; font-weight: 700; color: var(--pink); white-space: nowrap; }
+    .pu-actions { display: flex; gap: 6px; align-items: center; }
+
     /* ══ 訂單管理 ══ */
     .order-admin-card {
       background: var(--surface);
@@ -1898,6 +1938,7 @@
         <button class="subnav-btn"         data-section="campaigns" onclick="switchAdminSection('campaigns')">📦 開團系統</button>
         <button class="subnav-btn"         data-section="campaign-mgmt" onclick="switchAdminSection('campaign-mgmt')">📋 團務管理</button>
         <button class="subnav-btn"         data-section="orders"    onclick="switchAdminSection('orders')">🧾 訂單管理</button>
+        <button class="subnav-btn"         data-section="purchase"  onclick="switchAdminSection('purchase')">🛒 下單管理</button>
         <button class="subnav-btn"         data-section="finance"   onclick="switchAdminSection('finance')">💰 記帳</button>
         <button class="subnav-btn"         data-section="members"   onclick="switchAdminSection('members')">👤 會員管理</button>
       </div>
@@ -2197,6 +2238,40 @@
         <div id="admin-orders-list"></div>
       </div>
 
+      <!-- 下單管理 -->
+      <div class="admin-section" id="section-purchase">
+        <div class="section-header">
+          <h2 class="section-title">🛒 下單管理</h2>
+          <button class="btn btn-primary btn-sm" onclick="openPurchaseModal()">＋ 新增下單記錄</button>
+        </div>
+
+        <!-- 篩選列 -->
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <select class="form-input" id="purchase-filter-campaign" style="font-size:13px;width:200px" onchange="loadPurchases()">
+            <option value="">全部團務</option>
+          </select>
+          <select class="form-input" id="purchase-filter-status" style="font-size:13px;width:130px" onchange="loadPurchases()">
+            <option value="">全部狀態</option>
+            <option value="ordered">已下單</option>
+            <option value="shipped">已出貨</option>
+            <option value="arrived">到集運</option>
+            <option value="returning">運回中</option>
+            <option value="done">已完成</option>
+          </select>
+        </div>
+
+        <!-- 統計列 -->
+        <div class="purchase-stats" id="purchase-stats" style="display:none">
+          <div class="pstat"><div class="pstat-label">總筆數</div><div class="pstat-val" id="ps-count">0</div></div>
+          <div class="pstat"><div class="pstat-label">總金額</div><div class="pstat-val" id="ps-total">NT$0</div></div>
+          <div class="pstat"><div class="pstat-label">總重量</div><div class="pstat-val" id="ps-weight">0 kg</div></div>
+          <div class="pstat"><div class="pstat-label">運費合計</div><div class="pstat-val" id="ps-shipping">NT$0</div></div>
+        </div>
+
+        <!-- 列表 -->
+        <div id="purchase-list"></div>
+      </div>
+
       <!-- 記帳 -->
       <div class="admin-section" id="section-finance">
         <div class="finance-tabs">
@@ -2333,6 +2408,82 @@
 
 
 
+
+
+<!-- 下單管理 Modal -->
+<div class="modal-backdrop" id="modal-purchase" style="display:none" onclick="closePurchaseModal(event)">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <h3 class="modal-title" id="purchase-modal-title">🛒 新增下單記錄</h3>
+      <button class="modal-close" onclick="closePurchaseModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">關聯團務</label>
+        <select class="form-input" id="pu-campaign">
+          <option value="">無</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">商品說明 <span class="required">*</span></label>
+        <input class="form-input" id="pu-items" type="text" placeholder="例：手機殼×2、鑰匙圈×3" />
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">下單時間</label>
+          <input class="form-input" id="pu-ordered-at" type="datetime-local" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">下單金額 NT$</label>
+          <input class="form-input" id="pu-amount" type="number" min="0" placeholder="0" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">貨運單號</label>
+        <input class="form-input" id="pu-tracking" type="text" placeholder="填入後可追蹤" />
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">到集運時間</label>
+          <input class="form-input" id="pu-arrived-at" type="datetime-local" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">重量 (kg)</label>
+          <input class="form-input" id="pu-weight" type="number" min="0" step="0.1" placeholder="0.0" />
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">申請運回時間</label>
+          <input class="form-input" id="pu-return-at" type="datetime-local" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">運費 NT$</label>
+          <input class="form-input" id="pu-shipping-fee" type="number" min="0" placeholder="0" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">狀態</label>
+        <select class="form-input" id="pu-status">
+          <option value="ordered">已下單</option>
+          <option value="shipped">已出貨</option>
+          <option value="arrived">到集運</option>
+          <option value="returning">運回中</option>
+          <option value="done">已完成</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">備注</label>
+        <input class="form-input" id="pu-note" type="text" placeholder="其他備注" />
+      </div>
+      <p class="form-error" id="pu-error"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closePurchaseModal()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="savePurchase()">儲存</button>
+    </div>
+  </div>
+</div>
 
 <!-- 編輯團務 Modal -->
 <div class="modal-backdrop" id="modal-campaign-edit" style="display:none" onclick="closeCampaignEdit(event)">
@@ -2602,6 +2753,24 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   };
 
   window.handleSignOut = async function() { await signOutUser(); };
+
+  // 全域日期格式函式 yyyy/MM/DD HH:mm:ss
+  window.fmtDateTime = function(val) {
+    if (!val) return "—";
+    let d;
+    if (val?.toDate) d = val.toDate();
+    else if (typeof val === "string") d = new Date(val.replace(/\//g,"-"));
+    else d = new Date(val);
+    if (isNaN(d)) return String(val);
+    const p = n => String(n).padStart(2,"0");
+    return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  };
+  // 僅日期 yyyy/MM/DD
+  window.fmtDate = function(val) {
+    if (!val) return "—";
+    const s = window.fmtDateTime(val);
+    return s === "—" ? "—" : s.slice(0,10);
+  };
 </script>
 
 <!-- ── 團體管理邏輯 ── -->
@@ -5749,7 +5918,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           warehouse:"🔵到集運", returning:"🔵運回中", arrived:"🟣已抵台", done:"⚪結束" };
         const MODES = { 1:"匯款", 2:"代收", 3:"登記", 4:"賣貨便" };
         const deadline = data.deadline
-          ? new Date(data.deadline).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})
+          ? window.fmtDateTime(new Date(data.deadline)).slice(5,16)
           : "—";
         const shipdate = data.shipdate || "待更新";
         const modeName = MODES[data.mode] || "—";
@@ -6168,5 +6337,251 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           </tbody>
         </table>`;
     } catch(e) { el.innerHTML = `<div class="empty-row" style="color:var(--danger)">${e.message}</div>`; }
+  }
+</script>
+
+<!-- ── 下單管理 JS ── -->
+<script type="module">
+  import { db } from "./auth.js";
+  import {
+    collection, doc, addDoc, updateDoc, deleteDoc,
+    getDocs, getDoc, query, orderBy, where, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const PU_STATUS = {
+    ordered:   "🛒 已下單",
+    shipped:   "📦 已出貨",
+    arrived:   "🏪 到集運",
+    returning: "✈️ 運回中",
+    done:      "✅ 已完成",
+  };
+
+  // 日期格式 yyyy/MM/DD HH:mm:ss
+  function fmtDT(val) {
+    if (!val) return "—";
+    let d;
+    if (val?.toDate) d = val.toDate();
+    else if (typeof val === "string") d = new Date(val);
+    else d = new Date(val);
+    if (isNaN(d)) return String(val);
+    const p = n => String(n).padStart(2,"0");
+    return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  }
+
+  // 切換時初始化
+  const _origSwitch9 = window.switchAdminSection;
+  window.switchAdminSection = function(section) {
+    _origSwitch9(section);
+    if (section === "purchase") { loadPurchaseCampaignFilter(); loadPurchases(); }
+  };
+
+  // 篩選選單
+  async function loadPurchaseCampaignFilter() {
+    const sel = document.getElementById("purchase-filter-campaign");
+    if (!sel || sel.options.length > 1) return;
+    try {
+      const snap = await getDocs(query(collection(db,"campaigns"), orderBy("createdAt","desc")));
+      snap.forEach(d => {
+        const opt = document.createElement("option");
+        opt.value = d.id;
+        opt.textContent = `${d.data().name} (${d.id})`;
+        sel.appendChild(opt);
+      });
+    } catch(e) {}
+  }
+
+  // 載入下單列表
+  window.loadPurchases = async function() {
+    const list = document.getElementById("purchase-list");
+    if (!list) return;
+    list.innerHTML = '<div class="loading-row">載入中...</div>';
+    const campaignId = document.getElementById("purchase-filter-campaign")?.value;
+    const status     = document.getElementById("purchase-filter-status")?.value;
+    try {
+      const snap = await getDocs(query(collection(db,"purchases"), orderBy("orderedAt","desc")));
+      let records = [];
+      snap.forEach(d => records.push({ id: d.id, ...d.data() }));
+      if (campaignId) records = records.filter(r => r.campaignId === campaignId);
+      if (status)     records = records.filter(r => r.status === status);
+
+      // 統計
+      const stats = document.getElementById("purchase-stats");
+      if (records.length) {
+        stats.style.display = "grid";
+        document.getElementById("ps-count").textContent = records.length;
+        document.getElementById("ps-total").textContent = "NT$" + records.reduce((s,r)=>s+(r.amount||0),0).toLocaleString();
+        document.getElementById("ps-weight").textContent = records.reduce((s,r)=>s+(parseFloat(r.weight)||0),0).toFixed(1) + " kg";
+        document.getElementById("ps-shipping").textContent = "NT$" + records.reduce((s,r)=>s+(r.shippingFee||0),0).toLocaleString();
+      } else {
+        stats.style.display = "none";
+      }
+
+      if (!records.length) { list.innerHTML = '<div class="empty-row">沒有記錄</div>'; return; }
+      list.innerHTML = "";
+      records.forEach(r => list.appendChild(renderPurchaseRow(r)));
+    } catch(e) {
+      list.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
+    }
+  };
+
+  function renderPurchaseRow(r) {
+    const row = document.createElement("div");
+    row.className = "purchase-row";
+    row.id = `pu-row-${r.id}`;
+    const chips = [];
+    if (r.orderedAt)   chips.push(`<span class="pu-chip">下單：${fmtDT(r.orderedAt)}</span>`);
+    if (r.tracking)    chips.push(`<span class="pu-chip blue">單號：${esc(r.tracking)}</span>`);
+    if (r.arrivedAt)   chips.push(`<span class="pu-chip green">到倉：${fmtDT(r.arrivedAt)}</span>`);
+    if (r.weight)      chips.push(`<span class="pu-chip green">${r.weight} kg</span>`);
+    if (r.returnAt)    chips.push(`<span class="pu-chip orange">申請運回：${fmtDT(r.returnAt)}</span>`);
+    if (r.shippingFee) chips.push(`<span class="pu-chip orange">運費 NT$${r.shippingFee.toLocaleString()}</span>`);
+    if (r.note)        chips.push(`<span class="pu-chip">${esc(r.note)}</span>`);
+    row.innerHTML = `
+      <div class="pu-main">
+        <div class="pu-items">${esc(r.items || "—")}</div>
+        ${r.campaignId ? `<div class="pu-campaign">${esc(r.campaignName || r.campaignId)}</div>` : ""}
+        <div class="pu-meta">${chips.join("")}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <div class="pu-amount">${r.amount ? "NT$"+r.amount.toLocaleString() : "—"}</div>
+        <span style="font-size:11px;padding:2px 8px;background:#fff0f7;border-radius:20px;color:var(--text-muted)">
+          ${PU_STATUS[r.status] || r.status}
+        </span>
+      </div>
+      <div class="pu-actions">
+        <button class="btn btn-ghost btn-sm" onclick="openPurchaseModal('${r.id}')">編輯</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePurchase('${r.id}')">刪除</button>
+      </div>`;
+    return row;
+  }
+
+  // ── Modal 開關 ───────────────────────────────────────────────
+  let _editingPurchaseId = null;
+
+  window.openPurchaseModal = async function(id = null) {
+    _editingPurchaseId = id;
+    document.getElementById("purchase-modal-title").textContent = id ? "✏️ 編輯下單記錄" : "🛒 新增下單記錄";
+    document.getElementById("pu-error").textContent = "";
+
+    // 清空
+    ["pu-items","pu-amount","pu-tracking","pu-weight","pu-shipping-fee","pu-note"].forEach(i => {
+      const el = document.getElementById(i);
+      if (el) el.value = "";
+    });
+    ["pu-ordered-at","pu-arrived-at","pu-return-at"].forEach(i => {
+      const el = document.getElementById(i); if (el) el.value = "";
+    });
+    document.getElementById("pu-status").value = "ordered";
+
+    // 載入團務選單
+    const sel = document.getElementById("pu-campaign");
+    if (sel.options.length <= 1) {
+      try {
+        const snap = await getDocs(query(collection(db,"campaigns"), orderBy("createdAt","desc")));
+        snap.forEach(d => {
+          const opt = document.createElement("option");
+          opt.value = d.id;
+          opt.dataset.name = d.data().name;
+          opt.textContent = `${d.data().name} (${d.id})`;
+          sel.appendChild(opt);
+        });
+      } catch(e) {}
+    }
+
+    // 若是編輯，載入現有資料
+    if (id) {
+      try {
+        const snap = await getDoc(doc(db,"purchases",id));
+        if (snap.exists()) {
+          const d = snap.data();
+          document.getElementById("pu-campaign").value = d.campaignId || "";
+          document.getElementById("pu-items").value = d.items || "";
+          document.getElementById("pu-amount").value = d.amount || "";
+          document.getElementById("pu-tracking").value = d.tracking || "";
+          document.getElementById("pu-weight").value = d.weight || "";
+          document.getElementById("pu-shipping-fee").value = d.shippingFee || "";
+          document.getElementById("pu-note").value = d.note || "";
+          document.getElementById("pu-status").value = d.status || "ordered";
+          if (d.orderedAt) document.getElementById("pu-ordered-at").value = toLocalDTInput(d.orderedAt);
+          if (d.arrivedAt) document.getElementById("pu-arrived-at").value = toLocalDTInput(d.arrivedAt);
+          if (d.returnAt)  document.getElementById("pu-return-at").value  = toLocalDTInput(d.returnAt);
+        }
+      } catch(e) {}
+    } else {
+      // 預設下單時間為現在
+      const now = new Date();
+      document.getElementById("pu-ordered-at").value = toLocalDTInput(now);
+    }
+
+    document.getElementById("modal-purchase").style.display = "flex";
+  };
+
+  function toLocalDTInput(val) {
+    let d;
+    if (val?.toDate) d = val.toDate();
+    else d = new Date(val);
+    if (isNaN(d)) return "";
+    const p = n => String(n).padStart(2,"0");
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+
+  window.closePurchaseModal = function(e) {
+    if (e && e.target !== document.getElementById("modal-purchase")) return;
+    document.getElementById("modal-purchase").style.display = "none";
+    _editingPurchaseId = null;
+  };
+
+  window.savePurchase = async function() {
+    const items = document.getElementById("pu-items").value.trim();
+    const errEl = document.getElementById("pu-error");
+    if (!items) { errEl.textContent = "請填寫商品說明"; return; }
+
+    const cid = document.getElementById("pu-campaign").value;
+    const cOpt = document.querySelector(`#pu-campaign option[value="${cid}"]`);
+    const amount      = parseFloat(document.getElementById("pu-amount").value) || 0;
+    const tracking    = document.getElementById("pu-tracking").value.trim();
+    const weight      = parseFloat(document.getElementById("pu-weight").value) || 0;
+    const shippingFee = parseFloat(document.getElementById("pu-shipping-fee").value) || 0;
+    const note        = document.getElementById("pu-note").value.trim();
+    const status      = document.getElementById("pu-status").value;
+    const orderedAt   = document.getElementById("pu-ordered-at").value || null;
+    const arrivedAt   = document.getElementById("pu-arrived-at").value || null;
+    const returnAt    = document.getElementById("pu-return-at").value  || null;
+
+    const data = {
+      items, campaignId: cid || null,
+      campaignName: cOpt?.dataset.name || "",
+      amount, tracking, weight, shippingFee, note, status,
+      orderedAt:  orderedAt  ? new Date(orderedAt)  : null,
+      arrivedAt:  arrivedAt  ? new Date(arrivedAt)  : null,
+      returnAt:   returnAt   ? new Date(returnAt)   : null,
+      updatedAt: serverTimestamp(),
+    };
+
+    try {
+      if (_editingPurchaseId) {
+        await updateDoc(doc(db,"purchases",_editingPurchaseId), data);
+      } else {
+        data.createdAt = serverTimestamp();
+        await addDoc(collection(db,"purchases"), data);
+      }
+      document.getElementById("modal-purchase").style.display = "none";
+      _editingPurchaseId = null;
+      await loadPurchases();
+    } catch(e) { errEl.textContent = "儲存失敗：" + e.message; }
+  };
+
+  window.deletePurchase = async function(id) {
+    if (!confirm("確定刪除此下單記錄？")) return;
+    try {
+      await deleteDoc(doc(db,"purchases",id));
+      document.getElementById(`pu-row-${id}`)?.remove();
+      await loadPurchases();
+    } catch(e) { alert("刪除失敗：" + e.message); }
+  };
+
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c =>
+      ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   }
 </script>
