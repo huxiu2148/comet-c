@@ -223,11 +223,10 @@
       padding:8px 16px;
       background:#fff8fb;
       font-size:13px; font-weight:700;
-      background-clip: text; -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background: var(--grad);
+      color: var(--pink);
       border-top:1px dashed var(--border);
     }
+    .spec-subtotal-row strong { color: var(--orange); margin-left:4px; }
 
     /* 無規格商品 */
     .opi-note { font-size:11px; color:var(--text-muted); margin-top:2px; }
@@ -3374,6 +3373,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   // ── 匯率 ──────────────────────────────────────────────────────
   let rates = { KRW: null, JPY: null, CNY: null, USD: null };
+  // 暴露給其他 module（例如編輯團務的代購價自動換算）使用
+  window.__rates = rates;
+  window.__roundUpTo5 = roundUpTo5;
 
   const LABELS = { KRW:"韓幣", JPY:"日幣", CNY:"人民幣", USD:"美金" };
 
@@ -4598,7 +4600,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const el = document.getElementById('subtotal-' + pi);
     if (el) {
       if (count > 0) {
-        el.textContent = '× ' + count + ' = NT$' + sub.toLocaleString();
+        el.innerHTML = '× ' + count + ' = <strong>NT$' + sub.toLocaleString() + '</strong>';
         el.style.display = 'flex';
       } else {
         el.style.display = 'none';
@@ -6669,11 +6671,27 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     div.style.gap = "4px";
     div.style.alignItems = "center";
     div.innerHTML = `
-      <input class="form-input" type="text" id="ce-p-name-${id}" placeholder="商品名稱" value="${esc(data?.name || '')}" />
-      <input class="form-input" type="number" id="ce-p-foreign-${id}" placeholder="外幣" value="${data?.foreignPrice || ''}" />
-      <input class="form-input" type="number" id="ce-p-price-${id}" placeholder="代購價" value="${data?.price || ''}" />
+      <input class="form-input" type="text"   id="ce-p-name-${id}"    placeholder="商品名稱" value="${esc(data?.name || '')}" />
+      <input class="form-input" type="number" id="ce-p-foreign-${id}" placeholder="外幣"   value="${data?.foreignPrice || ''}" oninput="recalcCePrice(${id})" />
+      <input class="form-input" type="number" id="ce-p-price-${id}"   placeholder="代購價" value="${data?.price || ''}" />
       <button class="product-remove" type="button" onclick="removeCeProductRow(${id})">✕</button>`;
     list.appendChild(div);
+  };
+
+  // 編輯團務內：外幣 → 代購價 自動換算（用團務存的幣別與利潤率，含 1.5% 刷卡手續費，湊整到 5）
+  window.recalcCePrice = function(id) {
+    const foreignEl = document.getElementById(`ce-p-foreign-${id}`);
+    const priceEl   = document.getElementById(`ce-p-price-${id}`);
+    if (!foreignEl || !priceEl) return;
+    const foreign = parseFloat(foreignEl.value) || 0;
+    if (!foreign) { priceEl.value = ""; return; }
+    const currency = window.__ceCurrency || "KRW";
+    const markup   = (window.__ceMarkup ?? 18) / 100;
+    const rate     = window.__rates?.[currency];
+    const round5   = window.__roundUpTo5 || (n => Math.ceil(n / 5) * 5);
+    if (!rate) { return; } // 匯率還沒載入就不動
+    const fee = 0.015;
+    priceEl.value = round5(foreign * rate * (1 + fee + markup));
   };
 
   window.removeCeProductRow = function(id) {
@@ -6770,7 +6788,15 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       (document.getElementById("ce-shipdate") || {}).value = d.shipdate || "";
       (document.getElementById("ce-createdAt") || {}).value = toDatetimeLocal(d.createdAt);
       (document.getElementById("ce-progress") || {}).value = d.progress || "ongoing";
-      
+
+      // 記下這個團務的幣別與利潤率，給代購價自動換算用
+      window.__ceCurrency = d.currency || "KRW";
+      window.__ceMarkup   = (typeof d.markup === "number") ? d.markup : 18;
+      // 若匯率還沒載入過就先抓一次，避免外幣輸入後算不出代購價
+      if (window.__rates && window.__rates[window.__ceCurrency] == null && typeof window.fetchRates === "function") {
+        window.fetchRates();
+      }
+
       if (d.products && d.products.length) {
         d.products.forEach(p => addCeProductRow(p));
       }
