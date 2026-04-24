@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-14 -->
+  <!-- build:20260424-15 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2698,17 +2698,17 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-14 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-15 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
     currentRole = role;
     if (!user) {
       showView("login");
-      document.getElementById("btn-signin-header").style.display = "inline-flex";
-      document.getElementById("btn-signout").style.display = "none";
-      document.getElementById("user-info").style.display = "none";
-      document.getElementById("role-badge").style.display = "none";
+      (function(){const _el=document.getElementById("btn-signin-header");if(_el)_el.style.display="inline-flex";})();
+      (function(){const _el=document.getElementById("btn-signout");if(_el)_el.style.display="none";})();
+      (function(){const _el=document.getElementById("user-info");if(_el)_el.style.display="none";})();
+      (function(){const _el=document.getElementById("role-badge");if(_el)_el.style.display="none";})();
     } else {
       showView("app");
       setupAppUI(user, role);
@@ -2719,9 +2719,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const avatar = document.getElementById("user-avatar");
     if (user.photoURL) avatar.src = user.photoURL;
     document.getElementById("user-name").textContent = user.displayName || user.email;
-    document.getElementById("user-info").style.display = "flex";
-    document.getElementById("btn-signout").style.display = "inline-flex";
-    document.getElementById("btn-signin-header").style.display = "none";
+    (function(){const _el=document.getElementById("user-info");if(_el)_el.style.display="flex";})();
+    (function(){const _el=document.getElementById("btn-signout");if(_el)_el.style.display="inline-flex";})();
+    (function(){const _el=document.getElementById("btn-signin-header");if(_el)_el.style.display="none";})();
 
     const badge = document.getElementById("role-badge");
     badge.textContent = role === "admin" ? "✦ 管理者" : "會員";
@@ -2751,11 +2751,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   };
 
   function showView(name) {
-    document.getElementById("view-loading").style.display = "none";
-    document.getElementById("view-login").style.display = "none";
-    document.getElementById("view-app").style.display = "none";
-    if (name === "login") document.getElementById("view-login").style.display = "flex";
-    if (name === "app")   document.getElementById("view-app").style.display = "block";
+    (function(){const _el=document.getElementById("view-loading");if(_el)_el.style.display="none";})();
+    (function(){const _el=document.getElementById("view-login");if(_el)_el.style.display="none";})();
+    (function(){const _el=document.getElementById("view-app");if(_el)_el.style.display="none";})();
+    if (name === "login") (function(){const _el=document.getElementById("view-login");if(_el)_el.style.display="flex";})();
+    if (name === "app")   (function(){const _el=document.getElementById("view-app");if(_el)_el.style.display="block";})();
   }
 
   window.handleSignIn = async function() {
@@ -2964,7 +2964,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       : [];
     // 顯示 Modal
     document.getElementById("modal-group-title").textContent = id ? "編輯團體" : "新增團體";
-    document.getElementById("modal-group").style.display = "flex";
+    (function(){const _el=document.getElementById("modal-group");if(_el)_el.style.display="flex";})();
     // DOM 就緒後再填值
     requestAnimationFrame(() => {
       const nameEl    = document.getElementById("input-group-name");
@@ -2983,7 +2983,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   window.closeGroupModal = function(e) {
     if (e && e.target !== document.getElementById("modal-group")) return;
-    document.getElementById("modal-group").style.display = "none";
+    (function(){const _el=document.getElementById("modal-group");if(_el)_el.style.display="none";})();
     editingGroupId = null;
   };
 
@@ -3021,7 +3021,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       } else {
         await addDoc(collection(db, "groups"), { name, abbr, aliases, colors, color, members, createdAt: serverTimestamp() });
       }
-      document.getElementById("modal-group").style.display = "none";
+      (function(){const _el=document.getElementById("modal-group");if(_el)_el.style.display="none";})();
       editingGroupId = null;
       await loadGroups();
     } catch (e) {
@@ -3126,14 +3126,14 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   // ── 帳號管理 Modal ──────────────────────────────────────────
   window.openBankManager = async function() {
-    document.getElementById("modal-bank").style.display = "flex";
+    (function(){const _el=document.getElementById("modal-bank");if(_el)_el.style.display="flex";})();
     document.getElementById("bank-add-error").textContent = "";
     await renderBankAdminList();
   };
 
   window.closeBankManager = async function(e) {
     if (e && e.target !== document.getElementById("modal-bank")) return;
-    document.getElementById("modal-bank").style.display = "none";
+    (function(){const _el=document.getElementById("modal-bank");if(_el)_el.style.display="none";})();
     // 關閉時重新整理開團勾選清單
     await renderBankChecklist();
   };
@@ -3168,8 +3168,8 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     err.textContent = "";
     try {
       await addDoc(collection(db, "bankAccounts"), { name, account, createdAt: serverTimestamp() });
-      document.getElementById("bank-add-name").value = "";
-      document.getElementById("bank-add-account").value = "";
+      (document.getElementById("bank-add-name") || {}).value = "";
+      (document.getElementById("bank-add-account") || {}).value = "";
       await renderBankAdminList();
     } catch (e) {
       err.textContent = "新增失敗：" + e.message;
@@ -3599,9 +3599,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   function applyCurrencyDefaults() {
     const sel = document.getElementById("calc-currency");
     const opt = sel.options[sel.selectedIndex];
-    document.getElementById("calc-markup").value       = opt.dataset.markup     || "10";
-    document.getElementById("calc-markup-high").value  = opt.dataset.markupHigh || "8";
-    document.getElementById("calc-threshold").value    = opt.dataset.threshold  || "0";
+    (document.getElementById("calc-markup") || {}).value = opt.dataset.markup     || "10";
+    (document.getElementById("calc-markup-high") || {}).value = opt.dataset.markupHigh || "8";
+    (document.getElementById("calc-threshold") || {}).value = opt.dataset.threshold  || "0";
     document.getElementById("threshold-unit").textContent = sel.value;
     recalcAll();
   }
@@ -3715,7 +3715,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   // 訂單表單來源切換
   window.onFormSourceChange = function() {
     const src = document.querySelector('input[name="form-source"]:checked')?.value;
-    document.getElementById("google-form-settings").style.display = src === "google" ? "flex" : "none";
+    (function(){const _el=document.getElementById("google-form-settings");if(_el)_el.style.display=src === "google" ? "flex" : "none";})()
     updateCopywriter();
   };
 
@@ -3725,7 +3725,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     now.setHours(22, 0, 0, 0);
     const pad = n => String(n).padStart(2, "0");
     const val = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T22:00`;
-    document.getElementById("c-deadline").value = val;
+    (document.getElementById("c-deadline") || {}).value = val;
   }
   setDefaultDeadline();
   document.getElementById("c-shipdate").placeholder = "待更新";
@@ -3763,10 +3763,10 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     }
 
     if (!name || !products.length) {
-      document.getElementById("copywriter-card").style.display = "none";
+      (function(){const _el=document.getElementById("copywriter-card");if(_el)_el.style.display="none";})();
       return;
     }
-    document.getElementById("copywriter-card").style.display = "block";
+    (function(){const _el=document.getElementById("copywriter-card");if(_el)_el.style.display="block";})();
 
     const itemLines = products.map((p, i) => { const spec = p.specText ? `(${p.specText})` : ""; return `${i+1}. ${p.name}${spec} NT$${p.sell.toLocaleString()}｜${p.price.toLocaleString()} ${p.currency}`; }).join("\n");
     const discounts = getDiscounts();
@@ -3782,9 +3782,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const note   = name+"\n\n💰商品金額\n"+itemLinesNoFx+discountLines+"\n\n表單連結："+formUrl+"\n收單時間："+deadline+"\n官方出貨時間："+shipdate+"\n\n✓以上都可以接受再跟團 需二補\n\u{16999}跟團前請先詳閱記事本重要貼文裡的注意事項\n\u{16999}填單即視同已閱讀並同意所有內容"+payFooter+"\n謝謝";
     const social = "#代購 "+name+"\n\n💰商品金額\n"+itemLinesNoFx+"\n\n✓以上需二補 收單時間："+deadline+"\n\u{16999}欲跟團者請加入社群填單匯款\n🔗：https://reurl.cc/EQ1rLk\n\n有任何問題都歡迎詢問 謝謝～";
 
-    document.getElementById("txt-memo").value   = memo;
-    document.getElementById("txt-note").value   = note;
-    document.getElementById("txt-social").value = social;
+    (document.getElementById("txt-memo") || {}).value = memo;
+    (document.getElementById("txt-note") || {}).value = note;
+    (document.getElementById("txt-social") || {}).value = social;
   }
 
   // 即時更新文案
@@ -3896,8 +3896,8 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   window.resetCampaignForm = function() {
     if (!confirm("確定要重置所有欄位嗎？")) return;
-    document.getElementById("c-name").value = "";
-    document.getElementById("c-shipdate").value = "";
+    (document.getElementById("c-name") || {}).value = "";
+    (document.getElementById("c-shipdate") || {}).value = "";
     document.getElementById("products-list").innerHTML = "";
     productRows = []; rowCounter = 0;
     discountRows = []; discountCounter = 0;
@@ -3906,8 +3906,8 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     window._productMemberSel = {};
     document.querySelectorAll('.mode-option').forEach(o => o.classList.remove('selected'));
     [1,2,4].forEach(m => { const el = document.getElementById(`mode-extra-${m}`); if(el) el.style.display="none"; });
-    document.getElementById("calc-results").style.display = "none";
-    document.getElementById("copywriter-card").style.display = "none";
+    (function(){const _el=document.getElementById("calc-results");if(_el)_el.style.display="none";})();
+    (function(){const _el=document.getElementById("copywriter-card");if(_el)_el.style.display="none";})();
     setDefaultDeadline();
     applyNameColor("");
   };
@@ -4648,7 +4648,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const waitForDom = () => new Promise(resolve => {
       const check = () => {
         const el = document.getElementById("campaigns-list");
-        if (el && document.getElementById("view-app").style.display !== "none") {
+        if (el && document.getElementById("view-app")?.style.display !== "none") {
           resolve();
         } else {
           setTimeout(check, 50);
@@ -4949,7 +4949,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       if (nickInput)  nickInput.value  = profile.nickname || user.displayName || "";
       if (contactInput) contactInput.value = profile.contact || "";
       if (profile.nickname || profile.contact) {
-        document.getElementById("profile-saved-hint").style.display = "block";
+        (function(){const _el=document.getElementById("profile-saved-hint");if(_el)_el.style.display="block";})();
       }
     } catch (e) { console.warn("載入 profile 失敗", e); }
   }
@@ -5376,7 +5376,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   // ── 手動新增會員 Modal ────────────────────────────────────
   window.openMemberModal = function() {
-    document.getElementById("modal-member").style.display = "flex";
+    (function(){const _el=document.getElementById("modal-member");if(_el)_el.style.display="flex";})();
     document.getElementById("member-form-error").textContent = "";
     ["member-name","member-email","member-contact","member-nickname"].forEach(id => {
       const el = document.getElementById(id);
@@ -5386,7 +5386,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   window.closeMemberModal = function(e) {
     if (e && e.target !== document.getElementById("modal-member")) return;
-    document.getElementById("modal-member").style.display = "none";
+    (function(){const _el=document.getElementById("modal-member");if(_el)_el.style.display="none";})();
   };
 
   window.saveMember = async function() {
@@ -5409,7 +5409,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         createdAt: serverTimestamp(),
         lastLogin: new Date(),
       }, { merge: true });
-      document.getElementById("modal-member").style.display = "none";
+      (function(){const _el=document.getElementById("modal-member");if(_el)_el.style.display="none";})();
       await loadMembers();
     } catch (e) {
       errEl.textContent = "新增失敗：" + e.message;
@@ -5423,15 +5423,15 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   // ── 批次匯入會員 ─────────────────────────────────────────────
   window.openBatchMemberModal = function() {
-    document.getElementById("modal-batch-member").style.display = "flex";
-    document.getElementById("batch-member-input").value = "";
+    (function(){const _el=document.getElementById("modal-batch-member");if(_el)_el.style.display="flex";})();
+    (document.getElementById("batch-member-input") || {}).value = "";
     document.getElementById("batch-member-preview").innerHTML = "";
     document.getElementById("batch-member-error").textContent = "";
   };
 
   window.closeBatchMemberModal = function(e) {
     if (e && e.target !== document.getElementById("modal-batch-member")) return;
-    document.getElementById("modal-batch-member").style.display = "none";
+    (function(){const _el=document.getElementById("modal-batch-member");if(_el)_el.style.display="none";})();
   };
 
   // 解析輸入文字 → 會員陣列
@@ -5497,7 +5497,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       } catch(e) { fail++; console.error(m.email, e); }
     }
     errEl.textContent = "";
-    document.getElementById("modal-batch-member").style.display = "none";
+    (function(){const _el=document.getElementById("modal-batch-member");if(_el)_el.style.display="none";})();
     alert(`✅ 匯入完成！成功 ${success} 筆${fail ? `，失敗 ${fail} 筆` : ""}`);
     await loadMembers();
   };
@@ -5575,13 +5575,13 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   // ── 集運倉 Modal ─────────────────────────────────────────────
   window.openWarehouseManager = async function() {
-    document.getElementById("modal-warehouse").style.display = "flex";
+    (function(){const _el=document.getElementById("modal-warehouse");if(_el)_el.style.display="flex";})();
     await renderWarehouseAdminList();
   };
 
   window.closeWarehouseManager = async function(e) {
     if (e && e.target !== document.getElementById("modal-warehouse")) return;
-    document.getElementById("modal-warehouse").style.display = "none";
+    (function(){const _el=document.getElementById("modal-warehouse");if(_el)_el.style.display="none";})();
     await renderWarehouseChecklist();
   };
 
@@ -6441,7 +6441,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     loading.style.display = "block";
     form.style.display = "none";
     prodList.innerHTML = "";
-    document.getElementById("ce-batch-import-wrap").style.display = "none";
+    (function(){const _el=document.getElementById("ce-batch-import-wrap");if(_el)_el.style.display="none";})();
     ceProductRows = [];
     
     try {
@@ -6453,11 +6453,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         return;
       }
       const d = snap.data();
-      document.getElementById("ce-name").value      = d.name || "";
-      document.getElementById("ce-deadline").value  = d.deadline || "";
-      document.getElementById("ce-shipdate").value  = d.shipdate || "";
-      document.getElementById("ce-createdAt").value = toDatetimeLocal(d.createdAt);
-      document.getElementById("ce-progress").value  = d.progress || "ongoing";
+      (document.getElementById("ce-name") || {}).value = d.name || "";
+      (document.getElementById("ce-deadline") || {}).value = d.deadline || "";
+      (document.getElementById("ce-shipdate") || {}).value = d.shipdate || "";
+      (document.getElementById("ce-createdAt") || {}).value = toDatetimeLocal(d.createdAt);
+      (document.getElementById("ce-progress") || {}).value = d.progress || "ongoing";
       
       if (d.products && d.products.length) {
         d.products.forEach(p => addCeProductRow(p));
@@ -6513,7 +6513,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       const payload = { name, deadline, shipdate, progress, products };
       if (createdAt) payload.createdAt = createdAt;
       await updateDoc(doc(db, "campaigns", id), payload);
-      document.getElementById("modal-campaign-edit").style.display = "none";
+      (function(){const _el=document.getElementById("modal-campaign-edit");if(_el)_el.style.display="none";})();
       // 清除詳情快取，重新載入列表
       const det = document.getElementById(`car-detail-${id}`);
       if (det) { det.dataset.loaded = ""; det.style.display = "none"; }
@@ -6523,7 +6523,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   window.closeCampaignEdit = function(e) {
     if (e && e.target !== document.getElementById("modal-campaign-edit")) return;
-    document.getElementById("modal-campaign-edit").style.display = "none";
+    (function(){const _el=document.getElementById("modal-campaign-edit");if(_el)_el.style.display="none";})();
   };
 
   // ── 全選/刪除 ────────────────────────────────────────────────
@@ -6654,12 +6654,12 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   let _ledgerCampaigns = [];
 
   window.openLedgerModal = async function() {
-    document.getElementById("modal-ledger").style.display = "flex";
+    (function(){const _el=document.getElementById("modal-ledger");if(_el)_el.style.display="flex";})();
     document.getElementById("ledger-error").textContent = "";
-    document.getElementById("ledger-amount").value = "";
-    document.getElementById("ledger-note").value = "";
-    document.getElementById("ledger-date").value = new Date().toISOString().slice(0,10);
-    document.getElementById("ledger-products-group").style.display = "none";
+    (document.getElementById("ledger-amount") || {}).value = "";
+    (document.getElementById("ledger-note") || {}).value = "";
+    (document.getElementById("ledger-date") || {}).value = new Date().toISOString().slice(0,10);
+    (function(){const _el=document.getElementById("ledger-products-group");if(_el)_el.style.display="none";})();
 
     // 載入團務選單（含商品資料）
     const sel = document.getElementById("ledger-campaign");
@@ -6710,7 +6710,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   window.addLedgerProductAmount = function(amount, name) {
     const cur = parseFloat(document.getElementById("ledger-amount").value) || 0;
-    document.getElementById("ledger-amount").value = cur + amount;
+    (document.getElementById("ledger-amount") || {}).value = cur + amount;
     const noteEl = document.getElementById("ledger-note");
     if (!noteEl.value) noteEl.value = name;
     else if (!noteEl.value.includes(name)) noteEl.value += "+" + name;
@@ -6718,7 +6718,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   window.closeLedgerModal = function(e) {
     if (e && e.target !== document.getElementById("modal-ledger")) return;
-    document.getElementById("modal-ledger").style.display = "none";
+    (function(){const _el=document.getElementById("modal-ledger");if(_el)_el.style.display="none";})();
   };
 
   window.saveLedger = async function() {
@@ -6734,7 +6734,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         type, amount, note, campaignId: cid || null, date,
         createdAt: serverTimestamp()
       });
-      document.getElementById("modal-ledger").style.display = "none";
+      (function(){const _el=document.getElementById("modal-ledger");if(_el)_el.style.display="none";})();
       await window.loadLedger();
     } catch(e) { errEl.textContent = "儲存失敗：" + e.message; }
   };
@@ -6982,12 +6982,12 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       if (el) { el.value = ""; delete el.dataset.manualEdit; }
     });
     _puSelectedProducts = [];
-    document.getElementById("pu-products-group").style.display = "none";
+    (function(){const _el=document.getElementById("pu-products-group");if(_el)_el.style.display="none";})();
     document.querySelectorAll(".pu-product-btn.selected").forEach(b => b.classList.remove("selected"));
     ["pu-ordered-at","pu-arrived-at","pu-return-at"].forEach(i => {
       const el = document.getElementById(i); if (el) el.value = "";
     });
-    document.getElementById("pu-status").value = "ordered";
+    (document.getElementById("pu-status") || {}).value = "ordered";
 
     // 載入團務選單
     const sel = document.getElementById("pu-campaign");
@@ -7015,26 +7015,26 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         const snap = await getDoc(doc(db,"purchases",id));
         if (snap.exists()) {
           const d = snap.data();
-          document.getElementById("pu-campaign").value = d.campaignId || "";
-          document.getElementById("pu-items").value = d.items || "";
-          document.getElementById("pu-amount").value = d.amount || "";
-          document.getElementById("pu-tracking").value = d.tracking || "";
-          document.getElementById("pu-weight").value = d.weight || "";
-          document.getElementById("pu-shipping-fee").value = d.shippingFee || "";
-          document.getElementById("pu-note").value = d.note || "";
-          document.getElementById("pu-status").value = d.status || "ordered";
-          if (d.orderedAt) document.getElementById("pu-ordered-at").value = toLocalDTInput(d.orderedAt);
-          if (d.arrivedAt) document.getElementById("pu-arrived-at").value = toLocalDTInput(d.arrivedAt);
-          if (d.returnAt)  document.getElementById("pu-return-at").value  = toLocalDTInput(d.returnAt);
+          (document.getElementById("pu-campaign") || {}).value = d.campaignId || "";
+          (document.getElementById("pu-items") || {}).value = d.items || "";
+          (document.getElementById("pu-amount") || {}).value = d.amount || "";
+          (document.getElementById("pu-tracking") || {}).value = d.tracking || "";
+          (document.getElementById("pu-weight") || {}).value = d.weight || "";
+          (document.getElementById("pu-shipping-fee") || {}).value = d.shippingFee || "";
+          (document.getElementById("pu-note") || {}).value = d.note || "";
+          (document.getElementById("pu-status") || {}).value = d.status || "ordered";
+          if (d.orderedAt) (document.getElementById("pu-ordered-at") || {}).value = toLocalDTInput(d.orderedAt);
+          if (d.arrivedAt) (document.getElementById("pu-arrived-at") || {}).value = toLocalDTInput(d.arrivedAt);
+          if (d.returnAt)  (document.getElementById("pu-return-at") || {}).value = toLocalDTInput(d.returnAt);
         }
       } catch(e) {}
     } else {
       // 預設下單時間為現在
       const now = new Date();
-      document.getElementById("pu-ordered-at").value = toLocalDTInput(now);
+      (document.getElementById("pu-ordered-at") || {}).value = toLocalDTInput(now);
     }
 
-    document.getElementById("modal-purchase").style.display = "flex";
+    (function(){const _el=document.getElementById("modal-purchase");if(_el)_el.style.display="flex";})();
   };
 
   function toLocalDTInput(val) {
@@ -7134,7 +7134,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   window.closePurchaseModal = function(e) {
     if (e && e.target !== document.getElementById("modal-purchase")) return;
-    document.getElementById("modal-purchase").style.display = "none";
+    (function(){const _el=document.getElementById("modal-purchase");if(_el)_el.style.display="none";})();
     _editingPurchaseId = null;
   };
 
@@ -7189,7 +7189,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         } catch(e) { console.warn("記帳同步失敗", e); }
       }
 
-      document.getElementById("modal-purchase").style.display = "none";
+      (function(){const _el=document.getElementById("modal-purchase");if(_el)_el.style.display="none";})();
       _editingPurchaseId = null;
       await loadPurchases();
     } catch(e) { errEl.textContent = "儲存失敗：" + e.message; }
