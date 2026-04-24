@@ -6426,7 +6426,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       if (!snap.exists()) { el.innerHTML = '<div style="color:var(--danger)">找不到資料</div>'; return; }
       const d = snap.data();
       const createdAt = d.createdAt?.toDate
-        ? d.window.fmtDateTime(createdAt.toDate())
+        ? window.fmtDateTime(d.createdAt.toDate())
         : "—";
       const products = d.products || [];
       const prodRows = products.map(p => {
