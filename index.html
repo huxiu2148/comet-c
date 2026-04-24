@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-23 -->
+  <!-- build:20260424-24 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -168,7 +168,7 @@
     }
     .opi-header-left { display:flex; flex-direction:column; gap:2px; }
     .opi-name { font-size:14px; font-weight:700; color:var(--text); }
-    .opi-price { font-size:13px; color:var(--pink); font-weight:700; }
+    .opi-price { font-size:13px; font-weight:700; background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
     .opi-note { font-size:11px; color:var(--text-muted); }
 
     /* 加入一件按鈕 */
@@ -222,7 +222,10 @@
       display:flex; justify-content:flex-end;
       padding:8px 16px;
       background:#fff8fb;
-      font-size:13px; font-weight:700; color:var(--pink);
+      font-size:13px; font-weight:700;
+      background-clip: text; -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background: var(--grad);
       border-top:1px dashed var(--border);
     }
 
@@ -1469,6 +1472,43 @@
       flex: 1;
     }
 
+    /* ── 漸層文字 utility ─────────────────────────────────────── */
+    .grad-text,
+    .form-card-title,
+    .section-title,
+    .order-section-title,
+    .total-amount,
+    .opi-price,
+    .order-info-title {
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* 加入一件按鈕漸層 */
+    .add-item-btn {
+      background: var(--grad) !important;
+      -webkit-background-clip: text !important;
+      -webkit-text-fill-color: transparent !important;
+      background-clip: text !important;
+      border-image: var(--grad) 1 !important;
+      border: 1.5px solid transparent !important;
+      position: relative;
+    }
+    .add-item-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      padding: 1.5px;
+      background: var(--grad);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
     /* ══ 開團系統 ══════════════════════════════════════════════ */
 
     /* 匯率列 */
@@ -2077,7 +2117,7 @@
           <!-- 左欄：團務基本資料 -->
           <div class="campaign-form-col">
             <div class="form-card">
-              <div class="form-card-title">📋 團務基本資料</div>
+              <div class="form-card-title grad-text">📋 團務基本資料</div>
 
               <div class="form-group">
                 <label class="form-label">所屬團體 <span class="required">*</span></label>
@@ -2198,7 +2238,7 @@
           <!-- 右欄：商品試算 -->
           <div class="campaign-calc-col">
             <div class="form-card">
-              <div class="form-card-title">🧮 商品試算</div>
+              <div class="form-card-title grad-text">🧮 商品試算</div>
 
               <div class="form-group">
                 <label class="form-label">幣別</label>
@@ -2459,7 +2499,7 @@
       </div>
 
       <div class="bank-add-form">
-        <div class="form-card-title" style="font-size:13px;padding-bottom:6px;border:none">新增帳號</div>
+        <div class="form-card-title grad-text" style="font-size:13px;padding-bottom:6px;border:none">新增帳號</div>
         <div class="bank-add-grid">
           <input class="form-input" id="bank-add-name" type="text" placeholder="銀行（例：國泰013）" />
           <input class="form-input" id="bank-add-account" type="text" placeholder="帳號" />
@@ -2767,7 +2807,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     <div class="modal-body">
       <div id="warehouse-list-admin" class="bank-list-admin"></div>
       <div class="bank-add-form">
-        <div class="form-card-title" style="font-size:13px;padding-bottom:6px;border:none">新增集運倉</div>
+        <div class="form-card-title grad-text" style="font-size:13px;padding-bottom:6px;border:none">新增集運倉</div>
         <div style="display:flex;flex-direction:column;gap:8px">
           <div class="bank-add-grid" style="grid-template-columns:1fr 1fr auto">
             <input class="form-input" id="w-add-name" type="text" placeholder="倉庫名稱（例：首爾倉）" />
@@ -2792,7 +2832,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-23 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-24 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -4394,7 +4434,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           ${expired ? '<div class="placeholder-card" style="color:var(--danger);margin-bottom:20px">此團務已截止收單</div>' : ''}
 
           <!-- 商品選擇 -->
-          <div class="form-card-title" style="margin-bottom:12px;border:none;padding:0">選擇商品</div>
+          <div class="form-card-title grad-text" style="margin-bottom:12px;border:none;padding:0">選擇商品</div>
           <div id="order-products">
             ${campaign.products.map((p, i) => {
               const specs = getProductSpecs(p);
@@ -4438,11 +4478,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
           <div class="order-total-row">
             <span class="total-label">總金額</span>
-            <span class="total-amount" id="order-total">NT$0</span>
+            <span class="total-amount grad-text" id="order-total">NT$0</span>
           </div>
 
           <!-- 使用者資料 -->
-          <div class="form-card-title" style="margin:24px 0 12px;border:none;padding:0">聯絡資料</div>
+          <div class="form-card-title grad-text" style="margin:24px 0 12px;border:none;padding:0">聯絡資料</div>
           <div class="form-group">
             <label class="form-label">Email <span class="required">*</span></label>
             <input class="form-input" id="u-email" type="email" value="${escH(userProfile.email || u?.email || "")}" readonly style="background:#fff8fb" />
