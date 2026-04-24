@@ -1881,7 +1881,8 @@
       <div class="admin-subnav">
         <button class="subnav-btn active" data-section="groups"    onclick="switchAdminSection('groups')">🏷️ 團體管理</button>
         <button class="subnav-btn"         data-section="campaigns" onclick="switchAdminSection('campaigns')">📦 開團系統</button>
-        <button class="subnav-btn"         data-section="orders"    onclick="switchAdminSection('orders')">📋 訂單管理</button>
+        <button class="subnav-btn"         data-section="campaign-mgmt" onclick="switchAdminSection('campaign-mgmt')">📋 團務管理</button>
+        <button class="subnav-btn"         data-section="orders"    onclick="switchAdminSection('orders')">🧾 訂單管理</button>
         <button class="subnav-btn"         data-section="finance"   onclick="switchAdminSection('finance')">💰 記帳</button>
         <button class="subnav-btn"         data-section="members"   onclick="switchAdminSection('members')">👤 會員管理</button>
       </div>
@@ -2143,6 +2144,22 @@
           </div>
         </div>
 
+      </div>
+
+      <!-- 團務管理 -->
+      <div class="admin-section" id="section-campaign-mgmt">
+        <div class="section-header">
+          <h2 class="section-title">📋 團務管理</h2>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="downloadCampaignTemplate()">⬇ 下載範本</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('campaign-import-file').click()">📤 批次匯入</button>
+            <input type="file" id="campaign-import-file" accept=".xlsx,.csv" style="display:none" onchange="importCampaigns(this)" />
+            <button class="btn btn-ghost btn-sm" onclick="loadCampaignList()">↻ 重新整理</button>
+          </div>
+        </div>
+        <div id="campaign-list-admin" class="campaign-admin-list">
+          <div class="loading-row">載入中...</div>
+        </div>
       </div>
 
       <!-- 訂單管理 -->
@@ -5329,9 +5346,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   const _origSwitch = window.switchAdminSection;
   window.switchAdminSection = function(section) {
     _origSwitch(section);
-    if (section === "orders")    { loadCampaignFilter(); loadAdminOrders(); }
-    if (section === "finance")   initFinance();
-    if (section === "campaigns") setTimeout(() => window.loadCampaignList?.(), 300);
+    if (section === "orders")         { loadCampaignFilter(); loadAdminOrders(); }
+    if (section === "finance")        initFinance();
+    if (section === "campaign-mgmt")  window.loadCampaignList?.();
   };
 
   // ── 團務篩選選單 ─────────────────────────────────────────────
