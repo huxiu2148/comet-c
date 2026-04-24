@@ -5213,13 +5213,19 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   window.loadMembers = async function() {
     console.log('[members] loadMembers called');
     const list = document.getElementById("members-list");
+    console.log('[members] list element:', list);
+    if (!list) { console.error('[members] members-list DOM 不存在！'); return; }
     list.innerHTML = '<div class="loading-row">載入中...</div>';
     try {
+      console.log('[members] 開始查詢 Firestore...');
       const snap = await getDocs(query(collection(db, "users"), orderBy("createdAt", "asc")));
+      console.log('[members] 查詢完成，筆數:', snap.size);
       if (snap.empty) { list.innerHTML = '<div class="empty-row">尚無會員</div>'; return; }
       list.innerHTML = "";
       snap.forEach(d => list.appendChild(renderMemberRow(d.id, d.data())));
+      console.log('[members] 渲染完成');
     } catch (e) {
+      console.error('[members] 載入失敗:', e);
       list.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
     }
   }
