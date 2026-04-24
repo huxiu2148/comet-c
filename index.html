@@ -5206,10 +5206,12 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     query, orderBy, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+  console.log('[members] module loaded, setting window.loadMembers...');
   // ── 切換到 members 時載入列表 ──────────────────────────────
 
   // ── 會員列表 ──────────────────────────────────────────────
   window.loadMembers = async function() {
+    console.log('[members] loadMembers called');
     const list = document.getElementById("members-list");
     list.innerHTML = '<div class="loading-row">載入中...</div>';
     try {
