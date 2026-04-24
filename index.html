@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-09 -->
+  <!-- build:20260424-10 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -908,6 +908,7 @@
     .campaign-admin-row {
       background:#fff8fb; border:1.5px solid var(--border);
       border-radius:var(--radius); padding:10px 14px;
+      display:flex; align-items:flex-start;
     }
     .car-main { display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap; }
     .car-name { font-size:13px; font-weight:700; }
@@ -2177,11 +2178,13 @@
       <div class="admin-section" id="section-campaign-mgmt">
         <div class="section-header">
           <h2 class="section-title">📋 團務管理</h2>
-          <div style="display:flex;gap:8px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-ghost btn-sm" onclick="downloadCampaignTemplate()">⬇ 下載範本</button>
             <button class="btn btn-ghost btn-sm" onclick="document.getElementById('campaign-import-file').click()">📤 批次匯入</button>
             <input type="file" id="campaign-import-file" accept=".xlsx,.csv" style="display:none" onchange="importCampaigns(this)" />
             <button class="btn btn-ghost btn-sm" onclick="loadCampaignList()">↻ 重新整理</button>
+            <button class="btn btn-ghost btn-sm" id="btn-select-all-campaigns" onclick="toggleSelectAllCampaigns()">☐ 全選</button>
+            <button class="btn btn-danger btn-sm" id="btn-delete-selected" style="display:none" onclick="deleteSelectedCampaigns()">🗑 刪除所選</button>
           </div>
         </div>
         <div id="campaign-list-admin" class="campaign-admin-list">
@@ -2695,7 +2698,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-09 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-10 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -6159,7 +6162,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         const modeName = MODES[data.mode] || "—";
         const createdStr = data.createdAt ? window.fmtDate(data.createdAt) : "—";
         row.innerHTML = `
-          <div class="car-main" style="cursor:pointer">
+          <div class="car-select" style="display:none;align-items:center;padding-right:8px">
+            <input type="checkbox" class="campaign-checkbox" data-cid="${d.id}"
+                   style="width:16px;height:16px;accent-color:var(--pink);cursor:pointer" />
+          </div>
+          <div class="car-main" style="cursor:pointer;flex:1">
             <div style="flex:1">
               <div class="car-name">${esc(data.name)}</div>
               <div class="car-meta">
@@ -6435,6 +6442,46 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   window.closeCampaignEdit = function(e) {
     if (e && e.target !== document.getElementById("modal-campaign-edit")) return;
     document.getElementById("modal-campaign-edit").style.display = "none";
+  };
+
+  // ── 全選/刪除 ────────────────────────────────────────────────
+  let _selectMode = false;
+
+  window.toggleSelectAllCampaigns = function() {
+    _selectMode = !_selectMode;
+    const btn    = document.getElementById('btn-select-all-campaigns');
+    const delBtn = document.getElementById('btn-delete-selected');
+    const boxes  = document.querySelectorAll('.car-select');
+    boxes.forEach(b => b.style.display = _selectMode ? 'flex' : 'none');
+    if (_selectMode) {
+      btn.textContent = '✕ 取消選取';
+      delBtn.style.display = 'inline-flex';
+      // 全部打勾
+      document.querySelectorAll('.campaign-checkbox').forEach(cb => cb.checked = true);
+    } else {
+      btn.textContent = '☐ 全選';
+      delBtn.style.display = 'none';
+      document.querySelectorAll('.campaign-checkbox').forEach(cb => cb.checked = false);
+    }
+  };
+
+  window.deleteSelectedCampaigns = async function() {
+    const checked = Array.from(document.querySelectorAll('.campaign-checkbox:checked'));
+    if (!checked.length) { alert('沒有選取任何團務'); return; }
+    if (!confirm(`確定要刪除選取的 ${checked.length} 個團務嗎？\n此操作無法復原。`)) return;
+    let ok = 0, fail = 0;
+    for (const cb of checked) {
+      try {
+        await deleteDoc(doc(db, "campaigns", cb.dataset.cid));
+        document.getElementById(`campaign-row-${cb.dataset.cid}`)?.remove();
+        ok++;
+      } catch(e) { fail++; console.error(cb.dataset.cid, e); }
+    }
+    alert(`✅ 刪除完成：成功 ${ok} 筆${fail ? `，失敗 ${fail} 筆` : ''}`);
+    // 重置選取狀態
+    _selectMode = false;
+    document.getElementById('btn-select-all-campaigns').textContent = '☐ 全選';
+    document.getElementById('btn-delete-selected').style.display = 'none';
   };
 
   // 更新團務進度
