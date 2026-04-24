@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-18 -->
+  <!-- build:20260424-19 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -145,18 +145,23 @@
     .btn-danger:hover { background: #fff0f4; }
 
 
-    /* 有規格商品：覆寫 grid 為 flex column */
-    .order-product-item.order-product-multi {
-      display: flex !important;
-      flex-direction: column !important;
+    /* 有規格商品（加件模式） */
+    .order-product-spec {
+      display: flex;
+      flex-direction: column;
       gap: 8px;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 8px;
+      background: var(--surface);
     }
-    .order-product-multi .opi-header {
+    .order-product-spec .opi-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .order-product-multi .opi-subtotal {
+    .order-product-spec .opi-subtotal {
       text-align: right;
       font-size: 13px;
       font-weight: 700;
@@ -2729,7 +2734,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-18 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-19 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -4306,7 +4311,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
               if (specs.length) {
                 // 有規格：加件模式（每件各自選規格）
-                return '<div class="order-product-item order-product-multi" id="opi-' + i + '" data-idx="' + i + '" data-has-specs="1">' +
+                return '<div class="order-product-spec" id="opi-' + i + '" data-idx="' + i + '" data-has-specs="1">' +
                   '<div class="opi-header">' +
                     '<div>' +
                       '<div class="opi-name">' + escH(displayName) + '</div>' +
