@@ -144,6 +144,21 @@
 
     .btn-danger:hover { background: #fff0f4; }
 
+
+    .order-product-multi .opi-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+    .add-item-btn { font-size:12px; padding:4px 12px; border-radius:20px; }
+    .spec-items-list { display:flex; flex-direction:column; gap:6px; margin-bottom:6px; }
+    .spec-item-row {
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+      background:#fff8fb; border:1.5px solid var(--border);
+      border-radius:var(--radius); padding:8px 12px;
+    }
+    .spec-item-num { font-size:12px; font-weight:700; color:var(--text-muted); min-width:36px; }
+    .spec-item-sel { display:flex; align-items:center; gap:6px; }
+    .spec-item-label { font-size:12px; color:var(--text-muted); white-space:nowrap; }
+    .spec-item-price { font-size:12px; color:var(--pink); font-weight:700; margin-left:auto; white-space:nowrap; }
+    .opi-note { font-size:11px; color:var(--text-muted); margin-top:2px; }
+
     /* ── 主內容 ── */
     main { max-width: 980px; margin: 0 auto; padding: 32px 20px; }
 
@@ -4270,36 +4285,41 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
               const specs = getProductSpecs(p);
               const displayName = getDisplayName(p);
               const noteHtml = p.noteHint
-                ? '<div style="font-size:11px;color:var(--text-muted);margin-top:2px">' + escH(p.noteHint) + '</div>'
+                ? '<div class="opi-note">' + escH(p.noteHint) + '</div>'
                 : '';
-              const specsHtml = specs.length
-                ? '<div class="opi-specs" id="opi-specs-' + i + '" style="grid-column:1/-1;display:none">' +
-                  specs.map((spec, si) =>
-                    '<div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">' +
-                    '<span style="font-size:12px;color:var(--text-muted);min-width:50px">' + escH(spec.label||'') + '</span>' +
-                    '<select class="form-input" id="spec-sel-' + i + '-' + si + '" style="font-size:12px;min-width:100px">' +
-                    '<option value="">— 選擇 —</option>' +
-                    (spec.options||[]).map(o => '<option value="' + escH(o) + '">' + escH(o) + '</option>').join('') +
-                    '</select></div>'
-                  ).join('') +
-                  '</div>'
-                : '';
-              return '<div class="order-product-item" id="opi-' + i + '" data-idx="' + i + '">' +
-                '<div style="flex:1">' +
-                  '<div class="opi-name">' + escH(displayName) + '</div>' +
-                  noteHtml +
-                  '<div class="opi-price">NT$<strong>' + p.price.toLocaleString() + '</strong></div>' +
-                '</div>' +
-                '<div class="qty-control">' +
-                  '<button class="qty-btn" onclick="changeQty(' + i + ', -1)">−</button>' +
-                  '<span class="qty-num" id="qty-' + i + '">0</span>' +
-                  '<button class="qty-btn" onclick="changeQty(' + i + ', 1)">＋</button>' +
-                '</div>' +
-                '<div class="opi-subtotal" id="subtotal-' + i + '">NT$0</div>' +
-                specsHtml +
-              '</div>';
+
+              if (specs.length) {
+                // 有規格：加件模式（每件各自選規格）
+                return '<div class="order-product-item order-product-multi" id="opi-' + i + '" data-idx="' + i + '" data-has-specs="1">' +
+                  '<div class="opi-header">' +
+                    '<div>' +
+                      '<div class="opi-name">' + escH(displayName) + '</div>' +
+                      noteHtml +
+                      '<div class="opi-price">NT$<strong>' + p.price.toLocaleString() + '</strong></div>' +
+                    '</div>' +
+                    '<button class="qty-btn add-item-btn" onclick="addSpecItem(' + i + ')">＋ 加入一件</button>' +
+                  '</div>' +
+                  '<div class="spec-items-list" id="spec-items-' + i + '"></div>' +
+                  '<div class="opi-subtotal" id="subtotal-' + i + '">NT$0</div>' +
+                '</div>';
+              } else {
+                // 無規格：數量模式
+                return '<div class="order-product-item" id="opi-' + i + '" data-idx="' + i + '">' +
+                  '<div style="flex:1">' +
+                    '<div class="opi-name">' + escH(displayName) + '</div>' +
+                    noteHtml +
+                    '<div class="opi-price">NT$<strong>' + p.price.toLocaleString() + '</strong></div>' +
+                  '</div>' +
+                  '<div class="qty-control">' +
+                    '<button class="qty-btn" onclick="changeQty(' + i + ', -1)">−</button>' +
+                    '<span class="qty-num" id="qty-' + i + '">0</span>' +
+                    '<button class="qty-btn" onclick="changeQty(' + i + ', 1)">＋</button>' +
+                  '</div>' +
+                  '<div class="opi-subtotal" id="subtotal-' + i + '">NT$0</div>' +
+                '</div>';
+              }
             }).join("")}
-          </div>
+          </div>     </div>
 
           <div class="order-total-row">
             <span class="total-label">總金額</span>
@@ -4342,6 +4362,66 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     }
   }
 
+  // ── 加件模式（有規格商品）────────────────────────────────────
+  const _specItemCounts = {}; // { productIdx: count }
+
+  window.addSpecItem = function(pi) {
+    if (!_specItemCounts[pi]) _specItemCounts[pi] = 0;
+    _specItemCounts[pi]++;
+    const itemNum = _specItemCounts[pi];
+    const p = window.__currentCampaign.products[pi];
+    const specs = getProductSpecs(p);
+    const list = document.getElementById('spec-items-' + pi);
+
+    const row = document.createElement('div');
+    row.className = 'spec-item-row';
+    row.id = 'spec-item-' + pi + '-' + itemNum;
+
+    const specsHtml = specs.map((spec, si) =>
+      '<div class="spec-item-sel">' +
+      '<span class="spec-item-label">' + escH(spec.label||'') + '</span>' +
+      '<select class="form-input" id="si-' + pi + '-' + itemNum + '-' + si + '" style="font-size:12px;min-width:80px">' +
+      '<option value="">— 選 —</option>' +
+      (spec.options||[]).map(o => '<option value="' + escH(o) + '">' + escH(o) + '</option>').join('') +
+      '</select></div>'
+    ).join('');
+
+    row.innerHTML =
+      '<span class="spec-item-num">第' + itemNum + '件</span>' +
+      specsHtml +
+      '<span class="spec-item-price">NT$' + p.price.toLocaleString() + '</span>' +
+      '<button class="qty-btn" style="width:26px;height:26px;font-size:13px" onclick="removeSpecItem(' + pi + ',' + itemNum + ')">✕</button>';
+
+    list.appendChild(row);
+    updateSpecSubtotal(pi);
+  };
+
+  window.removeSpecItem = function(pi, num) {
+    document.getElementById('spec-item-' + pi + '-' + num)?.remove();
+    updateSpecSubtotal(pi);
+  };
+
+  function updateSpecSubtotal(pi) {
+    const p = window.__currentCampaign.products[pi];
+    const rows = document.querySelectorAll('[id^="spec-item-' + pi + '-"]');
+    const count = rows.length;
+    const sub = count * p.price;
+    const el = document.getElementById('subtotal-' + pi);
+    if (el) el.textContent = count > 0 ? '× ' + count + ' = NT$' + sub.toLocaleString() : 'NT$0';
+    // 更新 __orderQuantities
+    if (window.__orderQuantities) window.__orderQuantities[pi] = count;
+    recalcTotal();
+  }
+
+  function recalcTotal() {
+    const qs = window.__orderQuantities;
+    const products = window.__currentCampaign?.products;
+    if (!qs || !products) return;
+    const total = qs.reduce((s, q, i) => s + q * (products[i]?.price||0), 0);
+    const el = document.getElementById('order-total');
+    if (el) el.textContent = 'NT$' + total.toLocaleString();
+  }
+
   window.changeQty = function(idx, delta) {
     const qs = window.__orderQuantities;
     if (!qs) return;
@@ -4365,13 +4445,29 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const campaign = window.__currentCampaign;
     const qs = window.__orderQuantities;
 
-    // 商品
-    const items = qs.map((q, i) => q > 0 ? {
-      name: campaign.products[i].name,
-      price: campaign.products[i].price,
-      qty: q,
-      subtotal: q * campaign.products[i].price,
-    } : null).filter(Boolean);
+    // 商品（支援加件模式和數量模式）
+    const items = [];
+    campaign.products.forEach((p, i) => {
+      const specs = getProductSpecs(p);
+      if (specs.length) {
+        // 加件模式：每件各自選規格
+        const rows = document.querySelectorAll('[id^="spec-item-' + i + '-"]');
+        rows.forEach(row => {
+          const specVals = {};
+          row.querySelectorAll('select').forEach(sel => {
+            const si = sel.id.split('-').pop();
+            specVals[specs[si]?.label || si] = sel.value;
+          });
+          const specStr = Object.entries(specVals).filter(([,v])=>v).map(([k,v])=>k+':'+v).join(' ');
+          items.push({ name: getDisplayName(p), price: p.price, qty: 1,
+            subtotal: p.price, specs: specVals, specStr });
+        });
+      } else if (qs[i] > 0) {
+        // 數量模式
+        items.push({ name: getDisplayName(p), price: p.price, qty: qs[i],
+          subtotal: qs[i] * p.price, specs: {}, specStr: '' });
+      }
+    });
 
     if (!items.length) { alert("請至少選擇一項商品"); return; }
 
