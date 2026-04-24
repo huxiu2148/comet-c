@@ -5816,22 +5816,39 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     list.innerHTML = '<div class="loading-row">解析檔案中...</div>';
 
     try {
-      const rows = await parseImportFile(file);
-      if (!rows.length) { list.innerHTML = '<div class="empty-row">檔案內沒有有效資料</div>'; return; }
+      const allRows = await parseImportFile(file);
+      if (!allRows.length) { list.innerHTML = '<div class="empty-row">檔案內沒有有效資料</div>'; return; }
+
+      // 自動判斷標題列；找到就依名稱對應欄位，沒找到就退回舊版固定順序
+      let columnMap, dataRows;
+      if (looksLikeHeader(allRows[0])) {
+        columnMap = buildColumnMap(allRows[0]);
+        const startIdx = looksLikeDescription(allRows[1]) ? 2 : 1;
+        dataRows = allRows.slice(startIdx);
+        if (columnMap.name === -1) {
+          list.innerHTML = `<div class="empty-row" style="color:var(--danger)">標題列找不到「團務名稱」欄位，請確認檔案格式</div>`;
+          return;
+        }
+      } else {
+        columnMap = defaultColumnMap(allRows[0].length);
+        dataRows = allRows;
+      }
 
       let ok = 0, fail = 0, failMsgs = [];
       list.innerHTML = '<div class="loading-row">匯入中...</div>';
 
-      for (const row of rows) {
+      const cell = (row, i) => (i >= 0 && i < row.length) ? String(row[i] ?? "").trim() : "";
+
+      for (const row of dataRows) {
         try {
-          const customId  = row[0]?.trim();         // 欄 A：自訂 ID（可空白）
-          const name      = row[1]?.trim();         // 欄 B：團務名稱
-          const groupName = row[2]?.trim();         // 欄 C：所屬團體
-          const mode      = parseInt(row[3]) || 1;  // 欄 D：付款模式
-          const deadline  = parseDateTime(row[4]);  // 欄 E：收單時間
-          const shipdate  = row[5]?.trim() || "待更新"; // 欄 F：出貨時間
-          const createdAtRaw = row[6]?.trim();      // 欄 G：建立時間
-          const progress  = row[7]?.trim() || "ongoing"; // 欄 H：進度
+          const customId     = cell(row, columnMap.customId);
+          const name         = cell(row, columnMap.name);
+          const groupName    = cell(row, columnMap.groupName);
+          const mode         = parseInt(cell(row, columnMap.mode), 10) || 1;
+          const deadline     = parseDateTime(cell(row, columnMap.deadline));
+          const shipdate     = cell(row, columnMap.shipdate) || "待更新";
+          const createdAtRaw = cell(row, columnMap.createdAt);
+          const progress     = cell(row, columnMap.progress) || "ongoing";
           if (!name) { failMsgs.push("略過空白列"); fail++; continue; }
           // 解析建立時間（若無填寫就用現在）
           const createdAtDate = createdAtRaw ? new Date(createdAtRaw.replace(/\//g,"-")) : new Date();
@@ -5849,11 +5866,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           const groupColor = groupData?.color || "#FF84C3";
           const groupColors= groupData?.colors || [groupColor];
 
-          // 商品（從欄 I 開始，即 index 8，兩欄一組：名稱、售價）
+          // 商品：依標題對應的「商品N名稱／商品N售價」欄位配對讀取
           const products = [];
-          for (let c = 8; c < row.length - 1; c += 2) {
-            const pName  = row[c]?.trim();
-            const pPrice = parseFloat(row[c+1]) || 0;
+          for (const { nameIdx, priceIdx } of columnMap.products) {
+            const pName  = cell(row, nameIdx);
+            const pPrice = parseFloat(cell(row, priceIdx)) || 0;
             if (pName && pPrice) products.push({ name: pName, price: pPrice, cost: pPrice, foreignPrice: 0, specs: [], specMode: "none", hasNote: false, noteHint: "" });
           }
 
@@ -5897,15 +5914,15 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     }
   };
 
-  // 解析 XLSX 或 CSV
+  // 解析 XLSX 或 CSV，回傳完整 rows（不再固定跳過前兩列，由匯入端自己判斷標題）
   async function parseImportFile(file) {
     const ext = file.name.split(".").pop().toLowerCase();
     if (ext === "csv") {
-      const text = await file.text();
-      return text.split("\n")
-        .slice(2) // 跳過標題和說明列
-        .map(l => l.split(",").map(c => c.replace(/^"|"$/g,"").trim()))
-        .filter(r => r[0]);
+      const buf = await file.arrayBuffer();
+      const text = decodeCsvBuffer(buf);
+      return text.split(/\r?\n/)
+        .map(l => parseCsvLine(l))
+        .filter(r => r.some(c => String(c ?? "").trim().length > 0));
     }
     // XLSX：用 SheetJS
     return new Promise((resolve, reject) => {
@@ -5917,11 +5934,133 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           const wb = XLSX.read(new Uint8Array(e.target.result), { type:"array" });
           const ws = wb.Sheets[wb.SheetNames[0]];
           const data = XLSX.utils.sheet_to_json(ws, { header:1, defval:"" });
-          resolve(data.slice(2).filter(r => r[0])); // 跳過標題+說明
+          resolve(data.filter(r => r.some(c => String(c ?? "").trim().length > 0)));
         } catch(err) { reject(err); }
       };
       reader.readAsArrayBuffer(file);
     });
+  }
+
+  // 偵測一列是否是標題列（含關鍵欄位名稱）
+  function looksLikeHeader(row) {
+    if (!row) return false;
+    const joined = row.map(c => String(c ?? "")).join("|");
+    return /(團務名稱|團務\s*ID|所屬團體|付款模式|商品\s*\d+\s*名稱)/.test(joined);
+  }
+
+  // 偵測一列是否是「說明列」（範本第二列），有就跳過
+  function looksLikeDescription(row) {
+    if (!row) return false;
+    const joined = row.map(c => String(c ?? "")).join("|");
+    return /(說明|格式[：:]|留空|自動產生|YYYY|ongoing.*closed|1=匯款)/.test(joined);
+  }
+
+  // 用標題列建立欄位對應表（中／英、別名都接受，大小寫和空白都會忽略）
+  function buildColumnMap(headerRow) {
+    const map = {
+      customId: -1, name: -1, groupName: -1, mode: -1,
+      deadline: -1, shipdate: -1, createdAt: -1, progress: -1,
+      products: []
+    };
+    const productNames  = new Map(); // slot 編號 → 欄位 index
+    const productPrices = new Map();
+
+    headerRow.forEach((raw, idx) => {
+      // 標題正規化：去掉空白、星號、括號、底線、全形空白
+      const h = String(raw ?? "")
+        .replace(/[\s*＊()（）_\-]/g, "")
+        .toLowerCase();
+      if (!h) return;
+
+      // 商品 N 名稱 / 售價（先比對，避免被「名稱」誤抓成團務名稱）
+      const mName  = h.match(/^商品(\d+)名稱/);
+      const mPrice = h.match(/^商品(\d+)(售價|價格|單價|price)/);
+      if (mName)  { productNames.set(parseInt(mName[1], 10), idx);  return; }
+      if (mPrice) { productPrices.set(parseInt(mPrice[1], 10), idx); return; }
+
+      if (map.customId   === -1 && /(團務id|活動id|customid|自訂id)/.test(h))                         map.customId   = idx;
+      else if (map.name      === -1 && /(團務名稱|團名|活動名稱|campaignname|name)/.test(h))            map.name       = idx;
+      else if (map.groupName === -1 && /(所屬團體|團體名稱|團體|groupname|group)/.test(h))               map.groupName  = idx;
+      else if (map.mode      === -1 && /(付款模式|付款方式|paymentmode|mode)/.test(h))                   map.mode       = idx;
+      else if (map.deadline  === -1 && /(收單時間|收單|截止時間|截止|deadline|enddate)/.test(h))         map.deadline   = idx;
+      else if (map.shipdate  === -1 && /(出貨時間|出貨日|出貨|shipdate|shippingdate)/.test(h))           map.shipdate   = idx;
+      else if (map.createdAt === -1 && /(建立時間|開團時間|建立日期|開團日期|createdat|createtime)/.test(h)) map.createdAt = idx;
+      else if (map.progress  === -1 && /(進度|狀態|progress|status)/.test(h))                            map.progress   = idx;
+    });
+
+    // 按商品編號小到大組成對應，名稱與售價兩欄都要存在才採用
+    const slots = new Set([...productNames.keys(), ...productPrices.keys()]);
+    [...slots].sort((a, b) => a - b).forEach(slot => {
+      if (productNames.has(slot) && productPrices.has(slot)) {
+        map.products.push({ nameIdx: productNames.get(slot), priceIdx: productPrices.get(slot) });
+      }
+    });
+    return map;
+  }
+
+  // 沒有標題列時，使用舊版固定欄位順序（向下相容）
+  function defaultColumnMap(sampleRowLen) {
+    const map = {
+      customId: 0, name: 1, groupName: 2, mode: 3,
+      deadline: 4, shipdate: 5, createdAt: 6, progress: 7,
+      products: []
+    };
+    for (let c = 8; c < sampleRowLen - 1; c += 2) {
+      map.products.push({ nameIdx: c, priceIdx: c + 1 });
+    }
+    return map;
+  }
+
+  // 自動判斷 CSV 編碼（UTF-8 BOM / UTF-16 / UTF-8 / Big5）
+  function decodeCsvBuffer(buf) {
+    const bytes = new Uint8Array(buf);
+    // UTF-8 BOM (EF BB BF)
+    if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+      return new TextDecoder("utf-8").decode(bytes.subarray(3));
+    }
+    // UTF-16 LE BOM (FF FE)
+    if (bytes.length >= 2 && bytes[0] === 0xFF && bytes[1] === 0xFE) {
+      return new TextDecoder("utf-16le").decode(bytes.subarray(2));
+    }
+    // UTF-16 BE BOM (FE FF)
+    if (bytes.length >= 2 && bytes[0] === 0xFE && bytes[1] === 0xFF) {
+      return new TextDecoder("utf-16be").decode(bytes.subarray(2));
+    }
+    // 先嚴格用 UTF-8 解碼，遇到非法位元組就拋錯改用 Big5
+    try {
+      return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    } catch {
+      try {
+        return new TextDecoder("big5").decode(bytes);
+      } catch {
+        // 最後保險：寬鬆 UTF-8
+        return new TextDecoder("utf-8").decode(bytes);
+      }
+    }
+  }
+
+  // 解析單行 CSV（支援雙引號包住、欄位內含逗號、跳脫雙引號 ""）
+  function parseCsvLine(line) {
+    const out = [];
+    let cur = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (line[i + 1] === '"') { cur += '"'; i++; }
+          else { inQuotes = false; }
+        } else {
+          cur += ch;
+        }
+      } else {
+        if (ch === '"') inQuotes = true;
+        else if (ch === ",") { out.push(cur.trim()); cur = ""; }
+        else cur += ch;
+      }
+    }
+    out.push(cur.trim());
+    return out;
   }
 
   // 解析日期時間字串
