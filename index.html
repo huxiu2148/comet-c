@@ -5600,7 +5600,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 <script type="module">
   import { db } from "./auth.js";
   import {
-    collection, doc, updateDoc, deleteDoc, getDocs, setDoc,
+    collection, doc, updateDoc, deleteDoc, getDoc, getDocs, setDoc,
     query, orderBy, where, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -5838,24 +5838,28 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         dataRows = allRows;
       }
 
-      let ok = 0, fail = 0, failMsgs = [];
+      let ok = 0, fail = 0, skipped = 0, failMsgs = [], skipMsgs = [];
       list.innerHTML = '<div class="loading-row">匯入中...</div>';
 
-      const cell = (row, i) => (i >= 0 && i < row.length) ? String(row[i] ?? "").trim() : "";
+      const cell    = (row, i) => (i >= 0 && i < row.length) ? String(row[i] ?? "").trim() : "";
+      const cellRaw = (row, i) => (i >= 0 && i < row.length) ? row[i] : null;
+      const seenIds = new Set(); // 同一檔案內出現過的自訂 ID
 
       for (const row of dataRows) {
         try {
-          const customId     = cell(row, columnMap.customId);
-          const name         = cell(row, columnMap.name);
-          const groupName    = cell(row, columnMap.groupName);
-          const mode         = parseInt(cell(row, columnMap.mode), 10) || 1;
-          const deadline     = parseDateTime(cell(row, columnMap.deadline));
-          const shipdate     = cell(row, columnMap.shipdate) || "待更新";
-          const createdAtRaw = cell(row, columnMap.createdAt);
-          const progress     = cell(row, columnMap.progress) || "ongoing";
+          const customId       = cell(row, columnMap.customId);
+          const name           = cell(row, columnMap.name);
+          const groupName      = cell(row, columnMap.groupName);
+          const mode           = parseInt(cell(row, columnMap.mode), 10) || 1;
+          // deadline、createdAt 用 raw 值再過 parseImportedDate，吃得下 Date 物件 / Excel 序號 / 字串
+          const deadlineDate   = parseImportedDate(cellRaw(row, columnMap.deadline));
+          const deadline       = deadlineDate ? toDatetimeLocal(deadlineDate) : "";
+          const shipdate       = cell(row, columnMap.shipdate) || "待更新";
+          const createdAtDate  = parseImportedDate(cellRaw(row, columnMap.createdAt));
+          const progress       = cell(row, columnMap.progress) || "ongoing";
           if (!name) { failMsgs.push("略過空白列"); fail++; continue; }
-          // 解析建立時間（若無填寫就用現在）
-          const createdAtDate = createdAtRaw ? new Date(createdAtRaw.replace(/\//g,"-")) : new Date();
+          // 用「日期欄位裡的字串」當成 ID 自動產生用的 raw（保留 YYYY/MM/DD 形狀）
+          const createdAtRaw   = cell(row, columnMap.createdAt);
 
           // 從 groupsCache 找對應團體（用名稱或別名比對）
           let groupData = null;
@@ -5890,6 +5894,21 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
             campaignId = `${groupAbbr}-${ds}-${rand}`;
           }
 
+          // 重複團務ID直接略過：先檢查同一檔案內、再檢查 Firestore 是否已存在
+          if (seenIds.has(campaignId)) {
+            skipped++;
+            skipMsgs.push(`「${campaignId}」(${name}) 檔案內重複，略過`);
+            continue;
+          }
+          const existsSnap = await getDoc(doc(db, "campaigns", campaignId));
+          if (existsSnap.exists()) {
+            skipped++;
+            skipMsgs.push(`「${campaignId}」(${name}) 已存在，略過`);
+            seenIds.add(campaignId);
+            continue;
+          }
+          seenIds.add(campaignId);
+
           const base = window.location.origin + window.location.pathname.replace(/index\.html$/, "");
           const formUrl = `${base}?c=${campaignId}`;
 
@@ -5900,7 +5919,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
             formUrl, formSource: "builtin",
             status: "open",
             currency: "KRW", markup: 18,
-            createdAt: isNaN(createdAtDate) ? serverTimestamp() : createdAtDate,
+            createdAt: createdAtDate || serverTimestamp(),
           });
           ok++;
         } catch(e) {
@@ -5910,8 +5929,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       }
 
       await window.loadCampaignList();
-      const msg = `✅ 匯入完成！成功 ${ok} 筆${fail ? `，失敗 ${fail} 筆` : ""}`;
-      if (failMsgs.length) alert(msg + "\n\n" + failMsgs.join("\n"));
+      const msg = `✅ 匯入完成！成功 ${ok} 筆`
+        + (skipped ? `，略過 ${skipped} 筆（重複ID）` : "")
+        + (fail ? `，失敗 ${fail} 筆` : "");
+      const detail = [...skipMsgs, ...failMsgs];
+      if (detail.length) alert(msg + "\n\n" + detail.join("\n"));
       else alert(msg);
     } catch(e) {
       list.innerHTML = `<div class="empty-row" style="color:var(--danger)">解析失敗：${e.message}</div>`;
@@ -5928,21 +5950,42 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         .map(l => parseCsvLine(l))
         .filter(r => r.some(c => String(c ?? "").trim().length > 0));
     }
-    // XLSX：用 SheetJS
+    // XLSX：用 SheetJS（cellDates:true 讓日期欄直接回傳 Date 物件，避免變成 Excel 序號）
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = e => {
         try {
           const XLSX = window.XLSX;
           if (!XLSX) { reject(new Error("SheetJS 未載入，請使用 CSV 格式")); return; }
-          const wb = XLSX.read(new Uint8Array(e.target.result), { type:"array" });
+          const wb = XLSX.read(new Uint8Array(e.target.result), { type:"array", cellDates:true });
           const ws = wb.Sheets[wb.SheetNames[0]];
-          const data = XLSX.utils.sheet_to_json(ws, { header:1, defval:"" });
+          const data = XLSX.utils.sheet_to_json(ws, { header:1, defval:"", raw:true });
           resolve(data.filter(r => r.some(c => String(c ?? "").trim().length > 0)));
         } catch(err) { reject(err); }
       };
       reader.readAsArrayBuffer(file);
     });
+  }
+
+  // 把匯入欄位的「日期/時間」轉成 JS Date，能吃 Date 物件、Excel 序號、各種字串格式
+  function parseImportedDate(val) {
+    if (val == null || val === "") return null;
+    // SheetJS 開 cellDates:true 後直接給 Date 物件
+    if (val instanceof Date) return isNaN(val) ? null : val;
+    // Excel 日期序號（1899-12-30 起算的天數）
+    if (typeof val === "number" && isFinite(val)) {
+      const d = new Date(Math.round((val - 25569) * 86400000));
+      return isNaN(d) ? null : d;
+    }
+    // 字串：把中文年月日、斜線、點都統一成 "-"
+    const norm = String(val).trim()
+      .replace(/[年月.]/g, "-")
+      .replace(/日/g, "")
+      .replace(/\//g, "-")
+      .replace(/-+/g, "-")
+      .replace(/-$/, "");
+    const d = new Date(norm);
+    return isNaN(d) ? null : d;
   }
 
   // 偵測一列是否是標題列（含關鍵欄位名稱）
