@@ -2496,6 +2496,10 @@
           <input class="form-input" id="ce-shipdate" type="text" placeholder="待更新" />
         </div>
         <div class="form-group">
+          <label class="form-label">建立時間</label>
+          <input class="form-input" id="ce-createdAt" type="datetime-local" />
+        </div>
+        <div class="form-group">
           <label class="form-label">進度</label>
           <select class="form-input" id="ce-progress">
             <option value="ongoing">🟢 進行中</option>
@@ -6109,6 +6113,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           : "—";
         const shipdate = data.shipdate || "待更新";
         const modeName = MODES[data.mode] || "—";
+        const createdStr = data.createdAt ? window.fmtDate(data.createdAt) : "—";
         row.innerHTML = `
           <div class="car-main" onclick="toggleCampaignDetail('${d.id}')" style="cursor:pointer">
             <div style="flex:1">
@@ -6116,6 +6121,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
               <div class="car-meta">
                 <span>${d.id}</span>
                 <span>・${modeName}</span>
+                <span>・建立：${createdStr}</span>
                 <span>・收單：${deadline}</span>
                 <span>・出貨：${esc(shipdate)}</span>
               </div>
@@ -6307,6 +6313,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       document.getElementById("ce-name").value      = d.name || "";
       document.getElementById("ce-deadline").value  = d.deadline || "";
       document.getElementById("ce-shipdate").value  = d.shipdate || "";
+      document.getElementById("ce-createdAt").value = toDatetimeLocal(d.createdAt);
       document.getElementById("ce-progress").value  = d.progress || "ongoing";
       
       if (d.products && d.products.length) {
@@ -6322,14 +6329,35 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     }
   };
 
+  // Firestore Timestamp / Date / 字串 → datetime-local 用的「YYYY-MM-DDTHH:MM」
+  function toDatetimeLocal(val) {
+    if (!val) return "";
+    let d;
+    if (val?.toDate) d = val.toDate();
+    else if (typeof val === "string") d = new Date(val.replace(/\//g,"-"));
+    else d = new Date(val);
+    if (isNaN(d)) return "";
+    const p = n => String(n).padStart(2,"0");
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+
   window.saveCampaignEdit = async function() {
-    const id       = document.getElementById("ce-id").textContent;
-    const name     = document.getElementById("ce-name").value.trim();
-    const deadline = document.getElementById("ce-deadline").value;
-    const shipdate = document.getElementById("ce-shipdate").value.trim();
-    const progress = document.getElementById("ce-progress").value;
-    const errEl    = document.getElementById("ce-error");
+    const id           = document.getElementById("ce-id").textContent;
+    const name         = document.getElementById("ce-name").value.trim();
+    const deadline     = document.getElementById("ce-deadline").value;
+    const shipdate     = document.getElementById("ce-shipdate").value.trim();
+    const progress     = document.getElementById("ce-progress").value;
+    const createdAtStr = document.getElementById("ce-createdAt").value;
+    const errEl        = document.getElementById("ce-error");
     if (!name) { errEl.textContent = "請填寫團務名稱"; return; }
+
+    // 把 datetime-local 字串轉回 Date 寫回 Firestore（會被自動轉成 Timestamp）
+    let createdAt;
+    if (createdAtStr) {
+      const d = new Date(createdAtStr);
+      if (isNaN(d)) { errEl.textContent = "建立時間格式不正確"; return; }
+      createdAt = d;
+    }
 
     const products = ceProductRows.map(rid => {
       const pName = document.getElementById(`ce-p-name-${rid}`).value.trim();
@@ -6339,7 +6367,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     }).filter(p => p.name);
 
     try {
-      await updateDoc(doc(db, "campaigns", id), { name, deadline, shipdate, progress, products });
+      const payload = { name, deadline, shipdate, progress, products };
+      if (createdAt) payload.createdAt = createdAt;
+      await updateDoc(doc(db, "campaigns", id), payload);
       document.getElementById("modal-campaign-edit").style.display = "none";
       // 清除詳情快取，重新載入列表
       const det = document.getElementById(`car-detail-${id}`);
