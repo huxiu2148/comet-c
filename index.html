@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-24 -->
+  <!-- build:20260424-25 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1956,6 +1956,18 @@
     .calc-price { color: var(--pink); font-weight: 700; }
     .calc-profit{ color: #4caf50; font-weight: 600; }
 
+
+    /* 文案生成 */
+    .copy-tabs { display:flex; gap:6px; margin-bottom:10px; }
+    .copy-tab {
+      padding:5px 14px; font-size:12px; font-weight:600;
+      border-radius:20px; border:1.5px solid var(--border);
+      background:none; cursor:pointer; color:var(--text-muted);
+      transition:all 0.15s;
+    }
+    .copy-tab.active { background:var(--grad); color:#fff; border-color:transparent; -webkit-text-fill-color:#fff; }
+    .copy-textarea { font-family:monospace; font-size:12px; line-height:1.7; resize:vertical; }
+    .copy-btn { margin-top:6px; }
     /* 文案生成 */
     .copy-tabs { display: flex; gap: 6px; }
 
@@ -2299,7 +2311,26 @@
         </div>
 
         <!-- 文案生成區 -->
-        
+        <div id="copywriter-card" class="form-card" style="display:none;margin-top:8px">
+          <div class="form-card-title">📋 生成文案</div>
+          <div class="copy-tabs">
+            <button class="copy-tab active" onclick="switchCopyTab('memo')">備忘錄</button>
+            <button class="copy-tab" onclick="switchCopyTab('note')">記事本</button>
+            <button class="copy-tab" onclick="switchCopyTab('social')">社群貼文</button>
+          </div>
+          <div id="copy-panel-memo" class="copy-panel active">
+            <textarea class="form-input copy-textarea" id="txt-memo" readonly rows="12"></textarea>
+            <button class="btn btn-ghost btn-sm copy-btn" onclick="copyText('txt-memo')">複製</button>
+          </div>
+          <div id="copy-panel-note" class="copy-panel" style="display:none">
+            <textarea class="form-input copy-textarea" id="txt-note" readonly rows="12"></textarea>
+            <button class="btn btn-ghost btn-sm copy-btn" onclick="copyText('txt-note')">複製</button>
+          </div>
+          <div id="copy-panel-social" class="copy-panel" style="display:none">
+            <textarea class="form-input copy-textarea" id="txt-social" readonly rows="8"></textarea>
+            <button class="btn btn-ghost btn-sm copy-btn" onclick="copyText('txt-social')">複製</button>
+          </div>
+        </div>
 
         <!-- 底部按鈕列 -->
         <div class="campaign-actions">
@@ -2832,7 +2863,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-24 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-25 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -4021,7 +4052,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       window.currentFormUrl = formUrl;
       updateCopywriter();
 
-      document.getElementById("copywriter-card").scrollIntoView({ behavior: "smooth" });
+      document.getElementById("copywriter-card")?.scrollIntoView({ behavior: "smooth" });
       alert(`✨ 團務「${name}」已儲存！\n\n團務 ID：${campaignId}\n\n表單連結：\n${formUrl || "（模式 4 直接使用賣貨便連結）"}`);
     } catch (e) {
       alert("儲存失敗：" + e.message);
