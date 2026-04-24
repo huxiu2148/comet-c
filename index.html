@@ -2499,7 +2499,7 @@
           <label class="form-label">進度</label>
           <select class="form-input" id="ce-progress">
             <option value="ongoing">🟢 進行中</option>
-            <option value="closed">🟡 已收單</option>
+            <option value="closed">🔴 已收單</option>
             <option value="shipping">🔵 官方出貨中</option>
             <option value="warehouse">🔵 到集運</option>
             <option value="returning">🔵 運回中</option>
@@ -4547,7 +4547,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   const PROGRESS_LABEL = {
     ongoing:   "🟢 團務進行中",
-    closed:    "🟡 已收單",
+    closed:    "🔴 已收單",
     shipping:  "🔵 官方出貨中",
     warehouse: "🔵 到集運",
     returning: "🔵 運回中",
@@ -5607,7 +5607,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   };
 
   const PROGRESS_LABEL = {
-    ongoing:"🟢 進行中", closed:"🟡 已收單", shipping:"🔵 官方出貨中",
+    ongoing:"🟢 進行中", closed:"🔴 已收單", shipping:"🔵 官方出貨中",
     warehouse:"🔵 到集運", returning:"🔵 運回中", arrived:"🟣 已抵台", done:"⚪ 結束"
   };
 
@@ -6075,7 +6075,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   }
 
   // ── 已建立團務列表 ──────────────────────────────────────────
-  // 團務排序：進行中 > 已收單 > 出貨中 > 到集運 > 運回中 > 已抵台 > 結束
+  // 團務排序：進行中 > 已收單 > 官方出貨中 > 到集運 > 運回中 > 已抵台 > 結束
   const PROGRESS_ORDER = { ongoing:0, closed:1, shipping:2, warehouse:3, returning:4, arrived:5, done:6 };
 
   window.loadCampaignList = async function() {
@@ -6101,7 +6101,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         const row = document.createElement("div");
         row.className = "campaign-admin-row";
         row.id = `campaign-row-${d.id}`;
-        const PROGRESS = { ongoing:"🟢進行中", closed:"🟡已收單", shipping:"🔵出貨中",
+        const PROGRESS = { ongoing:"🟢進行中", closed:"🔴已收單", shipping:"🔵官方出貨中",
           warehouse:"🔵到集運", returning:"🔵運回中", arrived:"🟣已抵台", done:"⚪結束" };
         const MODES = { 1:"匯款", 2:"代收", 3:"登記", 4:"賣貨便" };
         const deadline = data.deadline
