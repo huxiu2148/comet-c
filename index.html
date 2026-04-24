@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-03 -->
+  <!-- build:20260424-04 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2670,7 +2670,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-03 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-04 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -2776,14 +2776,36 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     document.querySelectorAll(".admin-section").forEach(el => {
       el.classList.toggle("active", el.id === "section-"+section);
     });
-    // 直接呼叫各分頁的載入函式（不依賴事件時序）
-    if (section === "groups")        loadGroups();
-    if (section === "campaigns")     setTimeout(() => window.loadGroupsSelect?.(), 30);
-    if (section === "campaign-mgmt") setTimeout(() => window.loadCampaignList?.(), 50);
-    if (section === "orders")        setTimeout(() => { window.loadCampaignFilter?.(); window.loadAdminOrders?.(); }, 50);
-    if (section === "finance")       setTimeout(() => window.initFinance?.(), 50);
-    if (section === "members")       setTimeout(() => window.loadMembers?.(), 50);
-    if (section === "purchase")      setTimeout(() => { window.loadPurchaseCampaignFilter?.(); window.loadPurchases?.(); }, 50);
+    if (section === "groups") { loadGroups(); return; }
+
+    // 等待對應函式就緒後再呼叫（最多重試 20 次，每次 100ms）
+    const fnMap = {
+      "campaigns":     () => window.loadGroupsSelect?.(),
+      "campaign-mgmt": () => window.loadCampaignList?.(),
+      "orders":        () => { window.loadCampaignFilter?.(); window.loadAdminOrders?.(); },
+      "finance":       () => window.initFinance?.(),
+      "members":       () => window.loadMembers?.(),
+      "purchase":      () => { window.loadPurchaseCampaignFilter?.(); window.loadPurchases?.(); },
+    };
+    const readyMap = {
+      "campaigns":     () => !!window.loadGroupsSelect,
+      "campaign-mgmt": () => !!window.loadCampaignList,
+      "orders":        () => !!window.loadAdminOrders,
+      "finance":       () => !!window.initFinance,
+      "members":       () => !!window.loadMembers,
+      "purchase":      () => !!window.loadPurchases,
+    };
+    const fn    = fnMap[section];
+    const ready = readyMap[section];
+    if (!fn) return;
+
+    let tries = 0;
+    const run = () => {
+      if (ready && ready()) { fn(); return; }
+      if (++tries < 30) setTimeout(run, 100);
+      else console.warn("COMET: 等待逾時，", section, "的載入函式未就緒");
+    };
+    run();
   };
 
   window.loadGroups = async function() {
