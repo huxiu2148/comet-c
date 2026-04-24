@@ -2619,11 +2619,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     document.querySelectorAll(".admin-section").forEach(el => {
       el.classList.toggle("active", el.id === "section-"+section);
     });
-    if (section === "groups") loadGroups();
-    if (section === "campaigns") {
-      // 直接呼叫（不依賴跨 module 事件）
-      setTimeout(() => { if (window.loadGroupsSelect) window.loadGroupsSelect(); }, 30);
-    }
+    if (section === "groups")         loadGroups();
+    if (section === "campaigns")      setTimeout(() => window.loadGroupsSelect?.(), 30);
+    if (section === "campaign-mgmt")  setTimeout(() => window.loadCampaignList?.(), 50);
     document.dispatchEvent(new CustomEvent("adminSectionChanged", { detail: section }));
   };
 
