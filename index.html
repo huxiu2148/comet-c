@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-08 -->
+  <!-- build:20260424-09 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2695,7 +2695,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-08 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-09 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -6159,29 +6159,39 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         const modeName = MODES[data.mode] || "—";
         const createdStr = data.createdAt ? window.fmtDate(data.createdAt) : "—";
         row.innerHTML = `
-          <div class="car-main" onclick="toggleCampaignDetail('${d.id}')" style="cursor:pointer">
+          <div class="car-main" style="cursor:pointer">
             <div style="flex:1">
               <div class="car-name">${esc(data.name)}</div>
               <div class="car-meta">
                 <span>${d.id}</span>
                 <span>・${modeName}</span>
-                <span>・建立：${createdStr}</span>
                 <span>・收單：${deadline}</span>
                 <span>・出貨：${esc(shipdate)}</span>
               </div>
             </div>
-            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap" onclick="event.stopPropagation()">
-              <select class="form-input car-progress-sel" style="font-size:12px;width:110px"
-                      onchange="updateCampaignProgress('${d.id}',this.value)">
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+              <select class="form-input car-progress-sel" style="font-size:12px;width:110px">
                 ${["ongoing","closed","shipping","warehouse","returning","arrived","done"].map(k =>
                   `<option value="${k}" ${data.progress===k?"selected":""}>${PROGRESS[k]}</option>`
                 ).join("")}
               </select>
-              <button class="btn btn-ghost btn-sm" onclick="openCampaignEdit('${d.id}')">編輯</button>
-              <button class="btn btn-danger btn-sm" onclick="deleteCampaign('${d.id}','${esc(data.name)}')">刪除</button>
+              <button class="btn btn-ghost btn-sm car-edit-btn">編輯</button>
+              <button class="btn btn-danger btn-sm car-del-btn">刪除</button>
             </div>
           </div>
           <div class="car-detail" id="car-detail-${d.id}" style="display:none"></div>`;
+
+        // 事件委派（避免 onclick 字串中特殊字元如單引號破壞語法）
+        const _cid  = d.id;
+        const _name = data.name;
+        row.querySelector('.car-main').addEventListener('click', e => {
+          if (!e.target.closest('select, button')) toggleCampaignDetail(_cid);
+        });
+        row.querySelector('.car-edit-btn').addEventListener('click', () => openCampaignEdit(_cid));
+        row.querySelector('.car-del-btn').addEventListener('click',  () => deleteCampaign(_cid, _name));
+        row.querySelector('.car-progress-sel').addEventListener('change', function() {
+          updateCampaignProgress(_cid, this.value);
+        });
         list.appendChild(row);
       });
     } catch(e) { list.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`; }
