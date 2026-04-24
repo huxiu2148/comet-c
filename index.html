@@ -888,6 +888,21 @@
 
 
 
+
+    /* 團務詳情 */
+    .car-detail {
+      border-top: 1px dashed var(--border);
+      margin-top: 8px;
+      padding-top: 8px;
+    }
+    .car-detail-inner { padding: 4px 0; }
+    .car-detail-meta {
+      display: flex; gap: 12px; flex-wrap: wrap;
+      font-size: 12px; color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .car-detail-meta span { background:#fff0f7; padding:2px 8px; border-radius:20px; }
+
     /* 已建立團務列表 */
     .campaign-admin-list { display:flex; flex-direction:column; gap:8px; }
     .campaign-admin-row {
@@ -2317,6 +2332,52 @@
 </div>
 
 
+
+
+<!-- 編輯團務 Modal -->
+<div class="modal-backdrop" id="modal-campaign-edit" style="display:none" onclick="closeCampaignEdit(event)">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-header">
+      <h3 class="modal-title">✏️ 編輯團務</h3>
+      <button class="modal-close" onclick="closeCampaignEdit()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:11px;font-family:monospace;color:var(--text-muted);margin-bottom:8px" id="ce-id"></div>
+      <div id="ce-loading" style="text-align:center;color:var(--text-muted);padding:20px">載入中...</div>
+      <div id="ce-form" style="display:none;display:flex;flex-direction:column;gap:14px">
+        <div class="form-group">
+          <label class="form-label">團務名稱 <span class="required">*</span></label>
+          <input class="form-input" id="ce-name" type="text" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">收單時間</label>
+          <input class="form-input" id="ce-deadline" type="datetime-local" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">官方出貨時間</label>
+          <input class="form-input" id="ce-shipdate" type="text" placeholder="待更新" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">進度</label>
+          <select class="form-input" id="ce-progress">
+            <option value="ongoing">🟢 進行中</option>
+            <option value="closed">🟡 已收單</option>
+            <option value="shipping">🔵 官方出貨中</option>
+            <option value="warehouse">🔵 到集運</option>
+            <option value="returning">🔵 運回中</option>
+            <option value="arrived">🟣 已抵台</option>
+            <option value="done">⚪ 結束</option>
+          </select>
+        </div>
+      </div>
+      <p class="form-error" id="ce-error"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeCampaignEdit()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveCampaignEdit()">儲存</button>
+    </div>
+  </div>
+</div>
 
 <!-- 記帳新增 Modal -->
 <div class="modal-backdrop" id="modal-ledger" style="display:none" onclick="closeLedgerModal(event)">
@@ -5688,29 +5749,137 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         row.id = `campaign-row-${d.id}`;
         const PROGRESS = { ongoing:"🟢進行中", closed:"🟡已收單", shipping:"🔵出貨中",
           warehouse:"🔵到集運", returning:"🔵運回中", arrived:"🟣已抵台", done:"⚪結束" };
-        const progress = PROGRESS[data.progress] || "🟢進行中";
+        const MODES = { 1:"匯款", 2:"代收", 3:"登記", 4:"賣貨便" };
         const deadline = data.deadline
           ? new Date(data.deadline).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})
           : "—";
+        const shipdate = data.shipdate || "待更新";
+        const modeName = MODES[data.mode] || "—";
         row.innerHTML = `
-          <div class="car-main">
-            <div>
+          <div class="car-main" onclick="toggleCampaignDetail('${d.id}')" style="cursor:pointer">
+            <div style="flex:1">
               <div class="car-name">${esc(data.name)}</div>
-              <div class="car-meta">${d.id} · 收單：${deadline}</div>
+              <div class="car-meta">
+                <span>${d.id}</span>
+                <span>・${modeName}</span>
+                <span>・收單：${deadline}</span>
+                <span>・出貨：${esc(shipdate)}</span>
+              </div>
             </div>
-            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap" onclick="event.stopPropagation()">
               <select class="form-input car-progress-sel" style="font-size:12px;width:110px"
                       onchange="updateCampaignProgress('${d.id}',this.value)">
                 ${["ongoing","closed","shipping","warehouse","returning","arrived","done"].map(k =>
                   `<option value="${k}" ${data.progress===k?"selected":""}>${PROGRESS[k]}</option>`
                 ).join("")}
               </select>
+              <button class="btn btn-ghost btn-sm" onclick="openCampaignEdit('${d.id}')">編輯</button>
               <button class="btn btn-danger btn-sm" onclick="deleteCampaign('${d.id}','${esc(data.name)}')">刪除</button>
             </div>
-          </div>`;
+          </div>
+          <div class="car-detail" id="car-detail-${d.id}" style="display:none"></div>`;
         list.appendChild(row);
       });
     } catch(e) { list.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`; }
+  };
+
+  // ── 展開/收合團務詳情 ─────────────────────────────────────────
+  window.toggleCampaignDetail = async function(campaignId) {
+    const el = document.getElementById(`car-detail-${campaignId}`);
+    if (!el) return;
+    if (el.style.display !== "none") { el.style.display = "none"; return; }
+    el.style.display = "block";
+    if (el.dataset.loaded) return;
+    el.innerHTML = '<div style="padding:12px;font-size:13px;color:var(--text-muted)">載入中...</div>';
+    try {
+      const { getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+      const snap = await getDoc(doc(db, "campaigns", campaignId));
+      if (!snap.exists()) { el.innerHTML = '<div style="color:var(--danger)">找不到資料</div>'; return; }
+      const d = snap.data();
+      const createdAt = d.createdAt?.toDate
+        ? d.createdAt.toDate().toLocaleString("zh-TW",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit"})
+        : "—";
+      const products = d.products || [];
+      const prodRows = products.map(p => {
+        const price  = p.price  || 0;
+        const cost   = p.cost   || 0;
+        const profit = price - cost;
+        const fx     = p.foreignPrice ? `${p.foreignPrice.toLocaleString()} ${d.currency||""}` : "—";
+        return `<tr>
+          <td>${esc(p.name)}</td>
+          <td style="color:var(--text-muted)">${fx}</td>
+          <td style="color:var(--danger)">NT$${cost.toLocaleString()}</td>
+          <td style="color:var(--pink);font-weight:700">NT$${price.toLocaleString()}</td>
+          <td style="color:#4caf50">NT$${profit.toLocaleString()}</td>
+        </tr>`;
+      }).join("");
+      const discounts = (d.discounts||[]).map(di =>
+        `<div style="font-size:12px;color:var(--pink)">🎁 ${esc(di.text)}${di.amount ? ` -NT$${di.amount}` : ""}</div>`
+      ).join("");
+      el.innerHTML = `
+        <div class="car-detail-inner">
+          <div class="car-detail-meta">
+            <span>建立：${createdAt}</span>
+            <span>團體：${esc(d.groupName||"—")}</span>
+            <span>幣別：${d.currency||"—"}</span>
+            ${d.formUrl ? `<a href="${esc(d.formUrl)}" target="_blank" style="color:var(--pink);font-size:12px">表單連結 ↗</a>` : ""}
+          </div>
+          ${products.length ? `
+          <table class="finance-table" style="margin-top:8px">
+            <thead><tr><th>商品</th><th>外幣</th><th>成本</th><th>代購價</th><th>利潤</th></tr></thead>
+            <tbody>${prodRows}</tbody>
+          </table>` : '<div style="font-size:12px;color:var(--text-muted);padding:8px">無商品資料</div>'}
+          ${discounts}
+        </div>`;
+      el.dataset.loaded = "1";
+    } catch(e) { el.innerHTML = `<div style="color:var(--danger);padding:8px">${e.message}</div>`; }
+  };
+
+  // ── 編輯團務 ─────────────────────────────────────────────────
+  window.openCampaignEdit = async function(campaignId) {
+    document.getElementById("modal-campaign-edit").style.display = "flex";
+    document.getElementById("ce-error").textContent = "";
+    document.getElementById("ce-id").textContent = campaignId;
+    document.getElementById("ce-loading").style.display = "block";
+    document.getElementById("ce-form").style.display = "none";
+    try {
+      const { getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+      const snap = await getDoc(doc(db, "campaigns", campaignId));
+      if (!snap.exists()) return;
+      const d = snap.data();
+      document.getElementById("ce-name").value      = d.name || "";
+      document.getElementById("ce-deadline").value  = d.deadline || "";
+      document.getElementById("ce-shipdate").value  = d.shipdate || "";
+      document.getElementById("ce-progress").value  = d.progress || "ongoing";
+      document.getElementById("ce-loading").style.display = "none";
+      document.getElementById("ce-form").style.display    = "block";
+    } catch(e) {
+      document.getElementById("ce-error").textContent = "載入失敗：" + e.message;
+      document.getElementById("ce-loading").style.display = "none";
+    }
+  };
+
+  window.saveCampaignEdit = async function() {
+    const id       = document.getElementById("ce-id").textContent;
+    const name     = document.getElementById("ce-name").value.trim();
+    const deadline = document.getElementById("ce-deadline").value;
+    const shipdate = document.getElementById("ce-shipdate").value.trim();
+    const progress = document.getElementById("ce-progress").value;
+    const errEl    = document.getElementById("ce-error");
+    if (!name) { errEl.textContent = "請填寫團務名稱"; return; }
+    try {
+      await updateDoc(doc(db, "campaigns", id), { name, deadline, shipdate, progress });
+      document.getElementById("modal-campaign-edit").style.display = "none";
+      // 清除詳情快取，重新載入列表
+      const det = document.getElementById(`car-detail-${id}`);
+      if (det) { det.dataset.loaded = ""; det.style.display = "none"; }
+      await window.loadCampaignList();
+    } catch(e) { errEl.textContent = "儲存失敗：" + e.message; }
+  };
+
+  window.closeCampaignEdit = function(e) {
+    if (e && e.target !== document.getElementById("modal-campaign-edit")) return;
+    document.getElementById("modal-campaign-edit").style.display = "none";
   };
 
   // 更新團務進度
