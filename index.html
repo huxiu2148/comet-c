@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-22 -->
+  <!-- build:20260424-23 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -17,7 +17,7 @@
       --pink:   #FF84C3;
       --yellow: #E1E668;
       --orange: #FF9E23;
-      --grad: linear-gradient(135deg, #FF84C3 0%, #FF9E23 50%, #E1E668 100%);
+      --grad: linear-gradient(135deg, #FF84C3, #E1E668, #FF9E23);
       --grad-h: linear-gradient(135deg, #ff9ed4 0%, #ffb347 50%, #eaef7a 100%);
       --bg:        #fff9fb;
       --surface:   #ffffff;
@@ -2792,7 +2792,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-22 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-23 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -2980,7 +2980,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   let editingGroupId = null;
 
   // 顏色清單管理
-  let groupColors = ["#FF84C3"]; // 當前編輯的顏色陣列
+  let groupColors = ["#FF84C3","#E1E668","#FF9E23"]; // 當前編輯的顏色陣列
 
   function renderColorList() {
     const list = document.getElementById("color-list");
@@ -3051,7 +3051,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     // 先設資料
     if (typeof colors === "string" && colors) groupColors = [colors];
     else if (Array.isArray(colors) && colors.length) groupColors = [...colors];
-    else groupColors = ["#FF84C3"];
+    else groupColors = ["#FF84C3","#E1E668","#FF9E23"];
     // 支援舊格式（字串）→ 自動轉新格式
     window._openGroupMembers = Array.isArray(members)
       ? members.map(m => typeof m === "string" ? { display: m, aliases: [] } : m)
@@ -4373,7 +4373,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         if (cached) campColors = hexOnly(cached.colors) || (cached.color ? [cached.color] : []);
       }
 
-      if (!campColors.length) campColors = ["#FF84C3"];
+      if (!campColors.length) campColors = ["#FF84C3","#E1E668","#FF9E23"];
       const campGradient = campColors.length > 1
         ? `linear-gradient(135deg, ${campColors.join(",")})`
         : campColors[0];
@@ -4919,7 +4919,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     }
     // 確保每個值是合法 hex（過濾掉 linear-gradient 等）
     const hexColors = colors.filter(c => /^#[0-9a-fA-F]{3,6}$/.test(c));
-    if (!hexColors.length) hexColors.push("#FF84C3");
+    if (!hexColors.length) { hexColors.push("#FF84C3"); hexColors.push("#E1E668"); hexColors.push("#FF9E23"); }
 
     const gradient = hexColors.length > 1
       ? `linear-gradient(135deg, ${hexColors.join(", ")})`
