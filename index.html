@@ -2172,12 +2172,6 @@
           <button class="btn btn-primary" onclick="generateAll()">✨ 生成文案 &amp; 儲存團務</button>
         </div>
 
-        <!-- 已建立的團務列表 -->
-        <div class="form-card" style="margin-top:16px">
-          <div class="form-card-title" style="display:flex;justify-content:space-between;align-items:center">
-            <span>📋 已建立的團務</span>
-            <div style="display:flex;gap:8px">
-      </div>
 
       <!-- 團務管理 -->
       <div class="admin-section" id="section-campaign-mgmt">
@@ -5188,11 +5182,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   // ── 切換到 members 時載入列表 ──────────────────────────────
   document.addEventListener("adminSectionChanged", e => {
-    if (e.detail === "members") loadMembers();
+    if (e.detail === "members") window.loadMembers?.();
   });
 
   // ── 會員列表 ──────────────────────────────────────────────
-  async function loadMembers() {
+  window.loadMembers = async function() {
     const list = document.getElementById("members-list");
     list.innerHTML = '<div class="loading-row">載入中...</div>';
     try {
@@ -5567,8 +5561,8 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   document.addEventListener("adminSectionChanged", (e) => {
     const section = e.detail;
     if (section === "orders")        { loadCampaignFilter(); loadAdminOrders(); }
-    if (section === "finance")       initFinance();
-    if (section === "campaign-mgmt") window.loadCampaignList();
+    if (section === "finance")       window.initFinance?.();
+    if (section === "campaign-mgmt") window.loadCampaignList?.();
   });
 
   // ── 團務篩選選單 ─────────────────────────────────────────────
@@ -6079,8 +6073,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   };
 
   window.initFinance = function() { loadLedger(); };
-  // 也監聽事件（確保從事件觸發時也能運作）
-  document.addEventListener('adminSectionChanged', e => { if(e.detail==='finance') window.initFinance(); });
+
 
   // ── 收支記錄 ─────────────────────────────────────────────────
   let ledgerData = [];
