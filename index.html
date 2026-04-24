@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-17 -->
+  <!-- build:20260424-18 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2729,7 +2729,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-17 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-18 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -6174,7 +6174,16 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       return isNaN(d) ? null : d;
     }
     let s = String(val).trim();
-    // 處理中文上午/下午格式：「2025/9/14 下午 10:00:00」
+    // YYYY/MM/DD HH:MM:SS 或 YYYY/MM/DD HH:MM（24小時制文字）
+    const m24 = s.match(/^(\d{4})[/\-](\d{1,2})[/\-](\d{1,2})(?:[\s T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+    if (m24) {
+      const [,y,mo,d,h='0',mi='0',sec='0'] = m24;
+      return new Date(
+        parseInt(y), parseInt(mo)-1, parseInt(d),
+        parseInt(h), parseInt(mi), parseInt(sec)
+      );
+    }
+    // 中文上午/下午格式：「2025/9/14 下午 10:00:00」
     s = s.replace(/上午\s*(\d{1,2}:\d{2}(:\d{2})?)/, (_, t) => {
       const [h, m, sec] = t.split(':');
       const hh = parseInt(h) === 12 ? 0 : parseInt(h);
@@ -6185,13 +6194,10 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       const hh = parseInt(h) === 12 ? 12 : parseInt(h) + 12;
       return ` ${String(hh).padStart(2,'0')}:${m}${sec?':'+sec:''}`;
     });
-    // 統一日期分隔符
+    // 統一日期分隔符後交給 Date 解析
     s = s
-      .replace(/[年月.]/g, '-')
-      .replace(/日/g, '')
-      .replace(/\//g, '-')
-      .replace(/-+/g, '-')
-      .replace(/-$/, '');
+      .replace(/[年月.]/g, '-').replace(/日/g, '')
+      .replace(/\//g, '-').replace(/-+/g, '-').replace(/-$/, '');
     const d = new Date(s);
     return isNaN(d) ? null : d;
   }
