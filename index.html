@@ -5497,23 +5497,22 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const BOM = "\uFEFF";
     const rows = [
       // 標題列
-      ["團務名稱*","所屬團體名稱*","付款模式*(1匯款/2代收/3登記/4賣貨便)",
+      ["團務ID(空白自動產生)","團務名稱*","所屬團體名稱*","付款模式*(1匯款/2代收/3登記/4賣貨便)",
        "收單時間*(例:2025/08/15 22:00)","官方出貨時間(空白=待更新)",
        "建立時間*(例:2025/07/01)","進度*(ongoing/closed/shipping/warehouse/returning/arrived/done)",
        "商品1名稱","商品1售價NT$","商品2名稱","商品2售價NT$",
-       "商品3名稱","商品3售價NT$","商品4名稱","商品4售價NT$",
-       "商品5名稱","商品5售價NT$"],
+       "商品3名稱","商品3售價NT$", "商品4名稱","商品4售價NT$", "商品5名稱","商品5售價NT$", "商品6名稱","商品6售價NT$", "商品7名稱","商品7售價NT$", "商品8名稱","商品8售價NT$", "商品9名稱","商品9售價NT$", "商品10名稱","商品10售價NT$", "商品11名稱","商品11售價NT$", "商品12名稱","商品12售價NT$", "商品13名稱","商品13售價NT$", "商品14名稱","商品14售價NT$", "商品15名稱","商品15售價NT$", "商品16名稱","商品16售價NT$", "商品17名稱","商品17售價NT$", "商品18名稱","商品18售價NT$", "商品19名稱","商品19售價NT$", "商品20名稱","商品20售價NT$", "商品21名稱","商品21售價NT$", "商品22名稱","商品22售價NT$", "商品23名稱","商品23售價NT$", "商品24名稱","商品24售價NT$", "商品25名稱","商品25售價NT$", "商品26名稱","商品26售價NT$", "商品27名稱","商品27售價NT$", "商品28名稱","商品28售價NT$", "商品29名稱","商品29售價NT$", "商品30名稱","商品30售價NT$", "商品31名稱","商品31售價NT$", "商品32名稱","商品32售價NT$", "商品33名稱","商品33售價NT$", "商品34名稱","商品34售價NT$", "商品35名稱","商品35售價NT$", "商品36名稱","商品36售價NT$", "商品37名稱","商品37售價NT$", "商品38名稱","商品38售價NT$", "商品39名稱","商品39售價NT$", "商品40名稱","商品40售價NT$"],
       // 說明列
-      ["說明","填團體顯示名稱（需已在系統建立）","1=匯款 2=代收 3=登記 4=賣貨便",
+      ["留空自動產生，或填入自訂ID","說明","填團體顯示名稱（需已在系統建立）","1=匯款 2=代收 3=登記 4=賣貨便",
        "格式：YYYY/MM/DD HH:MM","空白自動填「待更新」",
        "格式：YYYY/MM/DD","ongoing進行中 closed已收單 shipping出貨中 warehouse到集運 returning運回中 arrived已抵台 done結束",
        "商品名","整數例:800","商品名","整數","商品名","整數","商品名","整數","商品名","整數"],
       // 範例1
-      ["NCT夢想隊周邊第一團","NCT Dream","1","2025/08/15 22:00","待更新",
-       "2025/07/01","done","手機殼","800","鑰匙圈","350","","","","","",""],
+      ["NCT-250815-01","NCT夢想隊周邊第一團","NCT Dream","1","2025/08/15 22:00","待更新",
+       "2025/07/01","done","手機殼","800","鑰匙圈","350","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""],
       // 範例2
-      ["SHINee回歸專輯團","SHINee","1","2025/09/01 22:00","2025/10/15",
-       "2025/08/20","arrived","正規專輯","1200","迷你專輯","850","","","","","",""],
+      ["SHINee-250901-01","SHINee回歸專輯團","SHINee","1","2025/09/01 22:00","2025/10/15",
+       "2025/08/20","arrived","正規專輯","1200","迷你專輯","850","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","","",""],
     ];
     const csv = BOM + rows.map(r =>
       r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")
@@ -5545,13 +5544,14 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
       for (const row of rows) {
         try {
-          const name = row[0]?.trim();
-          const groupName = row[1]?.trim();
-          const mode = parseInt(row[2]) || 1;
-          const deadline = parseDateTime(row[3]);
-          const shipdate = row[4]?.trim() || "待更新";
-          const createdAtRaw = row[5]?.trim();   // 欄 F：建立時間
-          const progress = row[6]?.trim() || "ongoing"; // 欄 G：進度
+          const customId  = row[0]?.trim();         // 欄 A：自訂 ID（可空白）
+          const name      = row[1]?.trim();         // 欄 B：團務名稱
+          const groupName = row[2]?.trim();         // 欄 C：所屬團體
+          const mode      = parseInt(row[3]) || 1;  // 欄 D：付款模式
+          const deadline  = parseDateTime(row[4]);  // 欄 E：收單時間
+          const shipdate  = row[5]?.trim() || "待更新"; // 欄 F：出貨時間
+          const createdAtRaw = row[6]?.trim();      // 欄 G：建立時間
+          const progress  = row[7]?.trim() || "ongoing"; // 欄 H：進度
           if (!name) { failMsgs.push("略過空白列"); fail++; continue; }
           // 解析建立時間（若無填寫就用現在）
           const createdAtDate = createdAtRaw ? new Date(createdAtRaw.replace(/\//g,"-")) : new Date();
@@ -5569,22 +5569,25 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           const groupColor = groupData?.color || "#FF84C3";
           const groupColors= groupData?.colors || [groupColor];
 
-          // 商品（從欄 8 開始，即 index 7，兩欄一組：名稱、售價）
+          // 商品（從欄 I 開始，即 index 8，兩欄一組：名稱、售價）
           const products = [];
-          for (let c = 7; c < row.length - 1; c += 2) {
+          for (let c = 8; c < row.length - 1; c += 2) {
             const pName  = row[c]?.trim();
             const pPrice = parseFloat(row[c+1]) || 0;
             if (pName && pPrice) products.push({ name: pName, price: pPrice, cost: pPrice, foreignPrice: 0, specs: [], specMode: "none", hasNote: false, noteHint: "" });
           }
 
-          // 產生 campaignId
-          const now = new Date();
-          const pad = n => String(n).padStart(2,"0");
-          const dateStr = `${String(now.getFullYear()).slice(2)}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
-          const prefix = `${groupAbbr}-${dateStr}-`;
-          // 用隨機後綴避免衝突（批次時可能同天開多團）
-          const rand = String(Math.floor(Math.random()*99)+1).padStart(2,"0");
-          const campaignId = `${prefix}${rand}`;
+          // 團務ID：優先用自訂，否則自動產生
+          let campaignId = customId;
+          if (!campaignId) {
+            const baseDate = createdAtRaw
+              ? new Date(createdAtRaw.replace(/\//g,"-"))
+              : new Date();
+            const pad2 = n => String(n).padStart(2,"0");
+            const ds = `${String(baseDate.getFullYear()).slice(2)}${pad2(baseDate.getMonth()+1)}${pad2(baseDate.getDate())}`;
+            const rand = String(Math.floor(Math.random()*99)+1).padStart(2,"0");
+            campaignId = `${groupAbbr}-${ds}-${rand}`;
+          }
 
           const base = window.location.origin + window.location.pathname.replace(/index\.html$/, "");
           const formUrl = `${base}?c=${campaignId}`;
