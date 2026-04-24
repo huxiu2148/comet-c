@@ -6075,6 +6075,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   }
 
   // ── 已建立團務列表 ──────────────────────────────────────────
+  // 團務排序：進行中 > 已收單 > 出貨中 > 到集運 > 運回中 > 已抵台 > 結束
+  const PROGRESS_ORDER = { ongoing:0, closed:1, shipping:2, warehouse:3, returning:4, arrived:5, done:6 };
+
   window.loadCampaignList = async function() {
     const list = document.getElementById("campaign-list-admin");
     if (!list) return;
@@ -6083,7 +6086,17 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt","desc")));
       if (snap.empty) { list.innerHTML = '<div class="empty-row">尚無團務</div>'; return; }
       list.innerHTML = "";
-      snap.forEach(d => {
+      // 先依「進度」排序；同進度時靠 Firestore 已排好的 createdAt desc 維持新→舊
+      const docs = snap.docs.slice().sort((a, b) => {
+        const pa = PROGRESS_ORDER[a.data().progress] ?? 99;
+        const pb = PROGRESS_ORDER[b.data().progress] ?? 99;
+        if (pa !== pb) return pa - pb;
+        // 保險：同進度下再用 createdAt 比一次（較新在前）
+        const ta = a.data().createdAt?.toMillis?.() ?? 0;
+        const tb = b.data().createdAt?.toMillis?.() ?? 0;
+        return tb - ta;
+      });
+      docs.forEach(d => {
         const data = d.data();
         const row = document.createElement("div");
         row.className = "campaign-admin-row";
