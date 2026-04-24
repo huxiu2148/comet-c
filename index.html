@@ -968,6 +968,13 @@
     .pu-amount { font-size: 15px; font-weight: 700; color: var(--pink); white-space: nowrap; }
     .pu-actions { display: flex; gap: 6px; align-items: center; }
 
+
+    .pu-product-btn.selected {
+      border-color: var(--pink) !important;
+      background: #fff0f7 !important;
+      box-shadow: 0 0 0 2px rgba(255,132,195,0.2);
+    }
+
     /* ══ 訂單管理 ══ */
     .order-admin-card {
       background: var(--surface);
@@ -2424,6 +2431,16 @@
           <option value="">無</option>
         </select>
       </div>
+      <!-- 商品快速選擇（選了團務才顯示）-->
+      <div class="form-group" id="pu-products-group" style="display:none">
+        <label class="form-label">快速帶入商品</label>
+        <div id="pu-products-list" class="ledger-products-list"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+          <span style="font-size:11px;color:var(--text-muted)">已選商品的成本合計：</span>
+          <span style="font-size:13px;font-weight:700;color:var(--pink)" id="pu-selected-total">NT$0</span>
+        </div>
+      </div>
+
       <div class="form-group">
         <label class="form-label">商品說明 <span class="required">*</span></label>
         <input class="form-input" id="pu-items" type="text" placeholder="例：手機殼×2、鑰匙圈×3" />
@@ -2476,6 +2493,12 @@
         <label class="form-label">備注</label>
         <input class="form-input" id="pu-note" type="text" placeholder="其他備注" />
       </div>
+
+      <label class="bank-check-item" style="margin-top:4px">
+        <input type="checkbox" id="pu-sync-ledger" checked style="accent-color:var(--pink)" />
+        <span style="font-size:13px">同步寫入記帳（支出）</span>
+      </label>
+
       <p class="form-error" id="pu-error"></p>
     </div>
     <div class="modal-footer">
@@ -6466,8 +6489,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     // 清空
     ["pu-items","pu-amount","pu-tracking","pu-weight","pu-shipping-fee","pu-note"].forEach(i => {
       const el = document.getElementById(i);
-      if (el) el.value = "";
+      if (el) { el.value = ""; delete el.dataset.manualEdit; }
     });
+    _puSelectedProducts = [];
+    document.getElementById("pu-products-group").style.display = "none";
+    document.querySelectorAll(".pu-product-btn.selected").forEach(b => b.classList.remove("selected"));
     ["pu-ordered-at","pu-arrived-at","pu-return-at"].forEach(i => {
       const el = document.getElementById(i); if (el) el.value = "";
     });
@@ -6482,11 +6508,16 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           const opt = document.createElement("option");
           opt.value = d.id;
           opt.dataset.name = d.data().name;
+          opt.dataset.products = JSON.stringify(d.data().products || []);
           opt.textContent = `${d.data().name} (${d.id})`;
           sel.appendChild(opt);
         });
       } catch(e) {}
     }
+    // 綁定團務切換事件
+    sel.onchange = onPuCampaignChange;
+    // 如果已有選中的團務，觸發一次
+    if (sel.value) onPuCampaignChange.call(sel);
 
     // 若是編輯，載入現有資料
     if (id) {
@@ -6524,6 +6555,92 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const p = n => String(n).padStart(2,"0");
     return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
   }
+
+  // 選了團務後顯示商品快速選擇
+  let _puSelectedProducts = []; // [{name, cost, qty}]
+
+  function onPuCampaignChange() {
+    const sel = document.getElementById("pu-campaign");
+    const opt = sel.options[sel.selectedIndex];
+    const group = document.getElementById("pu-products-group");
+    const list  = document.getElementById("pu-products-list");
+    _puSelectedProducts = [];
+    updatePuSelectedTotal();
+
+    if (!opt?.value) { group.style.display = "none"; return; }
+
+    let products = [];
+    try { products = JSON.parse(opt.dataset.products || "[]"); } catch {}
+    if (!products.length) { group.style.display = "none"; return; }
+
+    group.style.display = "block";
+    list.innerHTML = "";
+    products.forEach(p => {
+      const cost  = p.cost  || p.price || 0;
+      const sell  = p.price || 0;
+      const fx    = p.foreignPrice ? `${p.foreignPrice.toLocaleString()} ${p.currency||""}` : "";
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "ledger-product-btn pu-product-btn";
+      btn.dataset.name = p.name;
+      btn.dataset.cost = cost;
+      btn.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:2px;text-align:left">
+          <span class="lpb-name">${esc(p.name)}</span>
+          ${fx ? `<span style="font-size:11px;color:var(--text-muted)">${fx}</span>` : ""}
+        </div>
+        <span class="lpb-prices">
+          <span class="lpb-cost">成本 NT$${cost.toLocaleString()}</span>
+          <span class="lpb-price">售價 NT$${sell.toLocaleString()}</span>
+        </span>`;
+      btn.addEventListener("click", () => togglePuProduct(btn, p.name, cost));
+      list.appendChild(btn);
+    });
+  }
+
+  function togglePuProduct(btn, name, cost) {
+    const idx = _puSelectedProducts.findIndex(p => p.name === name);
+    if (idx >= 0) {
+      // 已選：移除
+      _puSelectedProducts.splice(idx, 1);
+      btn.classList.remove("selected");
+    } else {
+      // 未選：新增
+      _puSelectedProducts.push({ name, cost });
+      btn.classList.add("selected");
+    }
+    updatePuSelectedTotal();
+    updatePuItemsAndAmount();
+  }
+
+  function updatePuSelectedTotal() {
+    const total = _puSelectedProducts.reduce((s,p) => s + (p.cost||0), 0);
+    const el = document.getElementById("pu-selected-total");
+    if (el) el.textContent = `NT$${total.toLocaleString()}`;
+  }
+
+  function updatePuItemsAndAmount() {
+    if (!_puSelectedProducts.length) return;
+    // 更新商品說明
+    const itemsEl = document.getElementById("pu-items");
+    if (itemsEl && !itemsEl.dataset.manualEdit) {
+      itemsEl.value = _puSelectedProducts.map(p => p.name).join("、");
+    }
+    // 更新金額（可手動改，所以用 dataset 標記是否被手動改過）
+    const amountEl = document.getElementById("pu-amount");
+    if (amountEl && !amountEl.dataset.manualEdit) {
+      const total = _puSelectedProducts.reduce((s,p) => s + (p.cost||0), 0);
+      amountEl.value = total;
+    }
+  }
+
+  // 監聽手動修改
+  document.getElementById("pu-items")?.addEventListener("input", function() {
+    this.dataset.manualEdit = "1";
+  });
+  document.getElementById("pu-amount")?.addEventListener("input", function() {
+    this.dataset.manualEdit = "1";
+  });
 
   window.closePurchaseModal = function(e) {
     if (e && e.target !== document.getElementById("modal-purchase")) return;
@@ -6565,6 +6682,23 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         data.createdAt = serverTimestamp();
         await addDoc(collection(db,"purchases"), data);
       }
+
+      // 同步寫入記帳（支出）
+      const syncLedger = document.getElementById("pu-sync-ledger")?.checked;
+      if (syncLedger && amount > 0) {
+        try {
+          await addDoc(collection(db,"ledger"), {
+            type: "expense",
+            amount,
+            note: items,
+            campaignId: data.campaignId || null,
+            date: orderedAt ? orderedAt.slice(0,10) : new Date().toISOString().slice(0,10),
+            createdAt: serverTimestamp(),
+            source: "purchase",
+          });
+        } catch(e) { console.warn("記帳同步失敗", e); }
+      }
+
       document.getElementById("modal-purchase").style.display = "none";
       _editingPurchaseId = null;
       await loadPurchases();
