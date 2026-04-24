@@ -2164,26 +2164,7 @@
         </div>
 
         <!-- 文案生成區 -->
-        <div class="form-card" id="copywriter-card" style="display:none">
-          <div class="form-card-title">✍️ 文案生成</div>
-          <div class="copy-tabs">
-            <button class="copy-tab active" data-ct="memo"   onclick="switchCopyTab('memo')">備忘錄</button>
-            <button class="copy-tab"         data-ct="note"   onclick="switchCopyTab('note')">記事本</button>
-            <button class="copy-tab"         data-ct="social" onclick="switchCopyTab('social')">社群貼文</button>
-          </div>
-          <div class="copy-panel active" id="ct-memo">
-            <textarea class="copy-textarea" id="txt-memo" readonly></textarea>
-            <button class="btn btn-primary btn-sm copy-btn" onclick="copyText('txt-memo')">複製</button>
-          </div>
-          <div class="copy-panel" id="ct-note">
-            <textarea class="copy-textarea" id="txt-note" readonly></textarea>
-            <button class="btn btn-primary btn-sm copy-btn" onclick="copyText('txt-note')">複製</button>
-          </div>
-          <div class="copy-panel" id="ct-social">
-            <textarea class="copy-textarea" id="txt-social" readonly></textarea>
-            <button class="btn btn-primary btn-sm copy-btn" onclick="copyText('txt-social')">複製</button>
-          </div>
-        </div>
+        
 
         <!-- 底部按鈕列 -->
         <div class="campaign-actions">
@@ -2196,17 +2177,6 @@
           <div class="form-card-title" style="display:flex;justify-content:space-between;align-items:center">
             <span>📋 已建立的團務</span>
             <div style="display:flex;gap:8px">
-              <button class="btn btn-ghost btn-sm" onclick="downloadCampaignTemplate()">⬇ 下載範本</button>
-              <button class="btn btn-ghost btn-sm" onclick="document.getElementById('campaign-import-file').click()">📤 批次匯入</button>
-              <input type="file" id="campaign-import-file" accept=".xlsx,.csv" style="display:none" onchange="importCampaigns(this)" />
-              <button class="btn btn-ghost btn-sm" onclick="loadCampaignList()">↻ 重新整理</button>
-            </div>
-          </div>
-          <div id="campaign-list-admin" class="campaign-admin-list">
-            <div class="loading-row">點「重新整理」載入</div>
-          </div>
-        </div>
-
       </div>
 
       <!-- 團務管理 -->
@@ -2811,9 +2781,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     document.querySelectorAll(".admin-section").forEach(el => {
       el.classList.toggle("active", el.id === "section-"+section);
     });
-    if (section === "groups")         loadGroups();
-    if (section === "campaigns")      setTimeout(() => window.loadGroupsSelect?.(), 30);
-    if (section === "campaign-mgmt")  setTimeout(() => window.loadCampaignList?.(), 50);
+    if (section === "groups") loadGroups();
+    if (section === "campaigns") setTimeout(() => window.loadGroupsSelect?.(), 30);
+    // 其他分頁透過事件通知各自的 script 模組處理
     document.dispatchEvent(new CustomEvent("adminSectionChanged", { detail: section }));
   };
 
@@ -4625,7 +4595,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
     const progress = data.progress || "ongoing";
     const deadline = data.deadline
-      ? new Date(data.deadline).toLocaleString("zh-TW", { month:"numeric", day:"numeric", hour:"2-digit", minute:"2-digit" })
+      ? window.fmtDateTime(new Date(data.deadline))
       : "";
 
     card.innerHTML = `
@@ -4701,7 +4671,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     // 下單模式標籤
     const modeLabels = { 1:"🏦 匯款", 2:"📦 代收", 3:"📝 登記", 4:"🛍️ 賣貨便" };
     const deadline = c.deadline
-      ? new Date(c.deadline).toLocaleString("zh-TW", { month:"numeric", day:"numeric", hour:"2-digit", minute:"2-digit" })
+      ? window.fmtDateTime(new Date(c.deadline))
       : "—";
 
     // 代收護照欄位
@@ -5176,7 +5146,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const progress = campaign.progress || "ongoing";
     const itemsText = (data.items || []).map(it => `${it.name} × ${it.qty}`).join("、");
     const createdStr = data.createdAt?.toDate
-      ? data.createdAt.toDate().toLocaleString("zh-TW")
+      ? data.window.fmtDateTime(createdAt.toDate())
       : "—";
 
     card.innerHTML = `
@@ -5594,13 +5564,13 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   };
 
   // ── 初始化：切到 orders 時載入 ──────────────────────────────
-  const _origSwitch = window.switchAdminSection;
-  window.switchAdminSection = function(section) {
-    _origSwitch(section);
-    if (section === "orders")         { loadCampaignFilter(); loadAdminOrders(); }
-    if (section === "finance")        initFinance();
-    if (section === "campaign-mgmt")  window.loadCampaignList?.();
-  };
+  // 監聽分頁切換事件（避免跨 module 時序問題）
+  document.addEventListener("adminSectionChanged", (e) => {
+    const section = e.detail;
+    if (section === "orders")        { loadCampaignFilter(); loadAdminOrders(); }
+    if (section === "finance")       initFinance();
+    if (section === "campaign-mgmt") window.loadCampaignList();
+  });
 
   // ── 團務篩選選單 ─────────────────────────────────────────────
   async function loadCampaignFilter() {
@@ -5644,7 +5614,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     card.className = "order-admin-card";
     card.id = `oadmin-${o.id}`;
     const date = o.createdAt?.toDate
-      ? o.createdAt.toDate().toLocaleString("zh-TW")
+      ? o.window.fmtDateTime(createdAt.toDate())
       : "—";
     const items = (o.items || []).map(it => {
       const spec = it.specSummary ? ` (${it.specSummary})` : "";
@@ -5742,7 +5712,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     snap.forEach(d => {
       const o = d.data();
       const items = (o.items||[]).map(it=>`${it.name}×${it.qty}`).join("+");
-      const date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleDateString("zh-TW") : "";
+      const date = o.createdAt?.toDate ? o.createdAt.toDate().toISOString().slice(0,10).replace(/-/g,'/') : "";
       rows.push([d.id, o.campaignId, o.nickname||"", o.email||"", o.contact||"",
                  items, o.totalAmount||0, o.discountAmount||0,
                  o.paymentStatus||"pending", o.returnInfo||"", date]);
@@ -5987,7 +5957,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       if (!snap.exists()) { el.innerHTML = '<div style="color:var(--danger)">找不到資料</div>'; return; }
       const d = snap.data();
       const createdAt = d.createdAt?.toDate
-        ? d.createdAt.toDate().toLocaleString("zh-TW",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit"})
+        ? d.window.fmtDateTime(createdAt.toDate())
         : "—";
       const products = d.products || [];
       const prodRows = products.map(p => {
