@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-16 -->
+  <!-- build:20260424-17 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -145,15 +145,31 @@
     .btn-danger:hover { background: #fff0f4; }
 
 
-    .order-product-multi .opi-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
-    .add-item-btn { font-size:12px; padding:4px 12px; border-radius:20px; }
-    .spec-items-list { display:flex; flex-direction:column; gap:6px; margin-bottom:6px; }
+    /* 有規格商品：覆寫 grid 為 flex column */
+    .order-product-item.order-product-multi {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 8px;
+    }
+    .order-product-multi .opi-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .order-product-multi .opi-subtotal {
+      text-align: right;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--pink);
+    }
+    .add-item-btn { font-size:12px; padding:5px 14px; border-radius:20px; white-space:nowrap; }
+    .spec-items-list { display:flex; flex-direction:column; gap:6px; }
     .spec-item-row {
       display:flex; align-items:center; gap:8px; flex-wrap:wrap;
       background:#fff8fb; border:1.5px solid var(--border);
       border-radius:var(--radius); padding:8px 12px;
     }
-    .spec-item-num { font-size:12px; font-weight:700; color:var(--text-muted); min-width:36px; }
+    .spec-item-num { font-size:12px; font-weight:700; color:var(--text-muted); min-width:36px; flex-shrink:0; }
     .spec-item-sel { display:flex; align-items:center; gap:6px; }
     .spec-item-label { font-size:12px; color:var(--text-muted); white-space:nowrap; }
     .spec-item-price { font-size:12px; color:var(--pink); font-weight:700; margin-left:auto; white-space:nowrap; }
@@ -2713,7 +2729,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-16 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-17 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
