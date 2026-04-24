@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-02 -->
+  <!-- build:20260424-03 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2670,7 +2670,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-02 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-03 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -2776,10 +2776,14 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     document.querySelectorAll(".admin-section").forEach(el => {
       el.classList.toggle("active", el.id === "section-"+section);
     });
-    if (section === "groups") loadGroups();
-    if (section === "campaigns") setTimeout(() => window.loadGroupsSelect?.(), 30);
-    // 其他分頁透過事件通知各自的 script 模組處理
-    document.dispatchEvent(new CustomEvent("adminSectionChanged", { detail: section }));
+    // 直接呼叫各分頁的載入函式（不依賴事件時序）
+    if (section === "groups")        loadGroups();
+    if (section === "campaigns")     setTimeout(() => window.loadGroupsSelect?.(), 30);
+    if (section === "campaign-mgmt") setTimeout(() => window.loadCampaignList?.(), 50);
+    if (section === "orders")        setTimeout(() => { window.loadCampaignFilter?.(); window.loadAdminOrders?.(); }, 50);
+    if (section === "finance")       setTimeout(() => window.initFinance?.(), 50);
+    if (section === "members")       setTimeout(() => window.loadMembers?.(), 50);
+    if (section === "purchase")      setTimeout(() => { window.loadPurchaseCampaignFilter?.(); window.loadPurchases?.(); }, 50);
   };
 
   window.loadGroups = async function() {
@@ -5181,9 +5185,6 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   // ── 切換到 members 時載入列表 ──────────────────────────────
-  document.addEventListener("adminSectionChanged", e => {
-    if (e.detail === "members") window.loadMembers?.();
-  });
 
   // ── 會員列表 ──────────────────────────────────────────────
   window.loadMembers = async function() {
@@ -5558,12 +5559,6 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   // ── 初始化：切到 orders 時載入 ──────────────────────────────
   // 監聽分頁切換事件（避免跨 module 時序問題）
-  document.addEventListener("adminSectionChanged", (e) => {
-    const section = e.detail;
-    if (section === "orders")        { loadCampaignFilter(); loadAdminOrders(); }
-    if (section === "finance")       window.initFinance?.();
-    if (section === "campaign-mgmt") window.loadCampaignList?.();
-  });
 
   // ── 團務篩選選單 ─────────────────────────────────────────────
   async function loadCampaignFilter() {
@@ -6356,12 +6351,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   }
 
   // 切換時初始化
-  document.addEventListener("adminSectionChanged", e => {
-    if (e.detail === "purchase") { loadPurchaseCampaignFilter(); loadPurchases(); }
-  });
 
   // 篩選選單
-  async function loadPurchaseCampaignFilter() {
+  window.loadPurchaseCampaignFilter = async function() {
     const sel = document.getElementById("purchase-filter-campaign");
     if (!sel || sel.options.length > 1) return;
     try {
