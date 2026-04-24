@@ -5186,11 +5186,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   // ── 切換到 members 時載入列表 ──────────────────────────────
-  const origSwitchAdmin = window.switchAdminSection;
-  window.switchAdminSection = function(section) {
-    origSwitchAdmin(section);
-    if (section === "members") loadMembers();
-  };
+  document.addEventListener("adminSectionChanged", e => {
+    if (e.detail === "members") loadMembers();
+  });
 
   // ── 會員列表 ──────────────────────────────────────────────
   async function loadMembers() {
@@ -6076,15 +6074,17 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     document.querySelectorAll("[data-ft]").forEach(b => b.classList.toggle("active", b.dataset.ft === tab));
     if (tab === "monthly") renderMonthly();
     if (tab === "profit")  renderProfit();
-    if (tab === "ledger")  loadLedger();
+    if (tab === "ledger")  window.loadLedger?.() || loadLedger?.();
   };
 
   window.initFinance = function() { loadLedger(); };
+  // 也監聽事件（確保從事件觸發時也能運作）
+  document.addEventListener('adminSectionChanged', e => { if(e.detail==='finance') window.initFinance(); });
 
   // ── 收支記錄 ─────────────────────────────────────────────────
   let ledgerData = [];
 
-  async function loadLedger() {
+  window.loadLedger = async function() {
     const list = document.getElementById("ledger-list");
     if (!list) return;
     list.innerHTML = '<div class="loading-row">載入中...</div>';
@@ -6210,7 +6210,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         createdAt: serverTimestamp()
       });
       document.getElementById("modal-ledger").style.display = "none";
-      await loadLedger();
+      await window.loadLedger();
     } catch(e) { errEl.textContent = "儲存失敗：" + e.message; }
   };
 
@@ -6362,11 +6362,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   }
 
   // 切換時初始化
-  const _origSwitch9 = window.switchAdminSection;
-  window.switchAdminSection = function(section) {
-    _origSwitch9(section);
-    if (section === "purchase") { loadPurchaseCampaignFilter(); loadPurchases(); }
-  };
+  document.addEventListener("adminSectionChanged", e => {
+    if (e.detail === "purchase") { loadPurchaseCampaignFilter(); loadPurchases(); }
+  });
 
   // 篩選選單
   async function loadPurchaseCampaignFilter() {
