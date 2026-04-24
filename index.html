@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-19 -->
+  <!-- build:20260424-20 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -657,6 +657,15 @@
       padding: 24px;
       box-shadow: var(--shadow);
       margin-bottom: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+    .order-form-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--camp-color, var(--grad));
     }
 
     .back-btn {
@@ -2783,7 +2792,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-19 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-20 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -4333,12 +4342,21 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
       const modeNames = { 1:"匯款", 2:"代收", 3:"登記" };
 
+      // 計算團體顏色
+      const campColors = (campaign.groupColors && campaign.groupColors.length)
+        ? campaign.groupColors.filter(c => /^#[0-9a-fA-F]{3,6}$/.test(c))
+        : (campaign.groupColor ? [campaign.groupColor] : ["#FF84C3"]);
+      if (!campColors.length) campColors.push("#FF84C3");
+      const campGradient = campColors.length > 1
+        ? `linear-gradient(135deg, ${campColors.join(",")})`
+        : campColors[0];
+
       el.innerHTML = `
         <button class="back-btn" onclick="closeCampaign()">← 返回團購活動</button>
 
-        <div class="order-form-card">
-          <div class="order-header">
-            <div class="order-title">${escH(campaign.name)}</div>
+        <div class="order-form-card" style="--camp-color:${campColors[0]};border-top:4px solid transparent;border-image:${campGradient} 1">
+          <div class="order-header" style="border-bottom-color:${campColors[0]}33">
+            <div class="order-title" style="background:${campGradient};-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">${escH(campaign.name)}</div>
             <div class="order-info-row">
               <span>付款模式：${modeNames[campaign.mode] || ""}</span>
               ${deadline ? `<span>收單：${deadline.getMonth()+1}/${deadline.getDate()} ${String(deadline.getHours()).padStart(2,"0")}:${String(deadline.getMinutes()).padStart(2,"0")}</span>` : ""}
