@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-05 -->
+  <!-- build:20260424-06 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2670,7 +2670,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-05 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-06 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -5224,6 +5224,10 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       list.innerHTML = "";
       snap.forEach(d => list.appendChild(renderMemberRow(d.id, d.data())));
       console.log('[members] 渲染完成');
+      const sec = document.getElementById('section-members');
+      console.log('[members] section active:', sec?.classList.contains('active'), 'display:', window.getComputedStyle(sec).display);
+      const lst = document.getElementById('members-list');
+      console.log('[members] list display:', window.getComputedStyle(lst).display, 'children:', lst?.children.length);
     } catch (e) {
       console.error('[members] 載入失敗:', e);
       list.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
