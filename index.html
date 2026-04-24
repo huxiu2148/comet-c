@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-10 -->
+  <!-- build:20260424-11 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2698,7 +2698,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-10 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-11 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -5974,21 +5974,33 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   // 把匯入欄位的「日期/時間」轉成 JS Date，能吃 Date 物件、Excel 序號、各種字串格式
   function parseImportedDate(val) {
     if (val == null || val === "") return null;
-    // SheetJS 開 cellDates:true 後直接給 Date 物件
+    // SheetJS cellDates:true → 直接是 Date 物件
     if (val instanceof Date) return isNaN(val) ? null : val;
-    // Excel 日期序號（1899-12-30 起算的天數）
+    // Excel 日期序號
     if (typeof val === "number" && isFinite(val)) {
       const d = new Date(Math.round((val - 25569) * 86400000));
       return isNaN(d) ? null : d;
     }
-    // 字串：把中文年月日、斜線、點都統一成 "-"
-    const norm = String(val).trim()
-      .replace(/[年月.]/g, "-")
-      .replace(/日/g, "")
-      .replace(/\//g, "-")
-      .replace(/-+/g, "-")
-      .replace(/-$/, "");
-    const d = new Date(norm);
+    let s = String(val).trim();
+    // 處理中文上午/下午格式：「2025/9/14 下午 10:00:00」
+    s = s.replace(/上午\s*(\d{1,2}:\d{2}(:\d{2})?)/, (_, t) => {
+      const [h, m, sec] = t.split(':');
+      const hh = parseInt(h) === 12 ? 0 : parseInt(h);
+      return ` ${String(hh).padStart(2,'0')}:${m}${sec?':'+sec:''}`;
+    });
+    s = s.replace(/下午\s*(\d{1,2}:\d{2}(:\d{2})?)/, (_, t) => {
+      const [h, m, sec] = t.split(':');
+      const hh = parseInt(h) === 12 ? 12 : parseInt(h) + 12;
+      return ` ${String(hh).padStart(2,'0')}:${m}${sec?':'+sec:''}`;
+    });
+    // 統一日期分隔符
+    s = s
+      .replace(/[年月.]/g, '-')
+      .replace(/日/g, '')
+      .replace(/\//g, '-')
+      .replace(/-+/g, '-')
+      .replace(/-$/, '');
+    const d = new Date(s);
     return isNaN(d) ? null : d;
   }
 
