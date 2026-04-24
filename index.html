@@ -2507,6 +2507,13 @@
             <option value="done">⚪ 結束</option>
           </select>
         </div>
+        <div class="form-group">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <label class="form-label" style="margin-bottom:0">📦 商品管理</label>
+            <button class="btn btn-ghost btn-sm" onclick="addCeProductRow()">＋ 新增商品</button>
+          </div>
+          <div id="ce-products-list" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
       </div>
       <p class="form-error" id="ce-error"></p>
     </div>
@@ -5987,12 +5994,14 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         const cost   = p.cost   || 0;
         const profit = price - cost;
         const fx     = p.foreignPrice ? `${p.foreignPrice.toLocaleString()} ${d.currency||""}` : "—";
+        const costDisplay = cost > 0 ? `NT$${cost.toLocaleString()}` : "—";
+        const profitDisplay = profit !== price ? `NT$${profit.toLocaleString()}` : "—";
         return `<tr>
           <td>${esc(p.name)}</td>
           <td style="color:var(--text-muted)">${fx}</td>
-          <td style="color:var(--danger)">NT$${cost.toLocaleString()}</td>
+          <td style="color:var(--danger)">${costDisplay}</td>
           <td style="color:var(--pink);font-weight:700">NT$${price.toLocaleString()}</td>
-          <td style="color:#4caf50">NT$${profit.toLocaleString()}</td>
+          <td style="color:#4caf50">${profitDisplay}</td>
         </tr>`;
       }).join("");
       const discounts = (d.discounts||[]).map(di =>
@@ -6018,12 +6027,42 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   };
 
   // ── 編輯團務 ─────────────────────────────────────────────────
+  let ceProductRows = [];
+  let ceProductCounter = 0;
+
+  window.addCeProductRow = function(data = null) {
+    ceProductCounter++;
+    const id = ceProductCounter;
+    ceProductRows.push(id);
+    const list = document.getElementById("ce-products-list");
+    const div = document.createElement("div");
+    div.className = "product-row";
+    div.id = `ce-product-row-${id}`;
+    div.style.display = "grid";
+    div.style.gridTemplateColumns = "1fr 80px 80px 30px";
+    div.style.gap = "4px";
+    div.style.alignItems = "center";
+    div.innerHTML = `
+      <input class="form-input" type="text" id="ce-p-name-${id}" placeholder="商品名稱" value="${esc(data?.name || '')}" />
+      <input class="form-input" type="number" id="ce-p-foreign-${id}" placeholder="外幣" value="${data?.foreignPrice || ''}" />
+      <input class="form-input" type="number" id="ce-p-price-${id}" placeholder="代購價" value="${data?.price || ''}" />
+      <button class="product-remove" type="button" onclick="removeCeProductRow(${id})">✕</button>`;
+    list.appendChild(div);
+  };
+
+  window.removeCeProductRow = function(id) {
+    ceProductRows = ceProductRows.filter(r => r !== id);
+    document.getElementById(`ce-product-row-${id}`)?.remove();
+  };
+
   window.openCampaignEdit = async function(campaignId) {
     document.getElementById("modal-campaign-edit").style.display = "flex";
     document.getElementById("ce-error").textContent = "";
     document.getElementById("ce-id").textContent = campaignId;
     document.getElementById("ce-loading").style.display = "block";
     document.getElementById("ce-form").style.display = "none";
+    document.getElementById("ce-products-list").innerHTML = "";
+    ceProductRows = [];
     try {
       const { getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
       const snap = await getDoc(doc(db, "campaigns", campaignId));
@@ -6033,6 +6072,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       document.getElementById("ce-deadline").value  = d.deadline || "";
       document.getElementById("ce-shipdate").value  = d.shipdate || "";
       document.getElementById("ce-progress").value  = d.progress || "ongoing";
+      
+      if (d.products && d.products.length) {
+        d.products.forEach(p => addCeProductRow(p));
+      }
+
       document.getElementById("ce-loading").style.display = "none";
       document.getElementById("ce-form").style.display    = "block";
     } catch(e) {
@@ -6049,8 +6093,16 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const progress = document.getElementById("ce-progress").value;
     const errEl    = document.getElementById("ce-error");
     if (!name) { errEl.textContent = "請填寫團務名稱"; return; }
+
+    const products = ceProductRows.map(rid => {
+      const pName = document.getElementById(`ce-p-name-${rid}`).value.trim();
+      const pForeign = parseFloat(document.getElementById(`ce-p-foreign-${rid}`).value) || 0;
+      const pPrice = parseFloat(document.getElementById(`ce-p-price-${rid}`).value) || 0;
+      return { name: pName, foreignPrice: pForeign, price: pPrice, cost: 0 }; // cost 設為 0 或根據需要計算
+    }).filter(p => p.name);
+
     try {
-      await updateDoc(doc(db, "campaigns", id), { name, deadline, shipdate, progress });
+      await updateDoc(doc(db, "campaigns", id), { name, deadline, shipdate, progress, products });
       document.getElementById("modal-campaign-edit").style.display = "none";
       // 清除詳情快取，重新載入列表
       const det = document.getElementById(`car-detail-${id}`);
