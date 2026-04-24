@@ -17,7 +17,7 @@
       --pink:   #FF84C3;
       --yellow: #E1E668;
       --orange: #FF9E23;
-      --grad: linear-gradient(135deg, #FF84C3, #E1E668, #FF9E23);
+      --grad: linear-gradient(135deg, #FF84C3, #FF9E23, #E1E668);
       --grad-h: linear-gradient(135deg, #ff9ed4 0%, #ffb347 50%, #eaef7a 100%);
       --bg:        #fff9fb;
       --surface:   #ffffff;
@@ -2950,7 +2950,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   function renderGroupCard(id, data) {
     const card = document.createElement("div");
     card.className = "group-card";
-    const colors = (data.colors && data.colors.length) ? data.colors : [data.color || "#FF84C3"];
+    const colors = (data.colors && data.colors.length) ? data.colors : (data.color ? [data.color] : ["#FF84C3","#FF9E23","#E1E668"]);
     const gradient = buildGradient(colors);
     card.style.setProperty("--group-color", gradient);
     const colorsJson = JSON.stringify(colors).replace(/"/g, "&quot;");
@@ -3034,7 +3034,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   }
 
   function buildGradient(colors) {
-    if (!colors || colors.length === 0) return "#FF84C3";
+    if (!colors || colors.length === 0) return "linear-gradient(135deg,#FF84C3,#FF9E23,#E1E668)";
     if (colors.length === 1) return colors[0];
     return `linear-gradient(135deg, ${colors.join(", ")})`;
   }
@@ -4032,7 +4032,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
               : [m.display, ...(m.aliases || [])]
           ))
         ].filter(k => k && k.trim());
-        groupKeywords.push({ keywords: keys, color: data.colors || [data.color || "#FF84C3"], id: d.id, name: data.name });
+        groupKeywords.push({ keywords: keys, color: (data.colors && data.colors.length) ? data.colors : (data.color ? [data.color] : ["#FF84C3","#FF9E23","#E1E668"]), id: d.id, name: data.name });
       });
     } catch(e) { console.warn("載入團體關鍵字失敗", e); }
   }
@@ -4094,7 +4094,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       snap.forEach(d => {
         const data = d.data();
         const abbr = (data.abbr || window.genAbbr(data.name)).toUpperCase();
-        const colors = (data.colors && data.colors.length) ? data.colors : [data.color || "#FF84C3"];
+        const colors = (data.colors && data.colors.length) ? data.colors : (data.color ? [data.color] : ["#FF84C3","#FF9E23","#E1E668"]);
         groupsCache.push({ id: d.id, name: data.name, color: data.color || colors[0], colors, abbr, aliases: data.aliases || [], members: data.members || [] });
         const opt = document.createElement("option");
         opt.value = d.id;
@@ -4913,9 +4913,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       colors = [data.groupColor];
     } else if (data.groupId && window.groupsCache) {
       const g = window.groupsCache.find(x => x.id === data.groupId);
-      colors = g?.colors || [g?.color || "#FF84C3"];
+      colors = (g?.colors && g.colors.length) ? g.colors : (g?.color ? [g.color] : ["#FF84C3","#FF9E23","#E1E668"]);
     } else {
-      colors = ["#FF84C3"];
+      colors = ["#FF84C3","#FF9E23","#E1E668"];
     }
     // 確保每個值是合法 hex（過濾掉 linear-gradient 等）
     const hexColors = colors.filter(c => /^#[0-9a-fA-F]{3,6}$/.test(c));
