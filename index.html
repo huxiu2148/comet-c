@@ -5880,12 +5880,38 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   // 解析 XLSX 或 CSV
   async function parseImportFile(file) {
     const ext = file.name.split(".").pop().toLowerCase();
+    // CSV 處理：加入自動判斷 UTF-8 或 Big5 (Excel 預設)
     if (ext === "csv") {
-      const text = await file.text();
-      return text.split("\n")
-        .slice(2) // 跳過標題和說明列
-        .map(l => l.split(",").map(c => c.replace(/^"|"$/g,"").trim()))
-        .filter(r => r[0]);
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const buffer = e.target.result;
+          const view = new Uint8Array(buffer);
+          let text = "";
+          
+          // 判斷是否有 UTF-8 BOM
+          const hasBOM = view.length >= 3 && view[0] === 0xef && view[1] === 0xbb && view[2] === 0xbf;
+          
+          if (hasBOM) {
+            text = new TextDecoder("utf-8").decode(view);
+          } else {
+            // 預設先用 utf-8 解碼，如果遇到無效字元會產生  (U+FFFD)
+            text = new TextDecoder("utf-8").decode(view);
+            if (text.includes("")) {
+              // 如果出現亂碼，改用 Big5 (台灣 Excel 預設編碼) 重新解碼
+              text = new TextDecoder("big5").decode(view);
+            }
+          }
+
+          const rows = text.split("\n")
+            .slice(2) // 跳過標題和說明列
+            .map(l => l.split(",").map(c => c.replace(/^"|"$/g,"").trim()))
+            .filter(r => r[0]);
+          resolve(rows);
+        };
+        reader.onerror = err => reject(err);
+        reader.readAsArrayBuffer(file);
+      });
     }
     // XLSX：用 SheetJS
     return new Promise((resolve, reject) => {
