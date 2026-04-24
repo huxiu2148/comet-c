@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-06 -->
+  <!-- build:20260424-08 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2510,8 +2510,22 @@
         <div class="form-group">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
             <label class="form-label" style="margin-bottom:0">📦 商品管理</label>
-            <button class="btn btn-ghost btn-sm" onclick="addCeProductRow()">＋ 新增商品</button>
+            <div style="display:flex;gap:4px">
+              <button class="btn btn-ghost btn-sm" onclick="toggleCeBatchImport()">📋 批次匯入</button>
+              <button class="btn btn-ghost btn-sm" onclick="addCeProductRow()">＋ 新增</button>
+            </div>
           </div>
+          
+          <!-- 批次匯入區塊 -->
+          <div id="ce-batch-import-wrap" style="display:none;margin-bottom:12px;padding:12px;background:#f9f9f9;border-radius:8px;border:1px dashed var(--border)">
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">請貼上文字（格式：名稱 NT$價格｜外幣）</div>
+            <textarea class="form-input" id="ce-batch-input" rows="5" style="font-size:12px;font-family:monospace;resize:vertical" placeholder="LOGO 徽章 NT$240｜₩10000&#10;明信片組 NT$240｜10000"></textarea>
+            <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:8px">
+              <button class="btn btn-ghost btn-sm" onclick="toggleCeBatchImport()">取消</button>
+              <button class="btn btn-primary btn-sm" onclick="processCeBatchImport()">確認匯入</button>
+            </div>
+          </div>
+
           <div id="ce-products-list" style="display:flex;flex-direction:column;gap:8px"></div>
         </div>
       </div>
@@ -3878,7 +3892,6 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     document.getElementById("c-name").value = "";
     document.getElementById("c-shipdate").value = "";
     document.getElementById("products-list").innerHTML = "";
-    document.getElementById("discounts-list").innerHTML = "";
     productRows = []; rowCounter = 0;
     discountRows = []; discountCounter = 0;
     Object.keys(overrides).forEach(k => delete overrides[k]);
@@ -6055,18 +6068,89 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     document.getElementById(`ce-product-row-${id}`)?.remove();
   };
 
+  window.toggleCeBatchImport = function() {
+    const wrap = document.getElementById("ce-batch-import-wrap");
+    const input = document.getElementById("ce-batch-input");
+    if (wrap.style.display === "none") {
+      wrap.style.display = "block";
+      input.value = "";
+      input.focus();
+    } else {
+      wrap.style.display = "none";
+    }
+  };
+
+  window.processCeBatchImport = function() {
+    const text = document.getElementById("ce-batch-input").value.trim();
+    if (!text) return;
+    const lines = text.split("\n");
+    let count = 0;
+    lines.forEach(line => {
+      if (!line.trim()) return;
+      // 格式：名稱 NT$價格｜外幣
+      // 支援多種分隔符號：｜, |, ｜
+      const parts = line.split(/[｜|]/);
+      let namePart = parts[0] || "";
+      let foreignPart = parts[1] || "";
+
+      // 從 namePart 中分離名稱與台幣價格
+      // 尋找 NT$ 或價格數字
+      let name = namePart;
+      let price = "";
+      const ntMatch = namePart.match(/(.*?)NT\$?\s*(\d+)/i);
+      if (ntMatch) {
+        name = ntMatch[1].trim();
+        price = ntMatch[2];
+      } else {
+        // 如果沒找到 NT$，嘗試找最後一個空格後的數字
+        const lastSpaceMatch = namePart.match(/(.*)\s+(\d+)$/);
+        if (lastSpaceMatch) {
+          name = lastSpaceMatch[1].trim();
+          price = lastSpaceMatch[2];
+        }
+      }
+
+      // 處理外幣部分，移除貨幣符號如 ₩
+      let foreign = foreignPart.replace(/[^\d.]/g, "");
+
+      if (name) {
+        addCeProductRow({
+          name: name,
+          price: price,
+          foreignPrice: foreign
+        });
+        count++;
+      }
+    });
+    if (count > 0) {
+      window.toggleCeBatchImport();
+    }
+  };
+
   window.openCampaignEdit = async function(campaignId) {
-    document.getElementById("modal-campaign-edit").style.display = "flex";
+    console.log("Opening Campaign Edit for:", campaignId);
+    const modal = document.getElementById("modal-campaign-edit");
+    const loading = document.getElementById("ce-loading");
+    const form = document.getElementById("ce-form");
+    const prodList = document.getElementById("ce-products-list");
+    
+    modal.style.display = "flex";
     document.getElementById("ce-error").textContent = "";
     document.getElementById("ce-id").textContent = campaignId;
-    document.getElementById("ce-loading").style.display = "block";
-    document.getElementById("ce-form").style.display = "none";
-    document.getElementById("ce-products-list").innerHTML = "";
+    loading.style.display = "block";
+    form.style.display = "none";
+    prodList.innerHTML = "";
+    document.getElementById("ce-batch-import-wrap").style.display = "none";
     ceProductRows = [];
+    
     try {
       const { getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
       const snap = await getDoc(doc(db, "campaigns", campaignId));
-      if (!snap.exists()) return;
+      if (!snap.exists()) {
+        document.getElementById("ce-error").textContent = "找不到該團務資料";
+        loading.style.display = "none";
+        return;
+      }
       const d = snap.data();
       document.getElementById("ce-name").value      = d.name || "";
       document.getElementById("ce-deadline").value  = d.deadline || "";
@@ -6077,11 +6161,12 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         d.products.forEach(p => addCeProductRow(p));
       }
 
-      document.getElementById("ce-loading").style.display = "none";
-      document.getElementById("ce-form").style.display    = "block";
+      loading.style.display = "none";
+      form.style.display = "flex"; // 確保使用 flex 佈局
     } catch(e) {
+      console.error("Load campaign error:", e);
       document.getElementById("ce-error").textContent = "載入失敗：" + e.message;
-      document.getElementById("ce-loading").style.display = "none";
+      loading.style.display = "none";
     }
   };
 
