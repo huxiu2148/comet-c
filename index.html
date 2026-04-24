@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-25 -->
+  <!-- build:20260424-10 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2370,10 +2370,49 @@
               <option value="paid">已付款</option>
               <option value="cancelled">已取消</option>
             </select>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('order-import-file').click()">📤 批次匯入</button>
+            <input type="file" id="order-import-file" accept=".xlsx,.csv" style="display:none" onchange="importOrders(this)" />
             <button class="btn btn-primary btn-sm" onclick="exportOrders()">匯出 CSV</button>
           </div>
         </div>
         <div id="admin-orders-list"></div>
+      </div>
+
+      <!-- 訂單匯入預覽 Modal -->
+      <div class="modal-backdrop" id="modal-order-import" style="display:none" onclick="closeOrderImportModal(event)">
+        <div class="modal" style="max-width:900px; width:95%">
+          <div class="modal-header">
+            <h3 class="modal-title">📥 訂單批次匯入預覽</h3>
+            <button class="modal-close" onclick="closeOrderImportModal()">✕</button>
+          </div>
+          <div class="modal-body">
+            <div style="margin-bottom:12px; font-size:13px; color:var(--text-muted)">
+              請確認以下資料是否正確。系統會自動比對「團務 ID」與「買家姓名」。
+            </div>
+            <div style="overflow-x:auto; max-height:400px; border:1.5px solid var(--border); border-radius:8px">
+              <table class="finance-table" style="min-width:800px">
+                <thead>
+                  <tr>
+                    <th>狀態</th>
+                    <th>訂單時間</th>
+                    <th>團務 ID</th>
+                    <th>LINE 暱稱</th>
+                    <th>訂購明細</th>
+                    <th>總金額</th>
+                    <th>對帳狀態</th>
+                    <th>Email/末五碼</th>
+                  </tr>
+                </thead>
+                <tbody id="order-import-preview-body"></tbody>
+              </table>
+            </div>
+            <p class="form-error" id="order-import-error" style="margin-top:12px"></p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost btn-sm" onclick="closeOrderImportModal()">取消</button>
+            <button class="btn btn-primary btn-sm" id="btn-confirm-order-import" onclick="confirmOrderImport()">確認匯入 (<span id="order-import-count">0</span>)</button>
+          </div>
+        </div>
       </div>
 
       <!-- 下單管理 -->
@@ -6921,6 +6960,130 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       const opt = document.querySelector(`#orders-filter-campaign option[value="${campaignId}"]`);
       opt?.remove();
     } catch(e) { alert("刪除失敗：" + e.message); }
+  };
+
+  // ── 訂單批次匯入 ─────────────────────────────────────────────
+  let pendingOrderImports = [];
+
+  window.importOrders = async function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    input.value = "";
+
+    try {
+      const allRows = await parseImportFile(file);
+      if (!allRows.length) { alert("檔案內沒有有效資料"); return; }
+
+      // 欄位對應（簡單版，可根據需求擴充）
+      // 預期格式：訂單時間、團務 ID、團務名稱、LINE 暱稱、聯絡方式、訂購明細、總金額、對帳狀態、使用者填寫Email、末五碼/貨運單號
+      const dataRows = allRows.slice(looksLikeHeader(allRows[0]) ? 1 : 0);
+      pendingOrderImports = dataRows.map(row => {
+        const orderDate = parseImportedDate(row[0]) || new Date();
+        const campaignId = String(row[1] || "").trim();
+        const buyerName = String(row[3] || "").trim(); // LINE 暱稱
+        const contact = String(row[4] || "").trim();
+        const itemsText = String(row[5] || "").trim();
+        const totalPrice = parseFloat(String(row[6] || "").replace(/[^\d.]/g, "")) || 0;
+        const payStatus = String(row[7] || "").trim();
+        const email = String(row[8] || "").trim();
+        const lastFive = String(row[9] || "").trim();
+
+        // 狀態對應
+        let status = "pending";
+        if (payStatus.includes("已付") || payStatus.includes("完成") || payStatus.includes("paid")) {
+          status = "paid";
+        }
+
+        return {
+          orderDate,
+          campaignId,
+          buyerName,
+          contact,
+          itemsText,
+          totalPrice,
+          status,
+          email,
+          lastFive,
+          note: `聯絡方式: ${contact}${email ? ` | Email: ${email}` : ""}${lastFive ? ` | 末五/單號: ${lastFive}` : ""}`
+        };
+      }).filter(o => o.campaignId && o.buyerName);
+
+      renderOrderImportPreview();
+      document.getElementById("modal-order-import").style.display = "flex";
+    } catch (e) {
+      alert("解析失敗：" + e.message);
+    }
+  };
+
+  function renderOrderImportPreview() {
+    const tbody = document.getElementById("order-import-preview-body");
+    const countEl = document.getElementById("order-import-count");
+    tbody.innerHTML = "";
+    countEl.textContent = pendingOrderImports.length;
+
+    pendingOrderImports.forEach((o, idx) => {
+      const tr = document.createElement("tr");
+      const statusBadge = o.status === "paid" ? '<span class="role-badge admin">已付款</span>' : '<span class="role-badge user">待確認</span>';
+      tr.innerHTML = `
+        <td><span class="role-badge user">待匯入</span></td>
+        <td>${window.fmtDateTime(o.orderDate).slice(5,16)}</td>
+        <td>${esc(o.campaignId)}</td>
+        <td>${esc(o.buyerName)}</td>
+        <td style="font-size:11px; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${esc(o.itemsText)}">${esc(o.itemsText)}</td>
+        <td>NT$${o.totalPrice.toLocaleString()}</td>
+        <td>${statusBadge}</td>
+        <td style="font-size:11px">${esc(o.email)}<br>${esc(o.lastFive)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  window.confirmOrderImport = async function() {
+    if (!pendingOrderImports.length) return;
+    const btn = document.getElementById("btn-confirm-order-import");
+    const errEl = document.getElementById("order-import-error");
+    btn.disabled = true;
+    btn.textContent = "匯入中...";
+    errEl.textContent = "";
+
+    let ok = 0, fail = 0;
+    try {
+      const { collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+      
+      for (const o of pendingOrderImports) {
+        try {
+          await addDoc(collection(db, "orders"), {
+            campaignId: o.campaignId,
+            buyerName:  o.buyerName,
+            itemsText:  o.itemsText,
+            totalPrice: o.totalPrice,
+            status:     o.status || "pending",
+            note:       o.note,
+            createdAt:  o.orderDate || serverTimestamp(),
+            updatedAt:  serverTimestamp(),
+            source:     "import"
+          });
+          ok++;
+        } catch (e) {
+          fail++;
+          console.error("Import order fail:", e);
+        }
+      }
+      alert(`✅ 匯入完成！成功 ${ok} 筆${fail ? `，失敗 ${fail} 筆` : ""}`);
+      closeOrderImportModal();
+      if (window.loadAdminOrders) window.loadAdminOrders();
+    } catch (e) {
+      errEl.textContent = "匯入過程發生錯誤：" + e.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = `確認匯入 (${pendingOrderImports.length})`;
+    }
+  };
+
+  window.closeOrderImportModal = function(e) {
+    if (e && e.target !== document.getElementById("modal-order-import")) return;
+    document.getElementById("modal-order-import").style.display = "none";
+    pendingOrderImports = [];
   };
 </script>
 
