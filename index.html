@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-11 -->
+  <!-- build:20260424-12 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2698,7 +2698,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-11 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260424-12 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -4241,8 +4241,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           <div id="order-products">
             ${campaign.products.map((p, i) => `
               <div class="order-product-item" id="opi-${i}">
-                <div>
+                <div style="flex:1">
                   <div class="opi-name">${escH(p.name)}</div>
+                  ${p.noteHint ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">${escH(p.noteHint)}</div>` : ""}
                   <div class="opi-price">NT$<strong>${p.price.toLocaleString()}</strong></div>
                 </div>
                 <div class="qty-control">
@@ -4251,6 +4252,17 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
                   <button class="qty-btn" onclick="changeQty(${i}, 1)">＋</button>
                 </div>
                 <div class="opi-subtotal" id="subtotal-${i}">NT$0</div>
+                ${(p.specs && p.specs.length) ? `
+                <div class="opi-specs" id="opi-specs-${i}" style="grid-column:1/-1;display:none">
+                  ${p.specs.map((spec, si) => `
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+                      <span style="font-size:12px;color:var(--text-muted);min-width:50px">${escH(spec.label||spec.name||"")}</span>
+                      <select class="form-input" id="spec-sel-${i}-${si}" style="font-size:12px">
+                        <option value="">— 請選擇 —</option>
+                        ${(spec.options||[]).map(o => `<option value="${escH(o)}">${escH(o)}</option>`).join("")}
+                      </select>
+                    </div>`).join("")}
+                </div>` : ""}
               </div>
             `).join("")}
           </div>
@@ -4298,11 +4310,15 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   window.changeQty = function(idx, delta) {
     const qs = window.__orderQuantities;
+    if (!qs) return;
     qs[idx] = Math.max(0, qs[idx] + delta);
     const products = window.__currentCampaign.products;
     document.getElementById(`qty-${idx}`).textContent = qs[idx];
     document.getElementById(`subtotal-${idx}`).textContent = `NT$${(qs[idx] * products[idx].price).toLocaleString()}`;
     document.getElementById(`opi-${idx}`).classList.toggle("has-qty", qs[idx] > 0);
+    // 規格選單：有選購才顯示
+    const specsEl = document.getElementById(`opi-specs-${idx}`);
+    if (specsEl) specsEl.style.display = qs[idx] > 0 ? "block" : "none";
     // 總金額
     const total = qs.reduce((s, q, i) => s + q * products[i].price, 0);
     document.getElementById("order-total").textContent = `NT$${total.toLocaleString()}`;
@@ -4633,13 +4649,29 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   function renderCampaignCard(id, data) {
     const card = document.createElement("div");
     card.className = "campaign-card";
-    const colors = (data.groupColors && data.groupColors.length) ? data.groupColors : [data.groupColor || "#FF84C3"];
-    const gradient = colors.length > 1
-      ? `linear-gradient(135deg, ${colors.join(", ")})`
-      : colors[0];
+
+    // 取顏色：優先用 groupColors，其次 groupColor，否則找 groupsCache
+    let colors = [];
+    if (data.groupColors && data.groupColors.length) {
+      colors = data.groupColors;
+    } else if (data.groupColor) {
+      colors = [data.groupColor];
+    } else if (data.groupId && window.groupsCache) {
+      const g = window.groupsCache.find(x => x.id === data.groupId);
+      colors = g?.colors || [g?.color || "#FF84C3"];
+    } else {
+      colors = ["#FF84C3"];
+    }
+    // 確保每個值是合法 hex（過濾掉 linear-gradient 等）
+    const hexColors = colors.filter(c => /^#[0-9a-fA-F]{3,6}$/.test(c));
+    if (!hexColors.length) hexColors.push("#FF84C3");
+
+    const gradient = hexColors.length > 1
+      ? `linear-gradient(135deg, ${hexColors.join(", ")})`
+      : hexColors[0];
     card.style.setProperty("--cc-color", gradient);
-    card.style.setProperty("--cc-tag-bg", hexToRGBA(colors[0], 0.12));
-    card.style.setProperty("--cc-tag-color", colors[0]);
+    card.style.setProperty("--cc-tag-bg", hexToRGBA(hexColors[0], 0.12));
+    card.style.setProperty("--cc-tag-color", hexColors[0]);
 
     const progress = data.progress || "ongoing";
     const deadline = data.deadline
@@ -4888,24 +4920,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     } catch (e) { console.warn("載入 profile 失敗", e); }
   }
 
-  window.changeQty = function(idx, delta) {
-    if (!currentCampaign || !currentCampaign.products) return;
-    const curr = cart[idx] || 0;
-    const next = Math.max(0, curr + delta);
-    if (next === 0) delete cart[idx]; else cart[idx] = next;
-
-    const p = currentCampaign.products[idx];
-    const qtyEl = document.getElementById(`qty-${idx}`);
-    const subEl = document.getElementById(`subtotal-${idx}`);
-    if (qtyEl) qtyEl.textContent = next;
-    if (subEl) subEl.textContent = `NT$${(next * p.price).toLocaleString()}`;
-
-    // 簡單規格欄：有選購才顯示
-    const extrasEl = document.getElementById(`op-extras-${idx}`);
-    if (extrasEl) extrasEl.style.display = next > 0 ? "block" : "none";
-
-    updateOrderTotal();
-  };
+  // changeQty 由區塊4 的新版處理
 
   let multiItemCounters = {};
 
@@ -5883,7 +5898,15 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           for (const { nameIdx, priceIdx } of columnMap.products) {
             const pName  = cell(row, nameIdx);
             const pPrice = parseFloat(cell(row, priceIdx)) || 0;
-            if (pName && pPrice) products.push({ name: pName, price: pPrice, cost: pPrice, foreignPrice: 0, specs: [], specMode: "none", hasNote: false, noteHint: "" });
+            if (pName && pPrice) {
+              let finalName = pName, specText = "";
+              const specMatch = pName.match(/^(.+?)\(([^)]+)\)\s*$/);
+              if (specMatch) { finalName = specMatch[1].trim(); specText = specMatch[2].trim(); }
+              const parsedSpecs = specText ? parseSpecLocal(specText) : [];
+              products.push({ name: finalName, price: pPrice, cost: pPrice, foreignPrice: 0,
+                specText, specs: parsedSpecs, specMode: parsedSpecs.length ? "multi" : "none",
+                hasNote: false, noteHint: "" });
+            }
           }
 
           // 團務ID：優先用自訂，否則自動產生
@@ -5972,6 +5995,19 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   }
 
   // 把匯入欄位的「日期/時間」轉成 JS Date，能吃 Date 物件、Excel 序號、各種字串格式
+  // 本地簡易規格解析（和 parseSpecText 相同邏輯，但不依賴其他 module）
+  function parseSpecLocal(specText) {
+    if (!specText) return [];
+    if (specText.includes("成員") || specText.toLowerCase().includes("member")) {
+      return [{ label: specText, options: [], isMember: true }];
+    }
+    const groups = specText.split(",").map(g => g.trim()).filter(g => g);
+    return groups.map(g => {
+      const opts = g.split("/").map(o => o.trim()).filter(o => o);
+      return { label: g, options: opts.length > 1 ? opts : [g] };
+    });
+  }
+
   function parseImportedDate(val) {
     if (val == null || val === "") return null;
     // SheetJS cellDates:true → 直接是 Date 物件
