@@ -6087,19 +6087,23 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   // 監聽分頁切換事件（避免跨 module 時序問題）
 
   // ── 團務篩選選單 ─────────────────────────────────────────────
-  async function loadCampaignFilter() {
+  window.loadCampaignFilter = async function() {
     const sel = document.getElementById("orders-filter-campaign");
-    if (!sel || sel.options.length > 1) return;
+    if (!sel) return;
+    const prevValue = sel.value;
     try {
       const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt","desc")));
+      sel.innerHTML = '<option value="">全部團務</option>';
       snap.forEach(d => {
+        const data = d.data();
         const opt = document.createElement("option");
         opt.value = d.id;
-        opt.textContent = `${d.data().name} (${d.id})`;
+        opt.textContent = `${data.name || "(未命名)"} (${d.id})`;
         sel.appendChild(opt);
       });
-    } catch(e) { console.warn(e); }
-  }
+      if (prevValue) sel.value = prevValue;
+    } catch(e) { console.warn("loadCampaignFilter failed:", e); }
+  };
 
   // ── 載入訂單列表 ─────────────────────────────────────────────
   window.loadAdminOrders = async function() {
