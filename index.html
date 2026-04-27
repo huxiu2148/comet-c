@@ -5658,7 +5658,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const progress = campaign.progress || "ongoing";
     const itemsText = (data.items || []).map(it => `${it.name} × ${it.qty}`).join("、");
     const createdStr = data.createdAt?.toDate
-      ? window.fmtDateTime(data.createdAt.toDate())
+      ? data.window.fmtDateTime(createdAt.toDate())
       : "—";
 
     card.innerHTML = `
@@ -6144,7 +6144,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     card.className = "order-admin-card"; card.style.display = "flex"; card.style.alignItems = "flex-start";
     card.id = `oadmin-${o.id}`;
     const date = o.createdAt?.toDate
-      ? window.fmtDateTime(o.createdAt.toDate())
+      ? o.window.fmtDateTime(createdAt.toDate())
       : "—";
     const items = (o.items || []).map(it => {
       const spec = it.specSummary ? ` (${it.specSummary})` : "";
@@ -6646,7 +6646,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   function looksLikeDescription(row) {
     if (!row) return false;
     const joined = row.map(c => String(c ?? "")).join("|");
-    return /(說明|格式[：:]|留空|自動產生|YYYY|ongoing.*closed|1=匯款)/.test(joined);
+    return /(說明|格式[：:]|留空|自動產生|YYYY|ongoing.*closed|1=匯款|例[：:]|paid=|空白=|顯示名稱|數字，例)/.test(joined);
   }
 
   // 用標題列建立欄位對應表（中／英、別名都接受，大小寫和空白都會忽略）
@@ -7177,6 +7177,28 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   // ── 訂單批次匯入 ─────────────────────────────────────────────
   let pendingOrderImports = [];
 
+  // 解析訂購明細（多行：每行 "商品名 [規格] x數量"）
+  function parseImportItemsText(text) {
+    if (!text) return [];
+    return String(text).split(/[\r\n;；]+/).map(line => {
+      const ln = line.trim();
+      if (!ln) return null;
+      let rest = ln, qty = 1, specStr = "";
+      const qm = rest.match(/[xX×\*]\s*(\d+)\s*$/);
+      if (qm) { qty = parseInt(qm[1], 10) || 1; rest = rest.slice(0, qm.index).trim(); }
+      const sm = rest.match(/[\[\(（【]([^\]\)）】]+)[\]\)）】]\s*$/);
+      if (sm) { specStr = sm[1].trim(); rest = rest.slice(0, sm.index).trim(); }
+      return { name: rest, qty, specStr };
+    }).filter(it => it && it.name);
+  }
+
+  // 從「2228(2575)」之類的字串抽出第一個數字
+  function parseImportTotalNumber(str) {
+    if (str == null || str === "") return 0;
+    const m = String(str).replace(/[, ]/g, "").match(/-?\d+(\.\d+)?/);
+    return m ? parseFloat(m[0]) : 0;
+  }
+
   window.importOrders = async function(input) {
     const file = input.files[0];
     if (!file) return;
@@ -7186,43 +7208,49 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       const allRows = await parseImportFile(file);
       if (!allRows.length) { alert("檔案內沒有有效資料"); return; }
 
-      // 欄位對應（簡單版，可根據需求擴充）
-      // 預期格式：訂單時間、團務 ID、團務名稱、LINE 暱稱、聯絡方式、訂購明細、總金額、對帳狀態、使用者填寫Email、末五碼/貨運單號
-      const dataRows = allRows.slice(looksLikeHeader(allRows[0]) ? 1 : 0);
-      pendingOrderImports = dataRows.map(row => {
-        const orderDate = parseImportedDate(row[0]) || new Date();
-        const campaignId = String(row[1] || "").trim();
-        const buyerName = String(row[3] || "").trim(); // LINE 暱稱
-        const contact = String(row[4] || "").trim();
-        const itemsText = String(row[5] || "").trim();
-        const totalPrice = String(row[7] || "").trim(); // 原封不動存字串，欄H
-        const payStatus = String(row[7] || "").trim();
-        const email = String(row[8] || "").trim();
-        const lastFive = String(row[9] || "").trim();
+      // 範本實際欄位順序（A-J，10 欄）：
+      //   0:訂單時間  1:團務ID  2:團務名稱  3:社群暱稱  4:聯絡方式
+      //   5:Email     6:訂購明細 7:總金額   8:付款狀態  9:回傳資訊
+      // 跳過標題列 + 說明列（"例：xxx"）
+      const dataRows = allRows.filter((row, i) => {
+        if (i === 0 && looksLikeHeader(row)) return false;
+        if (looksLikeDescription(row)) return false;
+        return true;
+      });
 
-        // 狀態對應
+      pendingOrderImports = dataRows.map(row => {
+        const orderDate    = parseImportedDate(row[0]) || null;
+        const campaignId   = String(row[1] || "").trim();
+        const campaignName = String(row[2] || "").trim();
+        const buyerName    = String(row[3] || "").trim();
+        const contact      = String(row[4] || "").trim();
+        const email        = String(row[5] || "").trim();
+        const itemsText    = String(row[6] || "").trim();
+        const totalPrice   = String(row[7] || "").trim(); // 保留原字串（可能是 "2228(2575)"）
+        const payStatus    = String(row[8] || "").trim();
+        const lastFive     = String(row[9] || "").trim();
+
+        // 付款狀態對應
         let status = "pending";
-        if (payStatus.includes("已付") || payStatus.includes("完成") || payStatus.includes("paid")) {
-          status = "paid";
-        }
+        const ps = payStatus.toLowerCase();
+        if (/已付|完成|paid|已核對|已對帳/.test(payStatus) || ps === "paid")           status = "paid";
+        else if (/取消|cancel/.test(payStatus) || ps === "cancelled")                  status = "cancelled";
+
+        const items = parseImportItemsText(itemsText);
+        const totalNum = parseImportTotalNumber(totalPrice);
 
         return {
-          orderDate,
-          campaignId,
-          buyerName,
-          contact,
-          itemsText,
-          totalPrice,
-          status,
-          email,
-          lastFive,
-          note: `聯絡方式: ${contact}${email ? ` | Email: ${email}` : ""}${lastFive ? ` | 末五/單號: ${lastFive}` : ""}`
+          orderDate, campaignId, campaignName, buyerName, contact, email,
+          itemsText, items, totalPrice, totalNum, status, lastFive
         };
       }).filter(o => o.campaignId && o.buyerName);
+
+      if (!pendingOrderImports.length) { alert("沒有可匯入的資料（請確認檔案有「團務 ID」與「社群暱稱」欄位）"); return; }
 
       renderOrderImportPreview();
       document.getElementById("modal-order-import").style.display = "flex";
     } catch (e) {
+      console.error(e);
       alert("解析失敗：" + e.message);
     }
   };
@@ -7233,18 +7261,25 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     tbody.innerHTML = "";
     countEl.textContent = pendingOrderImports.length;
 
-    pendingOrderImports.forEach((o, idx) => {
+    pendingOrderImports.forEach(o => {
       const tr = document.createElement("tr");
-      const statusBadge = o.status === "paid" ? '<span class="role-badge admin">已付款</span>' : '<span class="role-badge user">待確認</span>';
+      const statusBadge =
+        o.status === "paid"      ? '<span class="role-badge admin">✅ 已付款</span>'
+      : o.status === "cancelled" ? '<span class="role-badge user">❌ 已取消</span>'
+                                 : '<span class="role-badge user">⏳ 待確認</span>';
+      const dateStr = o.orderDate ? window.fmtDateTime(o.orderDate).slice(5,16) : "—";
+      const itemsDisplay = o.items.length
+        ? o.items.map(it => `${esc(it.name)}${it.specStr?` [${esc(it.specStr)}]`:""} ×${it.qty}`).join("<br>")
+        : esc(o.itemsText || "—");
       tr.innerHTML = `
         <td><span class="role-badge user">待匯入</span></td>
-        <td>${window.fmtDateTime(o.orderDate).slice(5,16)}</td>
-        <td>${esc(o.campaignId)}</td>
-        <td>${esc(o.buyerName)}</td>
-        <td style="font-size:11px; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${esc(o.itemsText)}">${esc(o.itemsText)}</td>
-        <td>${esc(String(o.totalPrice||''))}</td>
+        <td style="white-space:nowrap">${dateStr}</td>
+        <td>${esc(o.campaignId)}${o.campaignName?`<br><span style="font-size:11px;color:var(--text-muted)">${esc(o.campaignName)}</span>`:""}</td>
+        <td>${esc(o.buyerName)}${o.contact?`<br><span style="font-size:11px;color:var(--text-muted)">${esc(o.contact)}</span>`:""}</td>
+        <td style="font-size:11px;max-width:220px" title="${esc(o.itemsText)}">${itemsDisplay}</td>
+        <td style="white-space:nowrap">${esc(o.totalPrice || String(o.totalNum))}</td>
         <td>${statusBadge}</td>
-        <td style="font-size:11px">${esc(o.email)}<br>${esc(o.lastFive)}</td>
+        <td style="font-size:11px">${esc(o.email)||"—"}<br><span style="color:var(--text-muted)">${esc(o.lastFive)||""}</span></td>
       `;
       tbody.appendChild(tr);
     });
@@ -7258,7 +7293,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     errEl.textContent = "";
 
     let ok = 0, fail = 0;
-    const BATCH = 20; // 每批 20 筆，避免 WebChannel 超時
+    const BATCH = 20;
     const total = pendingOrderImports.length;
 
     try {
@@ -7268,24 +7303,38 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
         await Promise.all(chunk.map(o =>
           addDoc(collection(db, "orders"), {
-            campaignId:   o.campaignId   || "",
-            campaignName: o.campaignName || "",
-            nickname:     o.buyerName    || "",
-            contact:      o.contact      || "",
-            email:        o.email        || "",
-            itemsText:    o.itemsText    || "",
-            totalPrice:   o.totalPrice   || "",
-            status:       o.status       || "pending",
-            returnInfo:   o.lastFive     || "",
-            note:         o.note         || "",
-            userId:       "imported",
-            createdAt:    o.orderDate    || serverTimestamp(),
-            updatedAt:    serverTimestamp(),
-            source:       "import",
+            campaignId:    o.campaignId   || "",
+            campaignName:  o.campaignName || "",
+            nickname:      o.buyerName    || "",
+            contact:       o.contact      || "",
+            email:         o.email        || "",
+            // 結構化的 items 陣列（給訂單列表顯示用）
+            items:         o.items.map(it => ({
+                             name: it.name,
+                             qty: it.qty,
+                             specSummary: it.specStr || "",
+                             specs: it.specStr ? { 規格: it.specStr } : {},
+                             price: 0,
+                             subtotal: 0,
+                           })),
+            // 同時保留原始字串（人工核對用，且支援「2228(2575)」這種帶括號的金額）
+            itemsText:     o.itemsText    || "",
+            totalPrice:    o.totalPrice   || "",
+            totalAmount:   o.totalNum     || 0,
+            total:         o.totalNum     || 0,
+            // status / paymentStatus 並存（前者是新欄位，後者是訂單列表現在讀的欄位）
+            status:        o.status       || "pending",
+            paymentStatus: o.status       || "pending",
+            checked:       o.status === "paid",
+            returnInfo:    o.lastFive     || "",
+            note:          o.contact ? `聯絡方式: ${o.contact}` : "",
+            userId:        "imported",
+            createdAt:     o.orderDate || serverTimestamp(),
+            updatedAt:     serverTimestamp(),
+            source:        "import",
           }).then(() => ok++).catch(e => { fail++; console.error("匯入失敗:", e.message); })
         ));
 
-        // 批次間稍作等待，避免連線過載
         if (i + BATCH < total) await new Promise(r => setTimeout(r, 300));
       }
 
