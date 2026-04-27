@@ -2401,6 +2401,7 @@
               <option value="time">按訂單時間</option>
               <option value="campaign">按團務分類</option>
             </select>
+            <button class="btn btn-primary btn-sm" onclick="openOrderCreate()">＋ 新增訂單</button>
             <button class="btn btn-ghost btn-sm" onclick="downloadOrderTemplate()">⬇ 下載範本</button>
             <button class="btn btn-ghost btn-sm" onclick="document.getElementById('order-import-file').click()">📤 批次匯入</button>
             <input type="file" id="order-import-file" accept=".xlsx,.csv" style="display:none" onchange="importOrders(this)" />
@@ -2451,6 +2452,87 @@
 
       
 <!-- 編輯訂單 Modal -->
+<!-- 新增單筆訂單 Modal -->
+<div class="modal-backdrop" id="modal-order-create" style="display:none" onclick="closeOrderCreate(event)">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <h3 class="modal-title">＋ 新增單筆訂單</h3>
+      <button class="modal-close" onclick="closeOrderCreate()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="form-group">
+          <label class="form-label">團務 <span style="color:var(--danger)">*</span></label>
+          <select class="form-input" id="oc-campaign">
+            <option value="">— 請選擇團務 —</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">訂單時間</label>
+            <input class="form-input" id="oc-datetime" type="datetime-local" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">付款方式</label>
+            <select class="form-input" id="oc-paytype">
+              <option value="1">匯款</option>
+              <option value="2">代收</option>
+              <option value="3">登記</option>
+              <option value="4">賣貨便</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">社群暱稱 <span style="color:var(--danger)">*</span></label>
+            <input class="form-input" id="oc-nickname" type="text" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">聯絡方式</label>
+            <input class="form-input" id="oc-contact" type="text" placeholder="IG / FB / Line" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="oc-email" type="text" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">訂購明細 <span style="color:var(--danger)">*</span></label>
+          <textarea class="form-input" id="oc-items" rows="3" placeholder="格式：商品名 (規格) ×數量&#10;例：SMini (Sakuya) ×1&#10;多筆請以分號或換行分開"></textarea>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">支援：「商品名 ×數量」、「商品名 (規格) ×數量」，多筆以「；」或換行分開</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">總金額 <span style="color:var(--danger)">*</span></label>
+            <input class="form-input" id="oc-total" type="text" placeholder="例：340 或 2228(2575)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">付款狀態</label>
+            <select class="form-input" id="oc-status">
+              <option value="pending">⏳ 待確認</option>
+              <option value="paid">✅ 已付款</option>
+              <option value="cancelled">❌ 已取消</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">回傳資訊（末五碼或貨運單號）</label>
+          <input class="form-input" id="oc-return" type="text" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">備注</label>
+          <input class="form-input" id="oc-note" type="text" />
+        </div>
+      </div>
+      <p class="form-error" id="oc-error" style="margin-top:12px"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeOrderCreate()">取消</button>
+      <button class="btn btn-primary btn-sm" id="btn-oc-save" onclick="saveOrderCreate()">建立訂單</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-backdrop" id="modal-order-edit" style="display:none" onclick="closeOrderEdit(event)">
   <div class="modal" style="max-width:480px">
     <div class="modal-header">
@@ -6317,6 +6399,115 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       await deleteDoc(doc(db, "orders", orderId));
       document.getElementById(`order-card-${orderId}`)?.remove();
     } catch(e) { alert("刪除失敗：" + e.message); }
+  };
+
+  // ── 新增單筆訂單 ──────────────────────────────────────────────
+  window.openOrderCreate = async function() {
+    const modal = document.getElementById("modal-order-create");
+    if (!modal) return;
+    // 清空欄位
+    ["oc-nickname","oc-contact","oc-email","oc-items","oc-total","oc-return","oc-note"].forEach(id=>{
+      const el = document.getElementById(id); if (el) el.value = "";
+    });
+    document.getElementById("oc-status").value  = "pending";
+    document.getElementById("oc-paytype").value = "1";
+    document.getElementById("oc-error").textContent = "";
+    // 預設訂單時間 = 現在
+    const now = new Date();
+    const pad = n => String(n).padStart(2,"0");
+    document.getElementById("oc-datetime").value =
+      `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    // 載入團務下拉
+    const sel = document.getElementById("oc-campaign");
+    sel.innerHTML = '<option value="">— 請選擇團務 —</option>';
+    try {
+      const snap = await getDocs(query(collection(db,"campaigns"), orderBy("createdAt","desc")));
+      snap.forEach(d => {
+        const data = d.data();
+        const opt = document.createElement("option");
+        opt.value = d.id;
+        opt.dataset.name = data.name || "";
+        opt.textContent = `${data.name || "(未命名)"} (${d.id})`;
+        sel.appendChild(opt);
+      });
+      // 若篩選器目前已選某團，預設帶入
+      const curFilter = document.getElementById("orders-filter-campaign")?.value;
+      if (curFilter) sel.value = curFilter;
+    } catch(e) {
+      document.getElementById("oc-error").textContent = "載入團務失敗：" + e.message;
+    }
+    modal.style.display = "flex";
+  };
+
+  window.closeOrderCreate = function(e) {
+    if (e && e.target !== document.getElementById("modal-order-create")) return;
+    document.getElementById("modal-order-create").style.display = "none";
+  };
+
+  window.saveOrderCreate = async function() {
+    const errEl = document.getElementById("oc-error");
+    const btn   = document.getElementById("btn-oc-save");
+    errEl.textContent = "";
+
+    const sel        = document.getElementById("oc-campaign");
+    const campaignId = sel.value.trim();
+    const campaignName = sel.options[sel.selectedIndex]?.dataset.name || "";
+    const nickname   = document.getElementById("oc-nickname").value.trim();
+    const contact    = document.getElementById("oc-contact").value.trim();
+    const email      = document.getElementById("oc-email").value.trim();
+    const itemsText  = document.getElementById("oc-items").value.trim();
+    const totalRaw   = document.getElementById("oc-total").value.trim();
+    const status     = document.getElementById("oc-status").value;
+    const paytype    = parseInt(document.getElementById("oc-paytype").value, 10) || 1;
+    const returnInfo = document.getElementById("oc-return").value.trim();
+    const note       = document.getElementById("oc-note").value.trim();
+    const dtStr      = document.getElementById("oc-datetime").value;
+
+    if (!campaignId) { errEl.textContent = "請選擇團務"; return; }
+    if (!nickname)   { errEl.textContent = "請填寫社群暱稱"; return; }
+    if (!itemsText)  { errEl.textContent = "請填寫訂購明細"; return; }
+    if (!totalRaw)   { errEl.textContent = "請填寫總金額"; return; }
+
+    const items   = parseImportItemsText(itemsText).map(it => ({
+      name: it.name,
+      qty: it.qty,
+      specSummary: it.specStr || "",
+      specs: it.specStr ? { 規格: it.specStr } : {},
+      price: 0,
+      subtotal: 0,
+    }));
+    const totalNum = parseImportTotalNumber(totalRaw);
+    const orderDate = dtStr ? new Date(dtStr) : new Date();
+
+    btn.disabled = true;
+    btn.textContent = "建立中...";
+    try {
+      await addDoc(collection(db, "orders"), {
+        campaignId, campaignName,
+        nickname, contact, email,
+        items, itemsText,
+        totalPrice:    totalRaw,
+        totalAmount:   totalNum,
+        total:         totalNum,
+        status,
+        paymentStatus: status,
+        paymentType:   paytype,
+        checked:       status === "paid",
+        returnInfo,
+        note,
+        userId:        "manual",
+        createdAt:     orderDate,
+        updatedAt:     serverTimestamp(),
+        source:        "manual",
+      });
+      document.getElementById("modal-order-create").style.display = "none";
+      await window.loadAdminOrders?.();
+    } catch(e) {
+      errEl.textContent = "建立失敗：" + e.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "建立訂單";
+    }
   };
 
   // ── 編輯訂單 ─────────────────────────────────────────────────
