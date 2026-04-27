@@ -3249,6 +3249,12 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
 <!-- ── 團體管理邏輯 ── -->
 <script type="module">
+  import { db } from "./auth.js";
+  import {
+    collection, doc, addDoc, setDoc, updateDoc, deleteDoc,
+    getDocs, getDoc, serverTimestamp, query, orderBy
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
   // ── 小分隊管理 ──────────────────────────────────────────────
   function renderSubgroupList() {
     const container = document.getElementById("subgroup-list");
@@ -8561,8 +8567,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
     // 重新從 Firestore 讀最新資料
     try {
+      // 用 where 過濾（不加 orderBy 避免需要複合 index）
       const snap = await getDocs(
-        query(collection(db, "orders"), where("campaignId", "==", g.campaignId), orderBy("createdAt", "desc"))
+        query(collection(db, "orders"), where("campaignId", "==", g.campaignId))
       );
       const orders = [];
       snap.forEach(d => orders.push({ id: d.id, ...d.data() }));
