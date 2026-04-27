@@ -3895,20 +3895,22 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       if (!stored[productId]) stored[productId] = new Set(memberDisplays); // 預設全選
       window._productMemberSel = stored;
       const sel = stored[productId];
-      // 取得小分隊資料
+      // 取得小分隊資料，存到 window 供按鈕呼叫
       const subgroups = group?.subgroups || [];
+      window._specMembers = window._specMembers || {};
+      window._specMembers[productId] = memberDisplays;
       const subgroupBtns = subgroups.length ? `
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
           <span style="font-size:11px;color:var(--text-muted);align-self:center">快選分隊：</span>
           <button type="button" class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 10px"
-            onclick="selectSubgroup(${productId}, null, ${JSON.stringify(memberDisplays)})">全部</button>
+            onclick="selectSubgroup(${productId}, null)">全部</button>
           ${subgroups.map((sg,si) => `
             <button type="button" class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 10px"
-              onclick="selectSubgroup(${productId}, ${si}, ${JSON.stringify(memberDisplays)})">
+              onclick="selectSubgroup(${productId}, ${si})">
               ${esc(sg.name)}
             </button>`).join("")}
           <button type="button" class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 10px"
-            onclick="selectSubgroup(${productId}, 'none', ${JSON.stringify(memberDisplays)})">清除</button>
+            onclick="selectSubgroup(${productId}, 'none')">清除</button>
         </div>` : "";
 
       preview.innerHTML = `
@@ -3955,7 +3957,8 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   };
 
   // ── 分隊快選 ────────────────────────────────────────────────
-  window.selectSubgroup = function(productId, subgroupIdx, allMembers) {
+  window.selectSubgroup = function(productId, subgroupIdx) {
+    const allMembers = (window._specMembers || {})[productId] || [];
     const stored = window._productMemberSel || {};
     if (!stored[productId]) stored[productId] = new Set();
     const sel = stored[productId];
@@ -4588,7 +4591,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         const data = d.data();
         const abbr = (data.abbr || window.genAbbr(data.name)).toUpperCase();
         const colors = (data.colors && data.colors.length) ? data.colors : (data.color ? [data.color] : ["#FF84C3","#FF9E23","#E1E668"]);
-        groupsCache.push({ id: d.id, name: data.name, color: data.color || colors[0], colors, abbr, aliases: data.aliases || [], members: data.members || [] });
+        groupsCache.push({ id: d.id, name: data.name, color: data.color || colors[0], colors, abbr, aliases: data.aliases || [], members: data.members || [], subgroups: data.subgroups || [] });
         const opt = document.createElement("option");
         opt.value = d.id;
         opt.textContent = `${data.name} (${abbr})`;
