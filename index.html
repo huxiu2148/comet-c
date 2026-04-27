@@ -2411,7 +2411,8 @@
           </div>
           <div class="modal-body">
             <div style="margin-bottom:12px; font-size:13px; color:var(--text-muted)">
-              請確認以下資料是否正確。系統會自動比對「團務 ID」與「買家姓名」。
+              請確認以下資料是否正確。系統會自動比對 Firestore 中已存在的訂單（團務 ID + 暱稱 + 同一天）；
+              <span style="color:#e6a700">🟡 重複</span> 預設不勾選，<span style="color:#4caf50">🟢 新訂單</span> 預設會匯入。
             </div>
             <div style="overflow-x:auto; max-height:400px; border:1.5px solid var(--border); border-radius:8px">
               <table class="finance-table" style="min-width:800px">
@@ -7199,6 +7200,16 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     return m ? parseFloat(m[0]) : 0;
   }
 
+  // 用 「campaignId|nickname|YYYY-MM-DD」 當去重鑰匙
+  function makeOrderDedupKey(campaignId, nickname, dateLike) {
+    const d = dateLike instanceof Date ? dateLike
+            : (dateLike?.toDate ? dateLike.toDate() : null);
+    const dayStr = d
+      ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`
+      : "";
+    return `${(campaignId||"").trim()}|${(nickname||"").trim()}|${dayStr}`;
+  }
+
   window.importOrders = async function(input) {
     const file = input.files[0];
     if (!file) return;
@@ -7241,11 +7252,28 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
         return {
           orderDate, campaignId, campaignName, buyerName, contact, email,
-          itemsText, items, totalPrice, totalNum, status, lastFive
+          itemsText, items, totalPrice, totalNum, status, lastFive,
+          _isDup: false, _selected: true   // 預設勾選；下面比對重複後會調整
         };
       }).filter(o => o.campaignId && o.buyerName);
 
       if (!pendingOrderImports.length) { alert("沒有可匯入的資料（請確認檔案有「團務 ID」與「社群暱稱」欄位）"); return; }
+
+      // 比對 Firestore 已存在的訂單（用 campaignId+nickname+同一天 當鑰匙）
+      try {
+        const snap = await getDocs(collection(db, "orders"));
+        const existing = new Set();
+        snap.forEach(d => {
+          const o = d.data();
+          existing.add(makeOrderDedupKey(o.campaignId, o.nickname, o.createdAt));
+        });
+        pendingOrderImports.forEach(o => {
+          const key = makeOrderDedupKey(o.campaignId, o.buyerName, o.orderDate);
+          if (existing.has(key)) { o._isDup = true; o._selected = false; }
+        });
+      } catch(e) {
+        console.warn("去重檢查失敗，將全部當作新訂單處理：", e);
+      }
 
       renderOrderImportPreview();
       document.getElementById("modal-order-import").style.display = "flex";
@@ -7255,24 +7283,40 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     }
   };
 
+  // 切換某筆是否要匯入（讓使用者手動覆蓋預設）
+  window.toggleOrderImportRow = function(idx, checked) {
+    if (pendingOrderImports[idx]) pendingOrderImports[idx]._selected = !!checked;
+    const cnt = pendingOrderImports.filter(o => o._selected).length;
+    document.getElementById("order-import-count").textContent = cnt;
+  };
+
   function renderOrderImportPreview() {
     const tbody = document.getElementById("order-import-preview-body");
     const countEl = document.getElementById("order-import-count");
     tbody.innerHTML = "";
-    countEl.textContent = pendingOrderImports.length;
+    countEl.textContent = pendingOrderImports.filter(o => o._selected).length;
 
-    pendingOrderImports.forEach(o => {
+    pendingOrderImports.forEach((o, idx) => {
       const tr = document.createElement("tr");
+      if (o._isDup) tr.style.background = "#fff8e6";
       const statusBadge =
         o.status === "paid"      ? '<span class="role-badge admin">✅ 已付款</span>'
       : o.status === "cancelled" ? '<span class="role-badge user">❌ 已取消</span>'
                                  : '<span class="role-badge user">⏳ 待確認</span>';
+      const dupBadge = o._isDup
+        ? '<div style="font-size:11px;color:#c48b00;margin-top:2px">🟡 重複</div>'
+        : '<div style="font-size:11px;color:#4caf50;margin-top:2px">🟢 新訂單</div>';
       const dateStr = o.orderDate ? window.fmtDateTime(o.orderDate).slice(5,16) : "—";
       const itemsDisplay = o.items.length
         ? o.items.map(it => `${esc(it.name)}${it.specStr?` [${esc(it.specStr)}]`:""} ×${it.qty}`).join("<br>")
         : esc(o.itemsText || "—");
       tr.innerHTML = `
-        <td><span class="role-badge user">待匯入</span></td>
+        <td style="white-space:nowrap">
+          <input type="checkbox" ${o._selected?"checked":""}
+                 style="width:15px;height:15px;accent-color:var(--pink);cursor:pointer;vertical-align:middle"
+                 onchange="toggleOrderImportRow(${idx}, this.checked)" />
+          ${dupBadge}
+        </td>
         <td style="white-space:nowrap">${dateStr}</td>
         <td>${esc(o.campaignId)}${o.campaignName?`<br><span style="font-size:11px;color:var(--text-muted)">${esc(o.campaignName)}</span>`:""}</td>
         <td>${esc(o.buyerName)}${o.contact?`<br><span style="font-size:11px;color:var(--text-muted)">${esc(o.contact)}</span>`:""}</td>
@@ -7289,16 +7333,19 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     if (!pendingOrderImports.length) return;
     const btn   = document.getElementById("btn-confirm-order-import");
     const errEl = document.getElementById("order-import-error");
+    const selected = pendingOrderImports.filter(o => o._selected);
+    if (!selected.length) { errEl.textContent = "沒有勾選任何要匯入的訂單"; return; }
     btn.disabled = true;
     errEl.textContent = "";
 
     let ok = 0, fail = 0;
     const BATCH = 20;
-    const total = pendingOrderImports.length;
+    const total = selected.length;
+    const skipped = pendingOrderImports.length - total;
 
     try {
       for (let i = 0; i < total; i += BATCH) {
-        const chunk = pendingOrderImports.slice(i, i + BATCH);
+        const chunk = selected.slice(i, i + BATCH);
         btn.textContent = `匯入中... ${Math.min(i + BATCH, total)}/${total}`;
 
         await Promise.all(chunk.map(o =>
@@ -7338,7 +7385,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         if (i + BATCH < total) await new Promise(r => setTimeout(r, 300));
       }
 
-      alert(`✅ 匯入完成！成功 ${ok} 筆${fail ? `，失敗 ${fail} 筆` : ""}`);
+      alert(`✅ 匯入完成！成功 ${ok} 筆${fail ? `，失敗 ${fail} 筆` : ""}${skipped ? `，略過 ${skipped} 筆（未勾選或重複）` : ""}`);
       closeOrderImportModal();
       window.loadAdminOrders?.();
     } catch(e) {
