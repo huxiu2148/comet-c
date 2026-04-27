@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260427-26 -->
+  <!-- build:20260427-27 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2376,7 +2376,10 @@
       <div class="admin-section" id="section-orders">
         <div class="section-header">
           <h2 class="section-title">📋 訂單管理</h2>
-          <div style="display:flex;gap:8px;align-items:center">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="downloadOrderTemplate()">⬇ 下載範本</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('order-import-file').click()">📤 批次匯入</button>
+            <input type="file" id="order-import-file" accept=".xlsx,.csv" style="display:none" onchange="importOrders(this)" />
             <select class="form-input" id="orders-filter-campaign" style="font-size:13px;width:200px" onchange="loadAdminOrders()">
               <option value="">全部團務</option>
             </select>
@@ -2917,7 +2920,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260427-26 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260427-27 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -6001,7 +6004,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 <script type="module">
   import { db } from "./auth.js";
   import {
-    collection, doc, updateDoc, deleteDoc, getDoc, getDocs, setDoc,
+    collection, doc, updateDoc, deleteDoc, getDoc, getDocs, setDoc, addDoc,
     query, orderBy, where, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
