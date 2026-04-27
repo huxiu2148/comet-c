@@ -5658,7 +5658,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const progress = campaign.progress || "ongoing";
     const itemsText = (data.items || []).map(it => `${it.name} × ${it.qty}`).join("、");
     const createdStr = data.createdAt?.toDate
-      ? data.window.fmtDateTime(createdAt.toDate())
+      ? window.fmtDateTime(data.createdAt.toDate())
       : "—";
 
     card.innerHTML = `
@@ -6144,7 +6144,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     card.className = "order-admin-card"; card.style.display = "flex"; card.style.alignItems = "flex-start";
     card.id = `oadmin-${o.id}`;
     const date = o.createdAt?.toDate
-      ? o.window.fmtDateTime(createdAt.toDate())
+      ? window.fmtDateTime(o.createdAt.toDate())
       : "—";
     const items = (o.items || []).map(it => {
       const spec = it.specSummary ? ` (${it.specSummary})` : "";
