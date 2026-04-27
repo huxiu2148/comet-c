@@ -1073,20 +1073,17 @@
     }
 
 
-    /* 訂單明細展開 */
-    .oa-detail { border-top:1px dashed var(--border); margin-top:8px; padding-top:12px; }
-    .oa-detail-inner { display:flex; flex-direction:column; gap:14px; }
-    .oa-detail-section { display:flex; flex-direction:column; gap:4px; }
-    .oa-detail-title { font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px; }
-    .oa-detail-row { display:flex; gap:12px; font-size:12px; align-items:baseline; }
-    .oa-dl { color:var(--text-muted); min-width:70px; flex-shrink:0; }
-    .oa-dv { color:var(--text); }
-    .oa-dv.mono { font-family:monospace; font-size:11px; }
-    .oa-items-table { width:100%; border-collapse:collapse; font-size:12px; }
-    .oa-items-table th { padding:5px 8px; text-align:left; font-size:11px; color:var(--text-muted); font-weight:600; border-bottom:1.5px solid var(--border); }
-    .oa-items-table td { padding:7px 8px; border-bottom:1px dashed var(--border); vertical-align:top; }
-    .oa-items-table tr:last-child td { border-bottom:none; }
-    .oa-spec-tag { display:inline-block; background:#fff0f7; color:var(--pink); border-radius:10px; padding:1px 7px; font-size:11px; margin:1px; }
+    /* 訂單分組標題 */
+    .order-group-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 14px; margin: 12px 0 4px;
+      background: var(--grad); color: #fff;
+      border-radius: var(--radius); font-size: 13px;
+    }
+    .order-group-count {
+      font-size: 11px; background: rgba(255,255,255,0.25);
+      padding: 2px 8px; border-radius: 20px;
+    }
 
     /* ══ 訂單管理 ══ */
     .order-admin-card {
@@ -2376,10 +2373,7 @@
       <div class="admin-section" id="section-orders">
         <div class="section-header">
           <h2 class="section-title">📋 訂單管理</h2>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <button class="btn btn-ghost btn-sm" onclick="downloadOrderTemplate()">⬇ 下載範本</button>
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('order-import-file').click()">📤 批次匯入</button>
-            <input type="file" id="order-import-file" accept=".xlsx,.csv" style="display:none" onchange="importOrders(this)" />
+          <div style="display:flex;gap:8px;align-items:center">
             <select class="form-input" id="orders-filter-campaign" style="font-size:13px;width:200px" onchange="loadAdminOrders()">
               <option value="">全部團務</option>
             </select>
@@ -2389,6 +2383,13 @@
               <option value="paid">已付款</option>
               <option value="cancelled">已取消</option>
             </select>
+            <select class="form-input" id="orders-sort-mode" style="font-size:13px;width:140px" onchange="loadAdminOrders()">
+              <option value="time">按訂單時間</option>
+              <option value="campaign">按團務分類</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="downloadOrderTemplate()">⬇ 下載範本</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('order-import-file').click()">📤 批次匯入</button>
+            <input type="file" id="order-import-file" accept=".xlsx,.csv" style="display:none" onchange="importOrders(this)" />
             <button class="btn btn-primary btn-sm" onclick="exportOrders()">匯出 CSV</button>
           </div>
         </div>
@@ -2412,14 +2413,12 @@
                   <tr>
                     <th>狀態</th>
                     <th>訂單時間</th>
-                    <th>團務ID</th>
-                    <th>社群暱稱</th>
-                    <th>聯絡方式</th>
-                    <th>Email</th>
+                    <th>團務 ID</th>
+                    <th>LINE 暱稱</th>
                     <th>訂購明細</th>
                     <th>總金額</th>
-                    <th>付款狀態</th>
-                    <th>回傳資訊</th>
+                    <th>對帳狀態</th>
+                    <th>Email/末五碼</th>
                   </tr>
                 </thead>
                 <tbody id="order-import-preview-body"></tbody>
@@ -2434,7 +2433,65 @@
         </div>
       </div>
 
-      <!-- 下單管理 -->
+      
+<!-- 編輯訂單 Modal -->
+<div class="modal-backdrop" id="modal-order-edit" style="display:none" onclick="closeOrderEdit(event)">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h3 class="modal-title">✏️ 編輯訂單</h3>
+      <button class="modal-close" onclick="closeOrderEdit()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:11px;font-family:monospace;color:var(--text-muted);margin-bottom:10px" id="oe-id"></div>
+      <div id="oe-loading" style="text-align:center;color:var(--text-muted);padding:20px">載入中...</div>
+      <div id="oe-form" style="display:none;flex-direction:column;gap:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">社群暱稱</label>
+            <input class="form-input" id="oe-nickname" type="text" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">聯絡方式</label>
+            <input class="form-input" id="oe-contact" type="text" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="oe-email" type="text" />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="form-group">
+            <label class="form-label">總金額 NT$</label>
+            <input class="form-input" id="oe-total" type="number" min="0" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">付款狀態</label>
+            <select class="form-input" id="oe-status">
+              <option value="pending">⏳ 待確認</option>
+              <option value="paid">✅ 已付款</option>
+              <option value="cancelled">❌ 已取消</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">回傳資訊（末五碼或貨運單號）</label>
+          <input class="form-input" id="oe-return" type="text" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">備注</label>
+          <input class="form-input" id="oe-note" type="text" />
+        </div>
+      </div>
+      <p class="form-error" id="oe-error"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeOrderEdit()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveOrderEdit()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 下單管理 -->
       <div class="admin-section" id="section-purchase">
         <div class="section-header">
           <h2 class="section-title">🛒 下單管理</h2>
@@ -6004,7 +6061,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 <script type="module">
   import { db } from "./auth.js";
   import {
-    collection, doc, updateDoc, deleteDoc, getDoc, getDocs, setDoc, addDoc,
+    collection, doc, updateDoc, deleteDoc, getDoc, getDocs, setDoc,
     query, orderBy, where, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -6053,7 +6110,24 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       if (status)     orders = orders.filter(o => (o.paymentStatus || "pending") === status);
       if (!orders.length) { list.innerHTML = '<div class="empty-row">沒有符合的訂單</div>'; return; }
       list.innerHTML = "";
-      orders.forEach(o => list.appendChild(renderOrderCard(o)));
+      const sortMode = document.getElementById('orders-sort-mode')?.value || 'time';
+      if (sortMode === 'campaign') {
+        const groups = {};
+        orders.forEach(o => {
+          const key = o.campaignId || '未分類';
+          if (!groups[key]) groups[key] = { name: o.campaignName || key, orders: [] };
+          groups[key].orders.push(o);
+        });
+        Object.entries(groups).forEach(([, g]) => {
+          const header = document.createElement('div');
+          header.className = 'order-group-header';
+          header.innerHTML = `<span style="font-weight:700">${esc(g.name)}</span><span class="order-group-count">${g.orders.length} 筆</span>`;
+          list.appendChild(header);
+          g.orders.forEach(o => list.appendChild(renderOrderCard(o)));
+        });
+      } else {
+        orders.forEach(o => list.appendChild(renderOrderCard(o)));
+      }
     } catch(e) {
       list.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
     }
@@ -6098,46 +6172,28 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           <option value="cancelled" ${status==="cancelled" ? "selected":""}>❌ 已取消</option>
         </select>
         ${o.paymentType === 3 && status !== "paid" ? `
-          <button class="btn btn-primary btn-sm" onclick="upgradeToTransfer('${o.id}')">升級為匯款</button>` : ""}
-        <button class="btn btn-ghost btn-sm" onclick="toggleOrderDetail('${o.id}')">詳情</button>
+          <button class="btn btn-primary btn-sm oa-upgrade-btn" data-oid="${o.id}">升級為匯款</button>` : ""}
+        <button class="btn btn-ghost btn-sm oa-detail-btn" data-oid="${o.id}">詳情</button>
+        <button class="btn btn-ghost btn-sm oa-edit-btn"   data-oid="${o.id}">編輯</button>
+        <button class="btn btn-danger btn-sm oa-del-btn"   data-oid="${o.id}">刪除</button>
       </div>
       <div class="oa-detail" id="oa-detail-${o.id}" style="display:none">
-        <div class="oa-detail-inner">
-
-          <!-- 訂單資訊 -->
-          <div class="oa-detail-section">
-            <div class="oa-detail-row"><span class="oa-dl">訂單 ID</span><span class="oa-dv mono">${esc(o.id)}</span></div>
-            <div class="oa-detail-row"><span class="oa-dl">信箱</span><span class="oa-dv">${esc(o.email||"—")}</span></div>
-            <div class="oa-detail-row"><span class="oa-dl">聯絡帳號</span><span class="oa-dv">${esc(o.contact||"—")}</span></div>
-            ${o.passport ? '<div class="oa-detail-row"><span class="oa-dl">護照姓名</span><span class="oa-dv">' + esc(o.passport) + '</span></div>' : ""}
-            ${o.returnInfo ? '<div class="oa-detail-row"><span class="oa-dl">回傳資訊</span><span class="oa-dv" style="color:#4caf50">✓ ' + esc(o.returnInfo) + '</span></div>' : ""}
-          </div>
-
-          <!-- 商品明細 -->
-          <div class="oa-detail-section">
-            <div class="oa-detail-title">商品明細</div>
-            <table class="oa-items-table">
-              <thead><tr><th>商品</th><th>規格</th><th>數量</th><th>小計</th></tr></thead>
-              <tbody>
-                ${(o.items||[]).map(it => {
-                  const specs = Object.entries(it.specs||{}).filter(([,v])=>v).map(([k,v])=>
-                    '<span class="oa-spec-tag">' + esc(k) + ':' + esc(v) + '</span>'
-                  ).join("");
-                  const note = it.note ? '<div style="font-size:11px;color:var(--text-muted)">備注：' + esc(it.note) + '</div>' : "";
-                  return '<tr>' +
-                    '<td>' + esc(it.name) + note + '</td>' +
-                    '<td>' + (specs || '<span style="color:var(--text-muted)">—</span>') + '</td>' +
-                    '<td style="text-align:center">×' + it.qty + '</td>' +
-                    '<td style="text-align:right;font-weight:700">NT$' + (it.subtotal||0).toLocaleString() + '</td>' +
-                  '</tr>';
-                }).join("")}
-              </tbody>
-              ${o.discountAmount ? '<tfoot><tr><td colspan="3" style="text-align:right;color:var(--text-muted)">折扣</td><td style="text-align:right;color:var(--pink);font-weight:700">-NT$' + o.discountAmount.toLocaleString() + '</td></tr></tfoot>' : ""}
-            </table>
-          </div>
-
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.8">
+          <div>信箱：${esc(o.email || "—")}</div>
+          <div>訂單ID：${esc(o.id)}</div>
+          ${(o.items||[]).map(it => {
+            const specStr = Object.entries(it.specs||{}).filter(([,v])=>v).map(([k,v])=>`${k}:${v}`).join(" ");
+            return `<div>• ${esc(it.name)} ${specStr ? `(${specStr})` : ""} ×${it.qty} = NT$${it.subtotal?.toLocaleString()}</div>`;
+          }).join("")}
+          ${o.discountAmount ? `<div style="color:var(--pink)">折扣 -NT$${o.discountAmount.toLocaleString()}</div>` : ""}
         </div>
       </div>`;
+    // 事件委派（避免特殊字元破壞 onclick）
+    const _oid = o.id;
+    card.querySelector('.oa-detail-btn')?.addEventListener('click',  () => toggleOrderDetail(_oid));
+    card.querySelector('.oa-edit-btn')?.addEventListener('click',    () => openOrderEdit(_oid));
+    card.querySelector('.oa-del-btn')?.addEventListener('click',     () => deleteOrder(_oid));
+    card.querySelector('.oa-upgrade-btn')?.addEventListener('click', () => upgradeToTransfer(_oid));
     return card;
   }
 
@@ -6179,6 +6235,64 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   };
 
   // 匯出 CSV
+  // ── 刪除訂單 ─────────────────────────────────────────────────
+  window.deleteOrder = async function(orderId) {
+    if (!confirm("確定刪除此訂單？此操作無法復原。")) return;
+    try {
+      await deleteDoc(doc(db, "orders", orderId));
+      document.getElementById(`order-card-${orderId}`)?.remove();
+    } catch(e) { alert("刪除失敗：" + e.message); }
+  };
+
+  // ── 編輯訂單 ─────────────────────────────────────────────────
+  window.openOrderEdit = async function(orderId) {
+    document.getElementById("modal-order-edit").style.display = "flex";
+    document.getElementById("oe-id").textContent = orderId;
+    document.getElementById("oe-error").textContent = "";
+    document.getElementById("oe-loading").style.display = "block";
+    document.getElementById("oe-form").style.display = "none";
+    try {
+      const snap = await getDoc(doc(db, "orders", orderId));
+      if (!snap.exists()) return;
+      const d = snap.data();
+      document.getElementById("oe-nickname").value  = d.nickname || d.buyerName || "";
+      document.getElementById("oe-contact").value   = d.contact  || "";
+      document.getElementById("oe-email").value     = d.email    || "";
+      document.getElementById("oe-total").value     = d.total    || d.amount || "";
+      document.getElementById("oe-status").value    = d.status   || "pending";
+      document.getElementById("oe-return").value    = d.returnInfo || d.lastFive || "";
+      document.getElementById("oe-note").value      = d.note     || "";
+      document.getElementById("oe-loading").style.display = "none";
+      document.getElementById("oe-form").style.display    = "block";
+    } catch(e) {
+      document.getElementById("oe-error").textContent = "載入失敗：" + e.message;
+      document.getElementById("oe-loading").style.display = "none";
+    }
+  };
+
+  window.saveOrderEdit = async function() {
+    const id     = document.getElementById("oe-id").textContent;
+    const errEl  = document.getElementById("oe-error");
+    try {
+      await updateDoc(doc(db, "orders", id), {
+        nickname:   document.getElementById("oe-nickname").value.trim(),
+        contact:    document.getElementById("oe-contact").value.trim(),
+        email:      document.getElementById("oe-email").value.trim(),
+        total:      parseFloat(document.getElementById("oe-total").value) || 0,
+        status:     document.getElementById("oe-status").value,
+        returnInfo: document.getElementById("oe-return").value.trim(),
+        note:       document.getElementById("oe-note").value.trim(),
+      });
+      document.getElementById("modal-order-edit").style.display = "none";
+      await loadAdminOrders();
+    } catch(e) { errEl.textContent = "儲存失敗：" + e.message; }
+  };
+
+  window.closeOrderEdit = function(e) {
+    if (e && e.target !== document.getElementById("modal-order-edit")) return;
+    document.getElementById("modal-order-edit").style.display = "none";
+  };
+
   window.exportOrders = async function() {
     const list = document.getElementById("admin-orders-list");
     const cards = list?.querySelectorAll(".order-admin-card");
@@ -6235,7 +6349,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "campaign_template.csv"; // 也支援直接上傳 xlsx
+    a.download = "campaign_template.csv";
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -7021,25 +7135,17 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
       // 欄位對應（簡單版，可根據需求擴充）
       // 預期格式：訂單時間、團務 ID、團務名稱、LINE 暱稱、聯絡方式、訂購明細、總金額、對帳狀態、使用者填寫Email、末五碼/貨運單號
-      // 跳過標題列 + 說明列（xlsx 範本有兩列要跳）
-      let skipRows = 0;
-      if (looksLikeHeader(allRows[0])) skipRows = 1;
-      if (skipRows === 1 && allRows[1] && looksLikeDescription(allRows[1])) skipRows = 2;
-      const dataRows = allRows.slice(skipRows);
+      const dataRows = allRows.slice(looksLikeHeader(allRows[0]) ? 1 : 0);
       pendingOrderImports = dataRows.map(row => {
-        // 欄位順序對應 xlsx 範本：
-        // A:訂單時間 B:團務ID C:團務名稱 D:社群暱稱 E:聯絡方式 F:Email
-        // G:訂購明細 H:總金額 I:付款狀態 J:回傳資訊
-        const orderDate   = parseImportedDate(row[0]) || new Date();
-        const campaignId  = String(row[1] || "").trim();
-        const campaignName = String(row[2] || "").trim();
-        const buyerName   = String(row[3] || "").trim();
-        const contact     = String(row[4] || "").trim();
-        const email       = String(row[5] || "").trim();
-        const itemsText   = String(row[6] || "").trim();
-        const totalPrice  = parseFloat(String(row[7] || "").replace(/[^\d.]/g, "")) || 0;
-        const payStatus   = String(row[8] || "").trim();
-        const lastFive    = String(row[9] || "").trim();
+        const orderDate = parseImportedDate(row[0]) || new Date();
+        const campaignId = String(row[1] || "").trim();
+        const buyerName = String(row[3] || "").trim(); // LINE 暱稱
+        const contact = String(row[4] || "").trim();
+        const itemsText = String(row[5] || "").trim();
+        const totalPrice = parseFloat(String(row[6] || "").replace(/[^\d.]/g, "")) || 0;
+        const payStatus = String(row[7] || "").trim();
+        const email = String(row[8] || "").trim();
+        const lastFive = String(row[9] || "").trim();
 
         // 狀態對應
         let status = "pending";
@@ -7079,15 +7185,13 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       const statusBadge = o.status === "paid" ? '<span class="role-badge admin">已付款</span>' : '<span class="role-badge user">待確認</span>';
       tr.innerHTML = `
         <td><span class="role-badge user">待匯入</span></td>
-        <td style="white-space:nowrap">${window.fmtDateTime(o.orderDate).slice(5,16)}</td>
-        <td style="white-space:nowrap">${esc(o.campaignId)}</td>
+        <td>${window.fmtDateTime(o.orderDate).slice(5,16)}</td>
+        <td>${esc(o.campaignId)}</td>
         <td>${esc(o.buyerName)}</td>
-        <td>${esc(o.contact)}</td>
-        <td style="font-size:11px">${esc(o.email)}</td>
-        <td style="font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(o.itemsText)}">${esc(o.itemsText)}</td>
-        <td style="white-space:nowrap">NT$${o.totalPrice.toLocaleString()}</td>
+        <td style="font-size:11px; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${esc(o.itemsText)}">${esc(o.itemsText)}</td>
+        <td>NT$${o.totalPrice.toLocaleString()}</td>
         <td>${statusBadge}</td>
-        <td style="font-size:11px">${esc(o.lastFive)}</td>
+        <td style="font-size:11px">${esc(o.email)}<br>${esc(o.lastFive)}</td>
       `;
       tbody.appendChild(tr);
     });
