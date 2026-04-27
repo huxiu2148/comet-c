@@ -6167,19 +6167,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const status = o.paymentStatus || "pending";
     const mode = ["","匯款","代收","登記","賣貨便"][o.paymentType] || "";
 
-    // 金額：可能是字串("2228(2575)")或數字，盡量取數字部分顯示千分位
+    // 金額：直接以原始文字呈現（含括號等內容），不轉換
     const rawAmount = o.totalAmount ?? o.totalPrice ?? o.total ?? "";
-    let amountDisplay = "";
-    if (rawAmount !== "" && rawAmount !== null && rawAmount !== undefined) {
-      const numMatch = String(rawAmount).match(/-?\d+(\.\d+)?/);
-      if (numMatch) {
-        const n = parseFloat(numMatch[0]);
-        const rest = String(rawAmount).replace(numMatch[0], "").trim();
-        amountDisplay = n.toLocaleString() + (rest ? ` ${rest}` : "");
-      } else {
-        amountDisplay = String(rawAmount);
-      }
-    }
+    const amountDisplay = (rawAmount !== "" && rawAmount !== null && rawAmount !== undefined)
+      ? String(rawAmount)
+      : "";
 
     card.innerHTML = `
       <div class="oa-checkbox-wrap">
