@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260427-29 -->
+  <!-- build:20260427-30 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2373,6 +2373,11 @@
       <div class="admin-section" id="section-orders">
         <div class="section-header">
           <h2 class="section-title">📋 訂單管理</h2>
+            <div id="order-select-bar" style="display:none;gap:6px;align-items:center">
+              <span id="order-select-count" style="font-size:12px;color:var(--text-muted)">已選 0 筆</span>
+              <button class="btn btn-danger btn-sm" onclick="deleteSelectedOrders()">🗑 刪除所選</button>
+              <button class="btn btn-ghost btn-sm" onclick="toggleOrderSelectMode(false)">✕ 取消</button>
+            </div>
           <div style="display:flex;gap:8px;align-items:center">
             <select class="form-input" id="orders-filter-campaign" style="font-size:13px;width:200px" onchange="loadAdminOrders()">
               <option value="">全部團務</option>
@@ -2391,6 +2396,7 @@
             <button class="btn btn-ghost btn-sm" onclick="document.getElementById('order-import-file').click()">📤 批次匯入</button>
             <input type="file" id="order-import-file" accept=".xlsx,.csv" style="display:none" onchange="importOrders(this)" />
             <button class="btn btn-primary btn-sm" onclick="exportOrders()">匯出 CSV</button>
+            <button class="btn btn-ghost btn-sm" id="btn-order-select-toggle" onclick="toggleOrderSelectMode(true)">☐ 全選刪除</button>
           </div>
         </div>
         <div id="admin-orders-list"></div>
@@ -2977,7 +2983,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260427-29 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260427-30 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -5670,7 +5676,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       ${data.returnInfo ? `<div style="font-size:12px;color:#4caf50">✓ 已回傳：${escHtmlU(data.returnInfo)}</div>` : ""}
       <div class="myorder-footer">
         <span style="color:var(--text-muted)">${createdStr}</span>
-        <span class="myorder-amount">NT$${data.totalAmount.toLocaleString()}</span>
+        <span class="myorder-amount">${esc(String(data.totalAmount||data.totalPrice||data.total||''))}</span>
       </div>`;
     return card;
   }
@@ -6135,7 +6141,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   function renderOrderCard(o) {
     const card = document.createElement("div");
-    card.className = "order-admin-card";
+    card.className = "order-admin-card"; card.style.display = "flex"; card.style.alignItems = "flex-start";
     card.id = `oadmin-${o.id}`;
     const date = o.createdAt?.toDate
       ? o.window.fmtDateTime(createdAt.toDate())
@@ -6148,7 +6154,12 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const mode = ["","匯款","代收","登記","賣貨便"][o.paymentType] || "—";
 
     card.innerHTML = `
-      <div class="oa-header">
+      <div class="oa-checkbox-wrap" style="display:none;align-items:center;padding-right:10px">
+        <input type="checkbox" class="order-checkbox" data-oid="${o.id}"
+               style="width:16px;height:16px;accent-color:var(--pink);cursor:pointer"
+               onchange="onOrderCheckChange()" />
+      </div>
+      <div class="oa-header" style="flex:1">
         <div>
           <div class="oa-campaign">${esc(o.campaignName || o.campaignId)}</div>
           <div class="oa-user">${esc(o.nickname || o.email)} · ${esc(o.contact || "")}</div>
@@ -6163,7 +6174,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       ${o.returnInfo ? `<div class="oa-meta" style="color:#4caf50">✓ 回傳：${esc(o.returnInfo)}</div>` : ""}
       <div class="oa-footer">
         <span class="oa-date">${date}</span>
-        <span class="oa-amount">NT$${(o.totalAmount||0).toLocaleString()}</span>
+        <span class="oa-amount">${esc(String(o.totalAmount||o.totalPrice||o.total||''))}</span>
       </div>
       <div class="oa-actions">
         <select class="form-input" id="oa-status-${o.id}" style="font-size:12px;width:130px" onchange="updateOrderStatus('${o.id}',this.value)">
@@ -6236,6 +6247,48 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   // 匯出 CSV
   // ── 刪除訂單 ─────────────────────────────────────────────────
+  // ── 全選刪除模式 ─────────────────────────────────────────────
+  let _orderSelectMode = false;
+
+  window.toggleOrderSelectMode = function(on) {
+    _orderSelectMode = on;
+    const bar    = document.getElementById('order-select-bar');
+    const toggle = document.getElementById('btn-order-select-toggle');
+    const boxes  = document.querySelectorAll('.oa-checkbox-wrap');
+    bar.style.display    = on ? 'flex' : 'none';
+    toggle.style.display = on ? 'none' : '';
+    boxes.forEach(b => b.style.display = on ? 'flex' : 'none');
+    if (!on) {
+      document.querySelectorAll('.order-checkbox').forEach(c => c.checked = false);
+      document.getElementById('order-select-count').textContent = '已選 0 筆';
+    } else {
+      // 預設全選
+      document.querySelectorAll('.order-checkbox').forEach(c => c.checked = true);
+      onOrderCheckChange();
+    }
+  };
+
+  window.onOrderCheckChange = function() {
+    const checked = document.querySelectorAll('.order-checkbox:checked').length;
+    document.getElementById('order-select-count').textContent = `已選 ${checked} 筆`;
+  };
+
+  window.deleteSelectedOrders = async function() {
+    const checked = Array.from(document.querySelectorAll('.order-checkbox:checked'));
+    if (!checked.length) { alert('沒有選取任何訂單'); return; }
+    if (!confirm(`確定刪除選取的 ${checked.length} 筆訂單？此操作無法復原。`)) return;
+    let ok = 0, fail = 0;
+    for (const cb of checked) {
+      try {
+        await deleteDoc(doc(db, 'orders', cb.dataset.oid));
+        document.getElementById(`oadmin-${cb.dataset.oid}`)?.remove();
+        ok++;
+      } catch(e) { fail++; }
+    }
+    alert(`✅ 刪除完成：成功 ${ok} 筆${fail ? `，失敗 ${fail} 筆` : ''}`);
+    toggleOrderSelectMode(false);
+  };
+
   window.deleteOrder = async function(orderId) {
     if (!confirm("確定刪除此訂單？此操作無法復原。")) return;
     try {
@@ -7142,7 +7195,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         const buyerName = String(row[3] || "").trim(); // LINE 暱稱
         const contact = String(row[4] || "").trim();
         const itemsText = String(row[5] || "").trim();
-        const totalPrice = parseFloat(String(row[6] || "").replace(/[^\d.]/g, "")) || 0;
+        const totalPrice = String(row[7] || "").trim(); // 原封不動存字串，欄H
         const payStatus = String(row[7] || "").trim();
         const email = String(row[8] || "").trim();
         const lastFive = String(row[9] || "").trim();
@@ -7189,7 +7242,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         <td>${esc(o.campaignId)}</td>
         <td>${esc(o.buyerName)}</td>
         <td style="font-size:11px; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${esc(o.itemsText)}">${esc(o.itemsText)}</td>
-        <td>NT$${o.totalPrice.toLocaleString()}</td>
+        <td>${esc(String(o.totalPrice||''))}</td>
         <td>${statusBadge}</td>
         <td style="font-size:11px">${esc(o.email)}<br>${esc(o.lastFive)}</td>
       `;
