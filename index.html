@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260427-28 -->
+  <!-- build:20260427-29 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2412,12 +2412,14 @@
                   <tr>
                     <th>狀態</th>
                     <th>訂單時間</th>
-                    <th>團務 ID</th>
-                    <th>LINE 暱稱</th>
+                    <th>團務ID</th>
+                    <th>社群暱稱</th>
+                    <th>聯絡方式</th>
+                    <th>Email</th>
                     <th>訂購明細</th>
                     <th>總金額</th>
-                    <th>對帳狀態</th>
-                    <th>Email/末五碼</th>
+                    <th>付款狀態</th>
+                    <th>回傳資訊</th>
                   </tr>
                 </thead>
                 <tbody id="order-import-preview-body"></tbody>
@@ -2918,7 +2920,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260427-28 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260427-29 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -7019,7 +7021,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
       // 欄位對應（簡單版，可根據需求擴充）
       // 預期格式：訂單時間、團務 ID、團務名稱、LINE 暱稱、聯絡方式、訂購明細、總金額、對帳狀態、使用者填寫Email、末五碼/貨運單號
-      const dataRows = allRows.slice(looksLikeHeader(allRows[0]) ? 1 : 0);
+      // 跳過標題列 + 說明列（xlsx 範本有兩列要跳）
+      let skipRows = 0;
+      if (looksLikeHeader(allRows[0])) skipRows = 1;
+      if (skipRows === 1 && allRows[1] && looksLikeDescription(allRows[1])) skipRows = 2;
+      const dataRows = allRows.slice(skipRows);
       pendingOrderImports = dataRows.map(row => {
         // 欄位順序對應 xlsx 範本：
         // A:訂單時間 B:團務ID C:團務名稱 D:社群暱稱 E:聯絡方式 F:Email
@@ -7073,13 +7079,15 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       const statusBadge = o.status === "paid" ? '<span class="role-badge admin">已付款</span>' : '<span class="role-badge user">待確認</span>';
       tr.innerHTML = `
         <td><span class="role-badge user">待匯入</span></td>
-        <td>${window.fmtDateTime(o.orderDate).slice(5,16)}</td>
-        <td>${esc(o.campaignId)}</td>
+        <td style="white-space:nowrap">${window.fmtDateTime(o.orderDate).slice(5,16)}</td>
+        <td style="white-space:nowrap">${esc(o.campaignId)}</td>
         <td>${esc(o.buyerName)}</td>
-        <td style="font-size:11px; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" title="${esc(o.itemsText)}">${esc(o.itemsText)}</td>
-        <td>NT$${o.totalPrice.toLocaleString()}</td>
+        <td>${esc(o.contact)}</td>
+        <td style="font-size:11px">${esc(o.email)}</td>
+        <td style="font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(o.itemsText)}">${esc(o.itemsText)}</td>
+        <td style="white-space:nowrap">NT$${o.totalPrice.toLocaleString()}</td>
         <td>${statusBadge}</td>
-        <td style="font-size:11px">${esc(o.email)}<br>${esc(o.lastFive)}</td>
+        <td style="font-size:11px">${esc(o.lastFive)}</td>
       `;
       tbody.appendChild(tr);
     });
