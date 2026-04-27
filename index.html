@@ -1090,20 +1090,29 @@
       background: var(--surface);
       border: 1.5px solid var(--border);
       border-radius: var(--radius);
-      padding: 16px;
+      padding: 14px 16px;
       margin-bottom: 12px;
       box-shadow: var(--shadow);
-      display: flex; flex-direction: column; gap: 8px;
+      display: flex; align-items: stretch; gap: 10px;
     }
-    .oa-header { display:flex; justify-content:space-between; align-items:flex-start; }
-    .oa-campaign { font-size:14px; font-weight:700; }
-    .oa-user { font-size:12px; color:var(--text-muted); margin-top:2px; }
-    .oa-items { font-size:13px; color:var(--text); }
-    .oa-meta { font-size:12px; color:var(--text-muted); }
-    .oa-footer { display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted);
-                 padding-top:8px; border-top:1px dashed var(--border); }
-    .oa-amount { font-size:15px; font-weight:700; color:var(--pink); }
-    .oa-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .oa-checkbox-wrap { display:none; align-items:flex-start; padding-top:4px; }
+    .oa-content { flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; }
+    .oa-header { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+    .oa-header-left { min-width:0; flex:1; }
+    .oa-header-right { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
+    .oa-campaign { font-size:14px; font-weight:700; line-height:1.4; word-break:break-word; }
+    .oa-user { font-size:12px; color:var(--text-muted); margin-top:2px; word-break:break-word; }
+    .oa-items { font-size:13px; color:var(--text); line-height:1.5; word-break:break-word; }
+    .oa-meta { font-size:12px; color:var(--text-muted); word-break:break-word; }
+    .oa-footer {
+      display:flex; justify-content:space-between; align-items:center; gap:12px;
+      padding-top:10px; margin-top:2px; border-top:1px dashed var(--border);
+    }
+    .oa-date { font-size:12px; color:var(--text-muted); }
+    .oa-amount { font-size:16px; font-weight:700; color:var(--pink); white-space:nowrap; }
+    .oa-amount-currency { font-size:11px; font-weight:600; color:var(--text-muted); margin-right:2px; }
+    .oa-actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; padding-top:4px; }
+    .oa-actions .form-input { flex-shrink:0; }
     .oa-detail { background:#fff8fb; border-radius:8px; padding:10px 14px; margin-top:4px; }
     .order-status-badge {
       font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px;
@@ -6146,7 +6155,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   function renderOrderCard(o) {
     const card = document.createElement("div");
-    card.className = "order-admin-card"; card.style.display = "flex"; card.style.alignItems = "flex-start";
+    card.className = "order-admin-card";
     card.id = `oadmin-${o.id}`;
     const date = o.createdAt?.toDate
       ? window.fmtDateTime(o.createdAt.toDate())
@@ -6156,52 +6165,68 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       return `${it.name}${spec} ×${it.qty}`;
     }).join("、");
     const status = o.paymentStatus || "pending";
-    const mode = ["","匯款","代收","登記","賣貨便"][o.paymentType] || "—";
+    const mode = ["","匯款","代收","登記","賣貨便"][o.paymentType] || "";
+
+    // 金額：可能是字串("2228(2575)")或數字，盡量取數字部分顯示千分位
+    const rawAmount = o.totalAmount ?? o.totalPrice ?? o.total ?? "";
+    let amountDisplay = "";
+    if (rawAmount !== "" && rawAmount !== null && rawAmount !== undefined) {
+      const numMatch = String(rawAmount).match(/-?\d+(\.\d+)?/);
+      if (numMatch) {
+        const n = parseFloat(numMatch[0]);
+        const rest = String(rawAmount).replace(numMatch[0], "").trim();
+        amountDisplay = n.toLocaleString() + (rest ? ` ${rest}` : "");
+      } else {
+        amountDisplay = String(rawAmount);
+      }
+    }
 
     card.innerHTML = `
-      <div class="oa-checkbox-wrap" style="display:none;align-items:center;padding-right:10px">
+      <div class="oa-checkbox-wrap">
         <input type="checkbox" class="order-checkbox" data-oid="${o.id}"
                style="width:16px;height:16px;accent-color:var(--pink);cursor:pointer"
                onchange="onOrderCheckChange()" />
       </div>
-      <div class="oa-header" style="flex:1">
-        <div>
-          <div class="oa-campaign">${esc(o.campaignName || o.campaignId)}</div>
-          <div class="oa-user">${esc(o.nickname || o.email)} · ${esc(o.contact || "")}</div>
+      <div class="oa-content">
+        <div class="oa-header">
+          <div class="oa-header-left">
+            <div class="oa-campaign">${esc(o.campaignName || o.campaignId)}</div>
+            <div class="oa-user">${esc(o.nickname || o.email)}${o.contact ? ` · ${esc(o.contact)}` : ""}</div>
+          </div>
+          <div class="oa-header-right">
+            <span class="order-status-badge status-${status}">${ORDER_STATUS[status] || status}</span>
+            ${mode ? `<span style="font-size:11px;color:var(--text-muted)">${mode}</span>` : ""}
+          </div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-          <span class="order-status-badge status-${status}">${ORDER_STATUS[status] || status}</span>
-          <span style="font-size:12px;color:var(--text-muted)">${mode}</span>
+        <div class="oa-items">${esc(items)}</div>
+        ${o.passport ? `<div class="oa-meta">護照：${esc(o.passport)}</div>` : ""}
+        ${o.returnInfo ? `<div class="oa-meta" style="color:#4caf50">✓ 回傳：${esc(o.returnInfo)}</div>` : ""}
+        <div class="oa-footer">
+          <span class="oa-date">${date}</span>
+          ${amountDisplay ? `<span class="oa-amount"><span class="oa-amount-currency">NT$</span>${esc(amountDisplay)}</span>` : ""}
         </div>
-      </div>
-      <div class="oa-items">${esc(items)}</div>
-      ${o.passport ? `<div class="oa-meta">護照：${esc(o.passport)}</div>` : ""}
-      ${o.returnInfo ? `<div class="oa-meta" style="color:#4caf50">✓ 回傳：${esc(o.returnInfo)}</div>` : ""}
-      <div class="oa-footer">
-        <span class="oa-date">${date}</span>
-        <span class="oa-amount">${esc(String(o.totalAmount||o.totalPrice||o.total||''))}</span>
-      </div>
-      <div class="oa-actions">
-        <select class="form-input" id="oa-status-${o.id}" style="font-size:12px;width:130px" onchange="updateOrderStatus('${o.id}',this.value)">
-          <option value="pending"   ${status==="pending"   ? "selected":""}>⏳ 待確認</option>
-          <option value="paid"      ${status==="paid"      ? "selected":""}>✅ 已付款</option>
-          <option value="cancelled" ${status==="cancelled" ? "selected":""}>❌ 已取消</option>
-        </select>
-        ${o.paymentType === 3 && status !== "paid" ? `
-          <button class="btn btn-primary btn-sm oa-upgrade-btn" data-oid="${o.id}">升級為匯款</button>` : ""}
-        <button class="btn btn-ghost btn-sm oa-detail-btn" data-oid="${o.id}">詳情</button>
-        <button class="btn btn-ghost btn-sm oa-edit-btn"   data-oid="${o.id}">編輯</button>
-        <button class="btn btn-danger btn-sm oa-del-btn"   data-oid="${o.id}">刪除</button>
-      </div>
-      <div class="oa-detail" id="oa-detail-${o.id}" style="display:none">
-        <div style="font-size:12px;color:var(--text-muted);line-height:1.8">
-          <div>信箱：${esc(o.email || "—")}</div>
-          <div>訂單ID：${esc(o.id)}</div>
-          ${(o.items||[]).map(it => {
-            const specStr = Object.entries(it.specs||{}).filter(([,v])=>v).map(([k,v])=>`${k}:${v}`).join(" ");
-            return `<div>• ${esc(it.name)} ${specStr ? `(${specStr})` : ""} ×${it.qty} = NT$${it.subtotal?.toLocaleString()}</div>`;
-          }).join("")}
-          ${o.discountAmount ? `<div style="color:var(--pink)">折扣 -NT$${o.discountAmount.toLocaleString()}</div>` : ""}
+        <div class="oa-actions">
+          <select class="form-input" id="oa-status-${o.id}" style="font-size:12px;width:130px" onchange="updateOrderStatus('${o.id}',this.value)">
+            <option value="pending"   ${status==="pending"   ? "selected":""}>⏳ 待確認</option>
+            <option value="paid"      ${status==="paid"      ? "selected":""}>✅ 已付款</option>
+            <option value="cancelled" ${status==="cancelled" ? "selected":""}>❌ 已取消</option>
+          </select>
+          ${o.paymentType === 3 && status !== "paid" ? `
+            <button class="btn btn-primary btn-sm oa-upgrade-btn" data-oid="${o.id}">升級為匯款</button>` : ""}
+          <button class="btn btn-ghost btn-sm oa-detail-btn" data-oid="${o.id}">詳情</button>
+          <button class="btn btn-ghost btn-sm oa-edit-btn"   data-oid="${o.id}">編輯</button>
+          <button class="btn btn-danger btn-sm oa-del-btn"   data-oid="${o.id}">刪除</button>
+        </div>
+        <div class="oa-detail" id="oa-detail-${o.id}" style="display:none">
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.8">
+            <div>信箱：${esc(o.email || "—")}</div>
+            <div>訂單ID：${esc(o.id)}</div>
+            ${(o.items||[]).map(it => {
+              const specStr = Object.entries(it.specs||{}).filter(([,v])=>v).map(([k,v])=>`${k}:${v}`).join(" ");
+              return `<div>• ${esc(it.name)} ${specStr ? `(${specStr})` : ""} ×${it.qty}${it.subtotal != null ? ` = NT$${Number(it.subtotal).toLocaleString()}` : ""}</div>`;
+            }).join("")}
+            ${o.discountAmount ? `<div style="color:var(--pink)">折扣 -NT$${o.discountAmount.toLocaleString()}</div>` : ""}
+          </div>
         </div>
       </div>`;
     // 事件委派（避免特殊字元破壞 onclick）
