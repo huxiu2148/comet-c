@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-12 -->
+  <!-- build:20260427-32 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -230,6 +230,46 @@
 
     /* 無規格商品 */
     .opi-note { font-size:11px; color:var(--text-muted); margin-top:2px; }
+
+
+    /* ── 出貨追蹤 ── */
+    .shipping-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 13px; background: var(--surface);
+      border-radius: var(--radius); overflow: hidden;
+    }
+    .shipping-table th {
+      padding: 10px 12px; background: var(--grad);
+      color: #fff; font-size: 12px; font-weight: 600;
+      text-align: left; white-space: nowrap;
+    }
+    .shipping-table td {
+      padding: 9px 12px; border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .shipping-table tr:last-child td { border-bottom: none; }
+    .shipping-table tr:hover td { background: #fff8fb; }
+    .st-name  { font-weight: 700; white-space: nowrap; min-width: 80px; }
+    .st-items { color: var(--text-muted); max-width: 200px; }
+    .st-paid  { color: #4caf50; font-weight: 700; white-space: nowrap; }
+    .st-remain { display: flex; align-items: center; gap: 6px; }
+    .st-remain-val { font-weight: 700; color: var(--pink); white-space: nowrap; }
+    .st-amount-input {
+      width: 80px; padding: 4px 6px; font-size: 12px;
+      border: 1.5px solid var(--border); border-radius: 6px;
+      background: #fff;
+    }
+    .st-amount-input:focus { border-color: var(--pink); outline: none; }
+    .st-note-input {
+      width: 120px; padding: 4px 6px; font-size: 12px;
+      border: 1.5px solid var(--border); border-radius: 6px;
+      background: #fff;
+    }
+    .st-note-input:focus { border-color: var(--pink); outline: none; }
+    .st-check {
+      width: 16px; height: 16px; accent-color: var(--pink); cursor: pointer;
+    }
+    .st-updated { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
 
     /* ── 主內容 ── */
     main { max-width: 980px; margin: 0 auto; padding: 32px 20px; }
@@ -2113,7 +2153,8 @@
         <button class="subnav-btn"         data-section="campaigns" onclick="switchAdminSection('campaigns')">📦 開團系統</button>
         <button class="subnav-btn"         data-section="campaign-mgmt" onclick="switchAdminSection('campaign-mgmt')">📋 團務管理</button>
         <button class="subnav-btn"         data-section="orders"    onclick="switchAdminSection('orders')">🧾 訂單管理</button>
-        <button class="subnav-btn"         data-section="purchase"  onclick="switchAdminSection('purchase')">🛒 下單管理</button>
+        <button class="subnav-btn"         data-section="purchase"  onclick="switchAdminSection('purchase')">🛒 採購記錄</button>
+        <button class="subnav-btn"         data-section="shipping"  onclick="switchAdminSection('shipping')">📦 出貨追蹤</button>
         <button class="subnav-btn"         data-section="finance"   onclick="switchAdminSection('finance')">💰 記帳</button>
         <button class="subnav-btn"         data-section="members"   onclick="switchAdminSection('members')">👤 會員管理</button>
       </div>
@@ -2599,7 +2640,7 @@
 <!-- 下單管理 -->
       <div class="admin-section" id="section-purchase">
         <div class="section-header">
-          <h2 class="section-title">🛒 下單管理</h2>
+          <h2 class="section-title">🛒 採購記錄</h2>
           <button class="btn btn-primary btn-sm" onclick="openPurchaseModal()">＋ 新增下單記錄</button>
         </div>
 
@@ -2628,6 +2669,29 @@
 
         <!-- 列表 -->
         <div id="purchase-list"></div>
+      </div>
+
+      <!-- 出貨追蹤 -->
+      <div class="admin-section" id="section-shipping">
+        <div class="section-header">
+          <h2 class="section-title">📦 出貨追蹤</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="downloadShippingTemplate()">⬇ 下載範本</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('shipping-import-file').click()">📤 批次匯入</button>
+            <input type="file" id="shipping-import-file" accept=".xlsx,.csv" style="display:none" onchange="importShipping(this)" />
+            <button class="btn btn-ghost btn-sm" onclick="loadShippingCampaigns()">↻ 重新整理</button>
+          </div>
+        </div>
+        <!-- 團務列表 / 人員列表 -->
+        <div id="shipping-campaign-list"></div>
+        <div id="shipping-order-list" style="display:none">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <button class="btn btn-ghost btn-sm" onclick="backToShippingCampaigns()">← 返回</button>
+            <h3 id="shipping-campaign-title" style="font-size:15px;font-weight:700;margin:0"></h3>
+            <span id="shipping-campaign-stats" style="font-size:12px;color:var(--text-muted)"></span>
+          </div>
+          <div id="shipping-orders-table"></div>
+        </div>
       </div>
 
       <!-- 記帳 -->
@@ -3082,7 +3146,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260427-31 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260427-32 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -3198,6 +3262,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       "finance":       () => window.initFinance?.(),
       "members":       () => window.loadMembers?.(),
       "purchase":      () => { window.loadPurchaseCampaignFilter?.(); window.loadPurchases?.(); },
+      "shipping":      () => window.loadShippingCampaigns?.(),
     };
     const readyMap = {
       "campaigns":     () => !!window.loadGroupsSelect && !!window.loadGroupKeywords,
@@ -3206,6 +3271,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       "finance":       () => !!window.initFinance,
       "members":       () => !!window.loadMembers,
       "purchase":      () => !!window.loadPurchases,
+      "shipping":      () => !!window.loadShippingCampaigns,
     };
     const fn    = fnMap[section];
     const ready = readyMap[section];
@@ -8283,5 +8349,348 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   function esc(s) {
     return String(s ?? "").replace(/[&<>"']/g, c =>
       ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+</script>
+
+<!-- ── 出貨追蹤 JS ── -->
+<script type="module">
+  import { db } from "./auth.js";
+  import {
+    collection, doc, updateDoc, addDoc, deleteDoc,
+    getDocs, getDoc, query, orderBy, where, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c =>
+      ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  let _currentShippingCampaign = null;
+
+  // ── 團務列表 ─────────────────────────────────────────────────
+  window.loadShippingCampaigns = async function() {
+    const listEl = document.getElementById("shipping-campaign-list");
+    const orderEl = document.getElementById("shipping-order-list");
+    if (!listEl) return;
+    listEl.style.display = "block";
+    if (orderEl) orderEl.style.display = "none";
+    listEl.innerHTML = '<div class="loading-row">載入中...</div>';
+
+    try {
+      // 從 orders 集合讀取所有有 campaignId 的訂單，依團務分組
+      const snap = await getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc")));
+      const groups = {};
+      snap.forEach(d => {
+        const o = d.data();
+        const cid = o.campaignId || "未分類";
+        if (!groups[cid]) groups[cid] = {
+          campaignId: cid,
+          campaignName: o.campaignName || cid,
+          orders: []
+        };
+        groups[cid].orders.push({ id: d.id, ...o });
+      });
+
+      if (!Object.keys(groups).length) {
+        listEl.innerHTML = '<div class="empty-row">尚無訂單資料</div>';
+        return;
+      }
+
+      listEl.innerHTML = "";
+      Object.values(groups).forEach(g => {
+        const paidCount = g.orders.filter(o => o.status === "paid").length;
+        const pickedCount = g.orders.filter(o => o.picked).length;
+        const card = document.createElement("div");
+        card.className = "campaign-admin-row";
+        card.style.cursor = "pointer";
+        card.innerHTML = `
+          <div class="car-main" style="flex:1">
+            <div class="car-name">${esc(g.campaignName)}</div>
+            <div class="car-meta">
+              <span>${esc(g.campaignId)}</span>
+              <span>・共 ${g.orders.length} 筆</span>
+              <span>・已付 ${paidCount} 筆</span>
+              <span>・取貨 ${pickedCount} 筆</span>
+            </div>
+          </div>
+          <div style="color:var(--text-muted);font-size:13px">▶</div>`;
+        card.addEventListener("click", () => loadShippingOrders(g));
+        listEl.appendChild(card);
+      });
+    } catch(e) {
+      listEl.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
+    }
+  };
+
+  // ── 返回團務列表 ─────────────────────────────────────────────
+  window.backToShippingCampaigns = function() {
+    document.getElementById("shipping-campaign-list").style.display = "block";
+    document.getElementById("shipping-order-list").style.display  = "none";
+  };
+
+  // ── 團務的出貨追蹤表 ─────────────────────────────────────────
+  async function loadShippingOrders(g) {
+    _currentShippingCampaign = g;
+    document.getElementById("shipping-campaign-list").style.display = "none";
+    const orderEl = document.getElementById("shipping-order-list");
+    orderEl.style.display = "block";
+    document.getElementById("shipping-campaign-title").textContent = g.campaignName;
+
+    const tableEl = document.getElementById("shipping-orders-table");
+    tableEl.innerHTML = '<div class="loading-row">載入中...</div>';
+
+    // 重新從 Firestore 讀最新資料
+    try {
+      const snap = await getDocs(
+        query(collection(db, "orders"), where("campaignId", "==", g.campaignId), orderBy("createdAt", "desc"))
+      );
+      const orders = [];
+      snap.forEach(d => orders.push({ id: d.id, ...d.data() }));
+
+      const stats = `${orders.length} 筆 | 已付 ${orders.filter(o=>o.status==="paid").length} | 取貨 ${orders.filter(o=>o.picked).length}`;
+      document.getElementById("shipping-campaign-stats").textContent = stats;
+
+      if (!orders.length) { tableEl.innerHTML = '<div class="empty-row">此團務尚無訂單</div>'; return; }
+
+      renderShippingTable(orders, tableEl);
+    } catch(e) {
+      tableEl.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
+    }
+  }
+
+  function renderShippingTable(orders, tableEl) {
+    tableEl.innerHTML = "";
+    const wrapper = document.createElement("div");
+    wrapper.style.overflowX = "auto";
+    wrapper.innerHTML = `
+      <table class="shipping-table">
+        <thead>
+          <tr>
+            <th>社群暱稱</th>
+            <th>訂購商品</th>
+            <th>已付金額</th>
+            <th>剩餘金額</th>
+            <th style="text-align:center">下單</th>
+            <th style="text-align:center">出貨</th>
+            <th style="text-align:center">取貨</th>
+            <th>備注</th>
+            <th>最後更新</th>
+          </tr>
+        </thead>
+        <tbody id="shipping-tbody"></tbody>
+      </table>`;
+    tableEl.appendChild(wrapper);
+
+    const tbody = document.getElementById("shipping-tbody");
+    orders.forEach(o => {
+      const row = document.createElement("tr");
+      row.id = `srow-${o.id}`;
+
+      // 金額計算
+      const rawTotal = parseFloat(String(o.totalPrice || o.total || o.totalAmount || "0").replace(/[^\d.]/g, "")) || 0;
+      const extraAmount = parseFloat(o.extraAmount || 0);
+      const paid   = o.status === "paid" ? rawTotal : 0;
+      const remain = (o.status !== "paid" ? rawTotal : 0) + extraAmount;
+
+      // 商品摘要
+      const itemsSummary = o.itemsText || (o.items||[]).map(i=>`${i.name}×${i.qty}`).join("、") || "—";
+
+      // 更新時間
+      const updatedAt = o.updatedAt?.toDate ? window.fmtDateTime(o.updatedAt.toDate()) : "—";
+
+      row.innerHTML = `
+        <td class="st-name">${esc(o.nickname || o.buyerName || o.email || "—")}</td>
+        <td class="st-items" title="${esc(itemsSummary)}">${esc(itemsSummary.length > 30 ? itemsSummary.slice(0,30)+"…" : itemsSummary)}</td>
+        <td class="st-paid" id="st-paid-${o.id}">
+          ${paid > 0 ? `NT$${paid.toLocaleString()}` : "—"}
+        </td>
+        <td class="st-remain">
+          <input class="st-amount-input" id="st-extra-${o.id}" type="number" min="0"
+            value="${extraAmount || ""}" placeholder="補款"
+            onchange="saveExtraAmount('${o.id}', this.value)" />
+          <span class="st-remain-val" id="st-remain-${o.id}">${remain > 0 ? `NT$${remain.toLocaleString()}` : "—"}</span>
+        </td>
+        <td style="text-align:center">
+          <input type="checkbox" class="st-check" ${o.ordered ? "checked" : ""}
+            onchange="saveShippingFlag('${o.id}','ordered',this.checked)" />
+        </td>
+        <td style="text-align:center">
+          <input type="checkbox" class="st-check" ${o.shipped ? "checked" : ""}
+            onchange="saveShippingFlag('${o.id}','shipped',this.checked)" />
+        </td>
+        <td style="text-align:center">
+          <input type="checkbox" class="st-check" ${o.picked ? "checked" : ""}
+            onchange="onPickedChange('${o.id}',this.checked,${rawTotal},${extraAmount})" />
+        </td>
+        <td><input class="st-note-input" id="st-note-${o.id}" type="text"
+          value="${esc(o.shippingNote||'')}" placeholder="備注"
+          onchange="saveShippingNote('${o.id}',this.value)" /></td>
+        <td class="st-updated">${updatedAt}</td>`;
+      tbody.appendChild(row);
+    });
+  }
+
+  // ── 勾選下單/出貨 ────────────────────────────────────────────
+  window.saveShippingFlag = async function(orderId, field, value) {
+    try {
+      await updateDoc(doc(db,"orders",orderId), {
+        [field]: value, updatedAt: serverTimestamp()
+      });
+    } catch(e) { alert(`儲存失敗：${e.message}`); }
+  };
+
+  // ── 取貨勾選：剩餘金額移入已付 ─────────────────────────────
+  window.onPickedChange = async function(orderId, picked, rawTotal, extraAmount) {
+    try {
+      const updates = { picked, updatedAt: serverTimestamp() };
+      if (picked) {
+        // 剩餘清零，補款清零（視同已付）
+        updates.extraAmount = 0;
+      }
+      await updateDoc(doc(db,"orders",orderId), updates);
+
+      // 更新 UI
+      const paidEl   = document.getElementById(`st-paid-${orderId}`);
+      const remainEl = document.getElementById(`st-remain-${orderId}`);
+      const extraEl  = document.getElementById(`st-extra-${orderId}`);
+      if (picked) {
+        const totalPaid = rawTotal + extraAmount;
+        if (paidEl)   paidEl.textContent   = totalPaid > 0 ? `NT$${totalPaid.toLocaleString()}` : "—";
+        if (remainEl) remainEl.textContent  = "—";
+        if (extraEl)  extraEl.value         = "";
+      } else {
+        const remain = (rawTotal > 0 && !picked ? rawTotal : 0) + extraAmount;
+        if (paidEl)   paidEl.textContent   = rawTotal > 0 && picked ? `NT$${rawTotal.toLocaleString()}` : "—";
+        if (remainEl) remainEl.textContent  = remain > 0 ? `NT$${remain.toLocaleString()}` : "—";
+      }
+    } catch(e) { alert(`儲存失敗：${e.message}`); }
+  };
+
+  // ── 補款金額 ─────────────────────────────────────────────────
+  window.saveExtraAmount = async function(orderId, value) {
+    const extra = parseFloat(value) || 0;
+    try {
+      await updateDoc(doc(db,"orders",orderId), {
+        extraAmount: extra, updatedAt: serverTimestamp()
+      });
+      const remainEl = document.getElementById(`st-remain-${orderId}`);
+      if (remainEl) remainEl.textContent = extra > 0 ? `NT$${extra.toLocaleString()}` : "—";
+    } catch(e) { alert(`儲存失敗：${e.message}`); }
+  };
+
+  // ── 備注 ─────────────────────────────────────────────────────
+  window.saveShippingNote = async function(orderId, value) {
+    try {
+      await updateDoc(doc(db,"orders",orderId), {
+        shippingNote: value, updatedAt: serverTimestamp()
+      });
+    } catch(e) { alert(`儲存失敗：${e.message}`); }
+  };
+
+  // ── 下載範本 CSV ─────────────────────────────────────────────
+  window.downloadShippingTemplate = function() {
+    const BOM = "\uFEFF";
+    const rows = [
+      ["團務ID*","社群暱稱*","聯絡方式","Email","訂購商品*","總金額","付款狀態(paid/pending)","回傳資訊","下單(true/false)","出貨(true/false)","取貨(true/false)","補款金額","備注"],
+      ["說明：需與系統一致","LINE或社群暱稱","LINE ID等","Email","商品描述","原封不動填入","paid=已付款","末五碼等","true=已下單","true=已出貨","true=已取貨","數字","其他備注"],
+      ["NCT-260414-01","Audrey","audrey_dream_land","tsen@gmail.com","娃娃頭套×1","425","paid","國泰-97427","true","false","false","",""],
+    ];
+    const csv = BOM + rows.map(r =>
+      r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")
+    ).join("\n");
+    const a = Object.assign(document.createElement("a"), {
+      href: URL.createObjectURL(new Blob([csv], {type:"text/csv;charset=utf-8"})),
+      download: "shipping_template.csv"
+    });
+    a.click();
+  };
+
+  // ── 批次匯入 ─────────────────────────────────────────────────
+  window.importShipping = async function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    input.value = "";
+
+    try {
+      const rows = await parseShippingFile(file);
+      if (!rows.length) { alert("檔案內沒有有效資料"); return; }
+
+      const STATUS_MAP = {"已核對":"paid","已付款":"paid","未核對":"pending","待確認":"pending","paid":"paid","pending":"pending"};
+      let ok = 0, fail = 0;
+      const BATCH = 20;
+
+      for (let i = 0; i < rows.length; i += BATCH) {
+        await Promise.all(rows.slice(i, i+BATCH).map(async row => {
+          try {
+            const campaignId   = String(row[0]||"").trim();
+            const nickname     = String(row[1]||"").trim();
+            const contact      = String(row[2]||"").trim();
+            const email        = String(row[3]||"").trim();
+            const itemsText    = String(row[4]||"").trim();
+            const totalPrice   = String(row[5]||"").trim();
+            const statusRaw    = String(row[6]||"").trim();
+            const returnInfo   = String(row[7]||"").trim();
+            const ordered      = String(row[8]||"").toLowerCase() === "true";
+            const shipped      = String(row[9]||"").toLowerCase() === "true";
+            const picked       = String(row[10]||"").toLowerCase() === "true";
+            const extraAmount  = parseFloat(row[11])||0;
+            const shippingNote = String(row[12]||"").trim();
+
+            if (!campaignId || !itemsText) { fail++; return; }
+
+            await addDoc(collection(db,"orders"), {
+              campaignId, nickname, contact, email, itemsText, totalPrice,
+              status: STATUS_MAP[statusRaw] || "pending",
+              returnInfo, ordered, shipped, picked, extraAmount, shippingNote,
+              userId: "imported", source: "shipping_import",
+              createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
+            });
+            ok++;
+          } catch(e) { fail++; console.error(e); }
+        }));
+        if (i + BATCH < rows.length) await new Promise(r => setTimeout(r, 300));
+      }
+
+      alert(`✅ 匯入完成！成功 ${ok} 筆${fail?`，失敗 ${fail} 筆`:""}`);
+      window.loadShippingCampaigns?.();
+    } catch(e) { alert("解析失敗：" + e.message); }
+  };
+
+  async function parseShippingFile(file) {
+    const ext = file.name.split(".").pop().toLowerCase();
+    if (ext === "csv") {
+      const buf = await file.arrayBuffer();
+      let text;
+      try { text = new TextDecoder("big5").decode(buf); if (text.includes("\uFFFD")) throw 0; }
+      catch { text = new TextDecoder("utf-8").decode(buf); }
+      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+      return parseCSVRows(text).slice(2).filter(r => r[0]);
+    }
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const XLSX = window.XLSX;
+          if (!XLSX) { reject(new Error("請改用 CSV 格式")); return; }
+          const wb = XLSX.read(new Uint8Array(e.target.result), { type:"array" });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          resolve(XLSX.utils.sheet_to_json(ws,{header:1,defval:""}).slice(2).filter(r=>r[0]));
+        } catch(err) { reject(err); }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  function parseCSVRows(text) {
+    return text.split(/\r?\n/).filter(l=>l.trim()).map(line => {
+      const row=[]; let cur="", inQ=false;
+      for (let i=0;i<line.length;i++) {
+        const ch=line[i];
+        if (ch==='"') { if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ; }
+        else if (ch===','&&!inQ) { row.push(cur); cur=""; }
+        else cur+=ch;
+      }
+      row.push(cur); return row;
+    });
   }
 </script>
