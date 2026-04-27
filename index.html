@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-10 -->
+  <!-- build:20260427-26 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1071,6 +1071,22 @@
       background: #fff0f7 !important;
       box-shadow: 0 0 0 2px rgba(255,132,195,0.2);
     }
+
+
+    /* 訂單明細展開 */
+    .oa-detail { border-top:1px dashed var(--border); margin-top:8px; padding-top:12px; }
+    .oa-detail-inner { display:flex; flex-direction:column; gap:14px; }
+    .oa-detail-section { display:flex; flex-direction:column; gap:4px; }
+    .oa-detail-title { font-size:12px; font-weight:700; color:var(--text-muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px; }
+    .oa-detail-row { display:flex; gap:12px; font-size:12px; align-items:baseline; }
+    .oa-dl { color:var(--text-muted); min-width:70px; flex-shrink:0; }
+    .oa-dv { color:var(--text); }
+    .oa-dv.mono { font-family:monospace; font-size:11px; }
+    .oa-items-table { width:100%; border-collapse:collapse; font-size:12px; }
+    .oa-items-table th { padding:5px 8px; text-align:left; font-size:11px; color:var(--text-muted); font-weight:600; border-bottom:1.5px solid var(--border); }
+    .oa-items-table td { padding:7px 8px; border-bottom:1px dashed var(--border); vertical-align:top; }
+    .oa-items-table tr:last-child td { border-bottom:none; }
+    .oa-spec-tag { display:inline-block; background:#fff0f7; color:var(--pink); border-radius:10px; padding:1px 7px; font-size:11px; margin:1px; }
 
     /* ══ 訂單管理 ══ */
     .order-admin-card {
@@ -2901,7 +2917,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260424-25 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260427-26 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -6083,14 +6099,40 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         <button class="btn btn-ghost btn-sm" onclick="toggleOrderDetail('${o.id}')">詳情</button>
       </div>
       <div class="oa-detail" id="oa-detail-${o.id}" style="display:none">
-        <div style="font-size:12px;color:var(--text-muted);line-height:1.8">
-          <div>信箱：${esc(o.email || "—")}</div>
-          <div>訂單ID：${esc(o.id)}</div>
-          ${(o.items||[]).map(it => {
-            const specStr = Object.entries(it.specs||{}).filter(([,v])=>v).map(([k,v])=>`${k}:${v}`).join(" ");
-            return `<div>• ${esc(it.name)} ${specStr ? `(${specStr})` : ""} ×${it.qty} = NT$${it.subtotal?.toLocaleString()}</div>`;
-          }).join("")}
-          ${o.discountAmount ? `<div style="color:var(--pink)">折扣 -NT$${o.discountAmount.toLocaleString()}</div>` : ""}
+        <div class="oa-detail-inner">
+
+          <!-- 訂單資訊 -->
+          <div class="oa-detail-section">
+            <div class="oa-detail-row"><span class="oa-dl">訂單 ID</span><span class="oa-dv mono">${esc(o.id)}</span></div>
+            <div class="oa-detail-row"><span class="oa-dl">信箱</span><span class="oa-dv">${esc(o.email||"—")}</span></div>
+            <div class="oa-detail-row"><span class="oa-dl">聯絡帳號</span><span class="oa-dv">${esc(o.contact||"—")}</span></div>
+            ${o.passport ? '<div class="oa-detail-row"><span class="oa-dl">護照姓名</span><span class="oa-dv">' + esc(o.passport) + '</span></div>' : ""}
+            ${o.returnInfo ? '<div class="oa-detail-row"><span class="oa-dl">回傳資訊</span><span class="oa-dv" style="color:#4caf50">✓ ' + esc(o.returnInfo) + '</span></div>' : ""}
+          </div>
+
+          <!-- 商品明細 -->
+          <div class="oa-detail-section">
+            <div class="oa-detail-title">商品明細</div>
+            <table class="oa-items-table">
+              <thead><tr><th>商品</th><th>規格</th><th>數量</th><th>小計</th></tr></thead>
+              <tbody>
+                ${(o.items||[]).map(it => {
+                  const specs = Object.entries(it.specs||{}).filter(([,v])=>v).map(([k,v])=>
+                    '<span class="oa-spec-tag">' + esc(k) + ':' + esc(v) + '</span>'
+                  ).join("");
+                  const note = it.note ? '<div style="font-size:11px;color:var(--text-muted)">備注：' + esc(it.note) + '</div>' : "";
+                  return '<tr>' +
+                    '<td>' + esc(it.name) + note + '</td>' +
+                    '<td>' + (specs || '<span style="color:var(--text-muted)">—</span>') + '</td>' +
+                    '<td style="text-align:center">×' + it.qty + '</td>' +
+                    '<td style="text-align:right;font-weight:700">NT$' + (it.subtotal||0).toLocaleString() + '</td>' +
+                  '</tr>';
+                }).join("")}
+              </tbody>
+              ${o.discountAmount ? '<tfoot><tr><td colspan="3" style="text-align:right;color:var(--text-muted)">折扣</td><td style="text-align:right;color:var(--pink);font-weight:700">-NT$' + o.discountAmount.toLocaleString() + '</td></tr></tfoot>' : ""}
+            </table>
+          </div>
+
         </div>
       </div>`;
     return card;
