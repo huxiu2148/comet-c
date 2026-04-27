@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260427-31 -->
+  <!-- build:20260424-11 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -6265,7 +6265,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         <div class="oa-header">
           <div class="oa-header-left">
             <div class="oa-campaign">${esc(o.campaignName || o.campaignId)}</div>
-            <div class="oa-user">${esc(o.nickname || o.email)}${o.contact ? ` · ${esc(o.contact)}` : ""}</div>
+            <div class="oa-user">${esc(o.nickname || o.email)}</div>
           </div>
           <div class="oa-header-right">
             <span class="order-status-badge status-${status}">${ORDER_STATUS[status] || status}</span>
@@ -6273,8 +6273,12 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           </div>
         </div>
         <div class="oa-items">${esc(items)}</div>
-        ${o.passport ? `<div class="oa-meta">護照：${esc(o.passport)}</div>` : ""}
-        ${o.returnInfo ? `<div class="oa-meta" style="color:#4caf50">✓ 回傳：${esc(o.returnInfo)}</div>` : ""}
+        <div class="oa-meta-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:6px;font-size:11px;color:var(--text-muted)">
+          ${o.contact ? `<div>📱 ${esc(o.contact)}</div>` : ""}
+          ${o.email ? `<div>✉️ ${esc(o.email)}</div>` : ""}
+          ${o.passport ? `<div>🛂 ${esc(o.passport)}</div>` : ""}
+          ${o.returnInfo ? `<div style="color:#4caf50">📦 ${esc(o.returnInfo)}</div>` : ""}
+        </div>
         <div class="oa-footer">
           <span class="oa-date">${date}</span>
           ${amountDisplay ? `<span class="oa-amount"><span class="oa-amount-currency">NT$</span>${esc(amountDisplay)}</span>` : ""}
@@ -7578,15 +7582,15 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
                            })),
             // 同時保留原始字串（人工核對用，且支援「2228(2575)」這種帶括號的金額）
             itemsText:     o.itemsText    || "",
-            totalPrice:    o.totalPrice   || "",
-            totalAmount:   o.totalNum     || 0,
-            total:         o.totalNum     || 0,
-            // status / paymentStatus 並存（前者是新欄位，後者是訂單列表現在讀的欄位）
+            totalPrice:    o.totalPrice   || "", // 這裡會存入原始文字（如 "2228(2575)"）
+            totalAmount:   o.totalPrice   || "", // 同步存入文字
+            total:         o.totalNum     || 0,  // 數字版留作統計用
+            // status / paymentStatus 並存
             status:        o.status       || "pending",
             paymentStatus: o.status       || "pending",
             checked:       o.status === "paid",
             returnInfo:    o.lastFive     || "",
-            note:          o.contact ? `聯絡方式: ${o.contact}` : "",
+            note:          "", // 聯絡方式已獨立，不再放入備註
             userId:        "imported",
             createdAt:     o.orderDate || serverTimestamp(),
             updatedAt:     serverTimestamp(),
