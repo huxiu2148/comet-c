@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260424-11 -->
+  <!-- build:20260424-12 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2579,12 +2579,19 @@
           <label class="form-label">備注</label>
           <input class="form-input" id="oe-note" type="text" />
         </div>
+        <div class="form-group">
+          <label class="form-label" style="display:flex;justify-content:space-between;align-items:center">
+            <span>📦 商品明細</span>
+            <button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:11px" onclick="addOeItemRow()">＋ 新增商品</button>
+          </label>
+          <div id="oe-items-list" style="display:flex;flex-direction:column;gap:8px;margin-top:4px"></div>
+        </div>
       </div>
       <p class="form-error" id="oe-error"></p>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost btn-sm" onclick="closeOrderEdit()">取消</button>
-      <button class="btn btn-primary btn-sm" onclick="saveOrderEdit()">儲存</button>
+      <button class="btn btn-ghost" onclick="closeOrderEdit()">取消</button>
+      <button class="btn btn-primary" onclick="saveOrderEdit()">儲存</button>
     </div>
   </div>
 </div>
@@ -6291,25 +6298,12 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           </select>
           ${o.paymentType === 3 && status !== "paid" ? `
             <button class="btn btn-primary btn-sm oa-upgrade-btn" data-oid="${o.id}">升級為匯款</button>` : ""}
-          <button class="btn btn-ghost btn-sm oa-detail-btn" data-oid="${o.id}">詳情</button>
           <button class="btn btn-ghost btn-sm oa-edit-btn"   data-oid="${o.id}">編輯</button>
           <button class="btn btn-danger btn-sm oa-del-btn"   data-oid="${o.id}">刪除</button>
-        </div>
-        <div class="oa-detail" id="oa-detail-${o.id}" style="display:none">
-          <div style="font-size:12px;color:var(--text-muted);line-height:1.8">
-            <div>信箱：${esc(o.email || "—")}</div>
-            <div>訂單ID：${esc(o.id)}</div>
-            ${(o.items||[]).map(it => {
-              const specStr = Object.entries(it.specs||{}).filter(([,v])=>v).map(([k,v])=>`${k}:${v}`).join(" ");
-              return `<div>• ${esc(it.name)} ${specStr ? `(${specStr})` : ""} ×${it.qty}${it.subtotal != null ? ` = NT$${Number(it.subtotal).toLocaleString()}` : ""}</div>`;
-            }).join("")}
-            ${o.discountAmount ? `<div style="color:var(--pink)">折扣 -NT$${o.discountAmount.toLocaleString()}</div>` : ""}
-          </div>
         </div>
       </div>`;
     // 事件委派（避免特殊字元破壞 onclick）
     const _oid = o.id;
-    card.querySelector('.oa-detail-btn')?.addEventListener('click',  () => toggleOrderDetail(_oid));
     card.querySelector('.oa-edit-btn')?.addEventListener('click',    () => openOrderEdit(_oid));
     card.querySelector('.oa-del-btn')?.addEventListener('click',     () => deleteOrder(_oid));
     card.querySelector('.oa-upgrade-btn')?.addEventListener('click', () => upgradeToTransfer(_oid));
@@ -6515,12 +6509,34 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   };
 
   // ── 編輯訂單 ─────────────────────────────────────────────────
+  let oeItemRows = [];
+  window.addOeItemRow = function(data) {
+    const id = Date.now() + Math.floor(Math.random() * 1000);
+    oeItemRows.push(id);
+    const list = document.getElementById("oe-items-list");
+    const div = document.createElement("div");
+    div.id = `oe-item-row-${id}`;
+    div.style = "display:grid;grid-template-columns:1fr 1fr 60px 30px;gap:6px;align-items:center";
+    div.innerHTML = `
+      <input class="form-input" type="text" id="oe-i-name-${id}" placeholder="商品" value="${esc(data?.name || '')}" style="font-size:12px" />
+      <input class="form-input" type="text" id="oe-i-spec-${id}" placeholder="規格" value="${esc(data?.specSummary || '')}" style="font-size:12px" />
+      <input class="form-input" type="number" id="oe-i-qty-${id}" placeholder="數量" value="${data?.qty || 1}" style="font-size:12px" />
+      <button class="product-remove" type="button" onclick="removeOeItemRow(${id})" style="padding:0;width:24px;height:24px">✕</button>`;
+    list.appendChild(div);
+  };
+  window.removeOeItemRow = function(id) {
+    oeItemRows = oeItemRows.filter(r => r !== id);
+    document.getElementById(`oe-item-row-${id}`)?.remove();
+  };
+
   window.openOrderEdit = async function(orderId) {
     document.getElementById("modal-order-edit").style.display = "flex";
     document.getElementById("oe-id").textContent = orderId;
     document.getElementById("oe-error").textContent = "";
     document.getElementById("oe-loading").style.display = "block";
     document.getElementById("oe-form").style.display = "none";
+    document.getElementById("oe-items-list").innerHTML = "";
+    oeItemRows = [];
     try {
       const snap = await getDoc(doc(db, "orders", orderId));
       if (!snap.exists()) return;
@@ -6528,10 +6544,23 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       document.getElementById("oe-nickname").value  = d.nickname || d.buyerName || "";
       document.getElementById("oe-contact").value   = d.contact  || "";
       document.getElementById("oe-email").value     = d.email    || "";
-      document.getElementById("oe-total").value     = d.total    || d.amount || "";
-      document.getElementById("oe-status").value    = d.status   || "pending";
+      
+      // 金額保留文字
+      const rawTotal = d.totalPrice ?? d.totalAmount ?? d.total ?? "";
+      document.getElementById("oe-total").type = "text"; // 改為 text 以支援括號
+      document.getElementById("oe-total").value = rawTotal;
+      
+      document.getElementById("oe-status").value    = d.status   || d.paymentStatus || "pending";
       document.getElementById("oe-return").value    = d.returnInfo || d.lastFive || "";
       document.getElementById("oe-note").value      = d.note     || "";
+      
+      if (d.items && d.items.length) {
+        d.items.forEach(it => addOeItemRow(it));
+      } else if (d.itemsText) {
+        // 如果沒有結構化資料，嘗試解析 itemsText (簡單處理)
+        addOeItemRow({ name: d.itemsText, qty: 1 });
+      }
+
       document.getElementById("oe-loading").style.display = "none";
       document.getElementById("oe-form").style.display    = "block";
     } catch(e) {
@@ -6543,15 +6572,29 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   window.saveOrderEdit = async function() {
     const id     = document.getElementById("oe-id").textContent;
     const errEl  = document.getElementById("oe-error");
+    
+    const items = oeItemRows.map(rid => {
+      const name = document.getElementById(`oe-i-name-${rid}`).value.trim();
+      const spec = document.getElementById(`oe-i-spec-${rid}`).value.trim();
+      const qty  = parseInt(document.getElementById(`oe-i-qty-${rid}`).value) || 1;
+      return { name, specSummary: spec, qty, specs: spec ? { "規格": spec } : {} };
+    }).filter(it => it.name);
+
+    const itemsText = items.map(it => `${it.name}${it.specSummary ? `(${it.specSummary})` : ""} x${it.qty}`).join("、");
+
     try {
       await updateDoc(doc(db, "orders", id), {
-        nickname:   document.getElementById("oe-nickname").value.trim(),
-        contact:    document.getElementById("oe-contact").value.trim(),
-        email:      document.getElementById("oe-email").value.trim(),
-        total:      parseFloat(document.getElementById("oe-total").value) || 0,
-        status:     document.getElementById("oe-status").value,
-        returnInfo: document.getElementById("oe-return").value.trim(),
-        note:       document.getElementById("oe-note").value.trim(),
+        nickname:      document.getElementById("oe-nickname").value.trim(),
+        contact:       document.getElementById("oe-contact").value.trim(),
+        email:         document.getElementById("oe-email").value.trim(),
+        totalPrice:    document.getElementById("oe-total").value.trim(),
+        totalAmount:   document.getElementById("oe-total").value.trim(),
+        status:        document.getElementById("oe-status").value,
+        paymentStatus: document.getElementById("oe-status").value,
+        returnInfo:    document.getElementById("oe-return").value.trim(),
+        note:          document.getElementById("oe-note").value.trim(),
+        items:         items,
+        itemsText:     itemsText
       });
       document.getElementById("modal-order-edit").style.display = "none";
       await loadAdminOrders();
