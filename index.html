@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260427-30 -->
+  <!-- build:20260427-31 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2983,7 +2983,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260427-30 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260427-31 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -6067,7 +6067,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 <script type="module">
   import { db } from "./auth.js";
   import {
-    collection, doc, updateDoc, deleteDoc, getDoc, getDocs, setDoc,
+    collection, doc, updateDoc, deleteDoc, getDoc, getDocs, setDoc, addDoc,
     query, orderBy, where, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -7252,43 +7252,51 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   window.confirmOrderImport = async function() {
     if (!pendingOrderImports.length) return;
-    const btn = document.getElementById("btn-confirm-order-import");
+    const btn   = document.getElementById("btn-confirm-order-import");
     const errEl = document.getElementById("order-import-error");
     btn.disabled = true;
-    btn.textContent = "匯入中...";
     errEl.textContent = "";
 
     let ok = 0, fail = 0;
+    const BATCH = 20; // 每批 20 筆，避免 WebChannel 超時
+    const total = pendingOrderImports.length;
+
     try {
-      const { collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-      
-      for (const o of pendingOrderImports) {
-        try {
-          await addDoc(collection(db, "orders"), {
-            campaignId: o.campaignId,
-            buyerName:  o.buyerName,
-            itemsText:  o.itemsText,
-            totalPrice: o.totalPrice,
-            status:     o.status || "pending",
-            note:       o.note,
-            createdAt:  o.orderDate || serverTimestamp(),
-            updatedAt:  serverTimestamp(),
-            source:     "import"
-          });
-          ok++;
-        } catch (e) {
-          fail++;
-          console.error("Import order fail:", e);
-        }
+      for (let i = 0; i < total; i += BATCH) {
+        const chunk = pendingOrderImports.slice(i, i + BATCH);
+        btn.textContent = `匯入中... ${Math.min(i + BATCH, total)}/${total}`;
+
+        await Promise.all(chunk.map(o =>
+          addDoc(collection(db, "orders"), {
+            campaignId:   o.campaignId   || "",
+            campaignName: o.campaignName || "",
+            nickname:     o.buyerName    || "",
+            contact:      o.contact      || "",
+            email:        o.email        || "",
+            itemsText:    o.itemsText    || "",
+            totalPrice:   o.totalPrice   || "",
+            status:       o.status       || "pending",
+            returnInfo:   o.lastFive     || "",
+            note:         o.note         || "",
+            userId:       "imported",
+            createdAt:    o.orderDate    || serverTimestamp(),
+            updatedAt:    serverTimestamp(),
+            source:       "import",
+          }).then(() => ok++).catch(e => { fail++; console.error("匯入失敗:", e.message); })
+        ));
+
+        // 批次間稍作等待，避免連線過載
+        if (i + BATCH < total) await new Promise(r => setTimeout(r, 300));
       }
+
       alert(`✅ 匯入完成！成功 ${ok} 筆${fail ? `，失敗 ${fail} 筆` : ""}`);
       closeOrderImportModal();
-      if (window.loadAdminOrders) window.loadAdminOrders();
-    } catch (e) {
+      window.loadAdminOrders?.();
+    } catch(e) {
       errEl.textContent = "匯入過程發生錯誤：" + e.message;
     } finally {
       btn.disabled = false;
-      btn.textContent = `確認匯入 (${pendingOrderImports.length})`;
+      btn.textContent = `確認匯入 (${total})`;
     }
   };
 
