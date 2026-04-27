@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260427-27 -->
+  <!-- build:20260427-28 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2389,8 +2389,6 @@
               <option value="paid">已付款</option>
               <option value="cancelled">已取消</option>
             </select>
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('order-import-file').click()">📤 批次匯入</button>
-            <input type="file" id="order-import-file" accept=".xlsx,.csv" style="display:none" onchange="importOrders(this)" />
             <button class="btn btn-primary btn-sm" onclick="exportOrders()">匯出 CSV</button>
           </div>
         </div>
@@ -2920,7 +2918,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260427-27 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260427-28 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -6235,7 +6233,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "campaign_template.csv";
+    a.download = "campaign_template.csv"; // 也支援直接上傳 xlsx
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -7023,15 +7021,19 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       // 預期格式：訂單時間、團務 ID、團務名稱、LINE 暱稱、聯絡方式、訂購明細、總金額、對帳狀態、使用者填寫Email、末五碼/貨運單號
       const dataRows = allRows.slice(looksLikeHeader(allRows[0]) ? 1 : 0);
       pendingOrderImports = dataRows.map(row => {
-        const orderDate = parseImportedDate(row[0]) || new Date();
-        const campaignId = String(row[1] || "").trim();
-        const buyerName = String(row[3] || "").trim(); // LINE 暱稱
-        const contact = String(row[4] || "").trim();
-        const itemsText = String(row[5] || "").trim();
-        const totalPrice = parseFloat(String(row[6] || "").replace(/[^\d.]/g, "")) || 0;
-        const payStatus = String(row[7] || "").trim();
-        const email = String(row[8] || "").trim();
-        const lastFive = String(row[9] || "").trim();
+        // 欄位順序對應 xlsx 範本：
+        // A:訂單時間 B:團務ID C:團務名稱 D:社群暱稱 E:聯絡方式 F:Email
+        // G:訂購明細 H:總金額 I:付款狀態 J:回傳資訊
+        const orderDate   = parseImportedDate(row[0]) || new Date();
+        const campaignId  = String(row[1] || "").trim();
+        const campaignName = String(row[2] || "").trim();
+        const buyerName   = String(row[3] || "").trim();
+        const contact     = String(row[4] || "").trim();
+        const email       = String(row[5] || "").trim();
+        const itemsText   = String(row[6] || "").trim();
+        const totalPrice  = parseFloat(String(row[7] || "").replace(/[^\d.]/g, "")) || 0;
+        const payStatus   = String(row[8] || "").trim();
+        const lastFive    = String(row[9] || "").trim();
 
         // 狀態對應
         let status = "pending";
