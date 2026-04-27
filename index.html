@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260427-32 -->
+  <!-- build:20260427-33 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2791,6 +2791,16 @@
         <span class="fee-hint">開團時規格輸入「分成員」會自動帶入此清單</span>
       </div>
 
+      <!-- 小分隊 -->
+      <div class="form-group">
+        <label class="form-label">小分隊
+          <span class="fee-hint" style="font-weight:400">（開團規格輸入「分成員」後可快速選分隊）</span>
+        </label>
+        <div id="subgroup-list" style="display:flex;flex-direction:column;gap:8px"></div>
+        <button class="btn-add-spec-option" type="button" onclick="addSubgroupInput()"
+                style="margin-top:4px">＋ 新增小分隊</button>
+      </div>
+
       <p class="form-error" id="group-form-error"></p>
     </div>
     <div class="modal-footer">
@@ -3146,7 +3156,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260427-32 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260427-33 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -3239,11 +3249,61 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
 <!-- ── 團體管理邏輯 ── -->
 <script type="module">
-  import { db } from "./auth.js";
-  import {
-    collection, doc, addDoc, updateDoc, getDocs, deleteDoc,
-    serverTimestamp, query, orderBy
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  i
+
+  // ── 小分隊管理 ──────────────────────────────────────────────
+  function renderSubgroupList() {
+    const container = document.getElementById("subgroup-list");
+    if (!container) return;
+    container.innerHTML = "";
+    (window._openGroupSubgroups || []).forEach((sg, i) => {
+      const div = document.createElement("div");
+      div.className = "subgroup-row";
+      div.style.cssText = "border:1.5px solid var(--border);border-radius:8px;padding:10px;background:#fff8fb;";
+      const memberCheckboxes = (window._openGroupMembers||[]).map((m, mi) => {
+        const isChecked = (sg.memberNames||[]).includes(m.display);
+        return `<label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;padding:3px 8px;border-radius:12px;margin:2px;background:${isChecked?'var(--pink)':'#f0f0f0'};color:${isChecked?'#fff':'inherit'}" id="sgl-${i}-${mi}">
+          <input type="checkbox" ${isChecked?"checked":""} style="display:none"
+            onchange="window.toggleSubgroupMember(${i},${mi},this.checked,document.getElementById('sgl-${i}-${mi}'))">
+          ${m.display.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+        </label>`;
+      }).join("");
+      div.innerHTML = `
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <input class="form-input" style="flex:1;font-size:13px" value="${(sg.name||"").replace(/"/g,'&quot;')}"
+            placeholder="分隊名稱（如：NCT WISH）"
+            oninput="window._openGroupSubgroups[${i}].name=this.value" />
+          <button class="btn btn-danger btn-sm" onclick="window.removeSubgroup(${i})">✕</button>
+        </div>
+        <div style="display:flex;flex-wrap:wrap">${memberCheckboxes||"<span style='font-size:12px;color:var(--text-muted)'>請先新增成員</span>"}</div>`;
+      container.appendChild(div);
+    });
+  }
+
+  window.addSubgroupInput = function() {
+    if (!window._openGroupSubgroups) window._openGroupSubgroups = [];
+    window._openGroupSubgroups.push({ name: "", memberNames: [] });
+    renderSubgroupList();
+  };
+
+  window.removeSubgroup = function(i) {
+    window._openGroupSubgroups.splice(i, 1);
+    renderSubgroupList();
+  };
+
+  window.toggleSubgroupMember = function(sgi, mi, checked, labelEl) {
+    const sg = window._openGroupSubgroups[sgi];
+    const name = (window._openGroupMembers[mi]||{}).display;
+    if (!name) return;
+    if (!sg.memberNames) sg.memberNames = [];
+    if (checked) {
+      if (!sg.memberNames.includes(name)) sg.memberNames.push(name);
+      if (labelEl) { labelEl.style.background="var(--pink)"; labelEl.style.color="#fff"; }
+    } else {
+      sg.memberNames = sg.memberNames.filter(n=>n!==name);
+      if (labelEl) { labelEl.style.background="#f0f0f0"; labelEl.style.color="inherit"; }
+    }
+  };
 
   window.switchAdminSection = function(section) {
     document.querySelectorAll(".subnav-btn").forEach(btn => {
@@ -3318,7 +3378,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       </div>
 
       <div class="group-card-actions">
-        <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${id}" data-name="${esc(data.name)}" data-colors="${colorsJson}" data-abbr="${esc(data.abbr || '')}" data-members="${JSON.stringify(data.members || []).replace(/"/g,'&quot;')}" data-aliases="${JSON.stringify(data.aliases || []).replace(/"/g,'&quot;')}">編輯</button>
+        <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${id}" data-name="${esc(data.name)}" data-colors="${colorsJson}" data-abbr="${esc(data.abbr || '')}" data-members="${JSON.stringify(data.members || []).replace(/"/g,'&quot;')}" data-aliases="${JSON.stringify(data.aliases || []).replace(/"/g,'&quot;')}" data-subgroups="${JSON.stringify(data.subgroups || []).replace(/"/g,'&quot;')}">編輯</button>
         <button class="btn btn-danger btn-sm" onclick="deleteGroup('${id}','${esc(data.name)}')">刪除</button>
       </div>`;
     // 綁定編輯按鈕（避免 onclick 字串中帶陣列出錯）
@@ -3328,7 +3388,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       let members = [], aliases = [];
       try { members = JSON.parse(btn.dataset.members.replace(/&quot;/g, '"')); } catch {}
       try { aliases = JSON.parse(btn.dataset.aliases.replace(/&quot;/g, '"')); } catch {}
-      openGroupModal(btn.dataset.id, btn.dataset.name, colors, btn.dataset.abbr || "", members, aliases);
+      let subgroups = [];
+      try { subgroups = JSON.parse((btn.dataset.subgroups||"[]").replace(/&quot;/g, '"')); } catch {}
+      openGroupModal(btn.dataset.id, btn.dataset.name, colors, btn.dataset.abbr || "", members, aliases, subgroups);
     });
     return card;
   }
@@ -3412,6 +3474,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     window._openGroupMembers = Array.isArray(members)
       ? members.map(m => typeof m === "string" ? { display: m, aliases: [] } : m)
       : [];
+    window._openGroupSubgroups = [];
     // 顯示 Modal
     document.getElementById("modal-group-title").textContent = id ? "編輯團體" : "新增團體";
     (function(){const _el=document.getElementById("modal-group");if(_el)_el.style.display="flex";})();
@@ -3466,10 +3529,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     if (!colors.length) { errEl.textContent = "請至少設一個顏色"; return; }
     btn.disabled = true; btn.textContent = "儲存中..."; errEl.textContent = "";
     try {
+      const subgroups = (window._openGroupSubgroups || []).filter(sg => sg.name);
       if (editingGroupId) {
-        await updateDoc(doc(db, "groups", editingGroupId), { name, abbr, aliases, colors, color, members });
+        await updateDoc(doc(db, "groups", editingGroupId), { name, abbr, aliases, colors, color, members, subgroups });
       } else {
-        await addDoc(collection(db, "groups"), { name, abbr, aliases, colors, color, members, createdAt: serverTimestamp() });
+        await addDoc(collection(db, "groups"), { name, abbr, aliases, colors, color, members, subgroups, createdAt: serverTimestamp() });
       }
       (function(){const _el=document.getElementById("modal-group");if(_el)_el.style.display="none";})();
       editingGroupId = null;
@@ -3819,12 +3883,29 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       if (!stored[productId]) stored[productId] = new Set(memberDisplays); // 預設全選
       window._productMemberSel = stored;
       const sel = stored[productId];
+      // 取得小分隊資料
+      const subgroups = group?.subgroups || [];
+      const subgroupBtns = subgroups.length ? `
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+          <span style="font-size:11px;color:var(--text-muted);align-self:center">快選分隊：</span>
+          <button type="button" class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 10px"
+            onclick="selectSubgroup(${productId}, null, ${JSON.stringify(memberDisplays)})">全部</button>
+          ${subgroups.map((sg,si) => `
+            <button type="button" class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 10px"
+              onclick="selectSubgroup(${productId}, ${si}, ${JSON.stringify(memberDisplays)})">
+              ${esc(sg.name)}
+            </button>`).join("")}
+          <button type="button" class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 10px"
+            onclick="selectSubgroup(${productId}, 'none', ${JSON.stringify(memberDisplays)})">清除</button>
+        </div>` : "";
+
       preview.innerHTML = `
         <div style="width:100%">
           <div style="font-size:12px;font-weight:700;color:var(--pink);margin-bottom:6px">
             此商品可選的成員（預設全選）：
           </div>
-          <div class="member-check-grid">
+          ${subgroupBtns}
+          <div class="member-check-grid" id="mcheck-${productId}">
             ${memberDisplays.map(m => `
               <label class="member-check-item" style="${sel.has(m) ? 'background:#fff0f7;border-color:var(--pink)' : ''}">
                 <input type="checkbox" value="${esc(m)}"
@@ -3834,7 +3915,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
                 <span style="font-size:12px">${esc(m)}</span>
               </label>`).join("")}
           </div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px" id="mcount-${productId}">
             已選 ${sel.size} / ${memberDisplays.length} 位成員
           </div>
         </div>`;
@@ -3859,6 +3940,47 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     if (checked) sel.add(member); else sel.delete(member);
     // 更新「已選 N / M」顯示
     updateSpecPreview(productId);
+  };
+
+  // ── 分隊快選 ────────────────────────────────────────────────
+  window.selectSubgroup = function(productId, subgroupIdx, allMembers) {
+    const stored = window._productMemberSel || {};
+    if (!stored[productId]) stored[productId] = new Set();
+    const sel = stored[productId];
+
+    if (subgroupIdx === 'none') {
+      sel.clear();
+    } else if (subgroupIdx === null) {
+      // 全選
+      allMembers.forEach(m => sel.add(m));
+    } else {
+      // 選指定分隊
+      const groupId = document.getElementById("c-group")?.value;
+      const group = groupsCache.find(g => g.id === groupId);
+      const sg = group?.subgroups?.[subgroupIdx];
+      if (!sg) return;
+      sel.clear();
+      (sg.memberNames || []).forEach(m => sel.add(m));
+    }
+
+    window._productMemberSel = stored;
+
+    // 更新 checkbox UI
+    const grid = document.getElementById(`mcheck-${productId}`);
+    if (grid) {
+      grid.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        const m = cb.value;
+        const checked = sel.has(m);
+        cb.checked = checked;
+        const label = cb.parentElement;
+        if (label) {
+          label.style.background = checked ? '#fff0f7' : '';
+          label.style.borderColor = checked ? 'var(--pink)' : '';
+        }
+      });
+    }
+    const countEl = document.getElementById(`mcount-${productId}`);
+    if (countEl) countEl.textContent = `已選 ${sel.size} / ${allMembers.length} 位成員`;
   };
 
   function esc(s) {
