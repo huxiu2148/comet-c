@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260427-35 -->
+  <!-- build:20260427-36 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3164,7 +3164,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260427-35 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260427-36 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -3883,6 +3883,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const group = groupsCache.find(g => g.id === groupId);
     const allMembers = group?.members || [];
     const isMemberSpec = text.includes("成員") || text.toLowerCase().includes("member");
+    console.log('[spec] groupId:', groupId, 'group:', group?.name, 'members:', allMembers.length, 'subgroups:', group?.subgroups?.length, 'isMember:', isMemberSpec);
 
     if (isMemberSpec && allMembers.length > 0) {
       // 分成員：顯示勾選 UI，讓管理者選這個商品有哪些成員可選
@@ -4010,6 +4011,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const group = groupsCache.find(g => g.id === groupId);
     const allMembers = group?.members || [];
     const isMemberSpec = text.includes("成員") || text.toLowerCase().includes("member");
+    console.log('[spec] groupId:', groupId, 'group:', group?.name, 'members:', allMembers.length, 'subgroups:', group?.subgroups?.length, 'isMember:', isMemberSpec);
 
     if (isMemberSpec && allMembers.length > 0) {
       // 用勾選的成員（若沒有設定就預設全部）
