@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-57 -->
+  <!-- build:20260428-58 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3037,7 +3037,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-57 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-58 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -8960,7 +8960,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         if (o.items && o.items.length) {
           o.items.forEach(it => {
             const specs = it.specs || {};
-            const specStr = it.specStr || Object.entries(specs).filter(([,v])=>v).map(([k,v])=>`${k}:${v}`).join(" ");
+            const specStr = it.specStr || Object.entries(specs).filter(([,v])=>v).map(([,v])=>v).join(", ");
             const k = itemKey(it.name, specs);
             if (!summary[k]) summary[k] = { name: it.name, specs, specStr, total: 0, unitPrice: it.price||0 };
             summary[k].total += (it.qty||1);
@@ -9003,10 +9003,10 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           <div style="display:flex;flex-wrap:wrap;gap:6px">
             ${summaryKeys.map(k => {
               const v = remaining[k];
-              const label = v.specStr ? `${v.name} ${v.specStr}` : v.name;
-              return `<button class="btn btn-ghost btn-sm" style="font-size:11px"
-                onclick="quickAddPuItem('${campaignId}','${k.replace(/'/g,"&#39;")}')"
-                id="pu-quick-${campaignId}-${encodeURIComponent(k).slice(0,20)}">
+              const label = v.specStr ? `${v.name} [${v.specStr}]` : v.name;
+              const safeKey = btoa(unescape(encodeURIComponent(k))).replace(/=/g,'');
+              return `<button class="btn btn-ghost btn-sm pu-quick-btn" style="font-size:11px"
+                data-cid="${esc(campaignId)}" data-key="${safeKey}">
                 ${esc(label)} <span style="opacity:.6">(${v.remaining}/${v.total})</span>
               </button>`;
             }).join("")}
@@ -9080,6 +9080,16 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
     // 載入平台和集運倉
     loadInlineSelects(campaignId);
+
+    // 事件委派處理快速按鈕（避免 onclick 字串含特殊字元）
+    const quickContainer = container.querySelector(".pu-inline-form");
+    if (quickContainer) {
+      quickContainer.addEventListener("click", e => {
+        const btn = e.target.closest(".pu-quick-btn");
+        if (!btn) return;
+        window.quickAddPuItem(btn.dataset.cid, btn.dataset.key);
+      });
+    }
   }
 
   async function loadInlineSelects(campaignId) {
@@ -9107,7 +9117,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   };
 
   // 快速點按帶入商品
-  window.quickAddPuItem = function(campaignId, key) {
+  window.quickAddPuItem = function(campaignId, encodedKey) {
+    // encodedKey 是 base64，解碼回原始 key
+    let key;
+    try { key = decodeURIComponent(escape(atob(encodedKey))); }
+    catch(e) { key = encodedKey; }
     const summary = _inlineOrderSummary[campaignId]||{};
     const v = summary[key];
     if (!v) return;
