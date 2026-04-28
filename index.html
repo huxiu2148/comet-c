@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-61 -->
+  <!-- build:20260428-62 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2744,6 +2744,35 @@
         </div>
       </div>
 
+      <!-- 記帳 -->
+      <div class="admin-section" id="section-finance">
+        <div class="section-header">
+          <h2 class="section-title">💰 記帳</h2>
+          <button class="btn btn-ghost btn-sm" onclick="initFinanceV2()">↻ 重新整理</button>
+        </div>
+        <div id="finance-v2-content">
+          <div class="loading-row">載入中...</div>
+        </div>
+      </div>
+
+      <!-- 會員管理 -->
+      <div class="admin-section" id="section-members">
+        <div class="section-header">
+          <h2 class="section-title">👤 會員管理</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="downloadMemberTemplate()">⬇ 下載範本</button>
+            <button class="btn btn-ghost btn-sm" onclick="openBatchMemberModal()">📋 批次匯入（文字）</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('member-xlsx-file').click()">📤 xlsx 匯入</button>
+            <input type="file" id="member-xlsx-file" accept=".xlsx,.csv" style="display:none" onchange="importMembersXlsx(this)" />
+            <button class="btn btn-ghost btn-sm" id="btn-member-select" onclick="toggleMemberSelectMode()">☐ 全選</button>
+            <button class="btn btn-danger btn-sm" id="btn-member-delete" style="display:none" onclick="deleteSelectedMembers()">🗑 刪除所選</button>
+            <button class="btn btn-primary btn-sm" onclick="openMemberModal()">＋ 新增會員</button>
+          </div>
+        </div>
+        <div id="member-dup-notice" style="display:none;background:#fff3cd;border:1.5px solid #ffc107;border-radius:8px;padding:8px 14px;font-size:12px;margin-bottom:10px;color:#856404"></div>
+        <div id="members-list" class="members-grid"></div>
+      </div>
+
 <!-- 下單管理 Modal -->
 <div class="modal-backdrop" id="modal-purchase" style="display:none" onclick="closePurchaseModal(event)">
   <div class="modal" style="max-width:520px">
@@ -2831,36 +2860,6 @@
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" onclick="closePurchaseModal()">取消</button>
       <button class="btn btn-primary btn-sm" onclick="savePurchase()">儲存</button>
-
-
-      <!-- 記帳 -->
-      <div class="admin-section" id="section-finance">
-        <div class="section-header">
-          <h2 class="section-title">💰 記帳</h2>
-          <button class="btn btn-ghost btn-sm" onclick="initFinanceV2()">↻ 重新整理</button>
-        </div>
-        <div id="finance-v2-content">
-          <div class="loading-row">載入中...</div>
-        </div>
-      </div>
-
-      <!-- 會員管理 -->
-      <div class="admin-section" id="section-members">
-        <div class="section-header">
-          <h2 class="section-title">👤 會員管理</h2>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-ghost btn-sm" onclick="downloadMemberTemplate()">⬇ 下載範本</button>
-            <button class="btn btn-ghost btn-sm" onclick="openBatchMemberModal()">📋 批次匯入（文字）</button>
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('member-xlsx-file').click()">📤 xlsx 匯入</button>
-            <input type="file" id="member-xlsx-file" accept=".xlsx,.csv" style="display:none" onchange="importMembersXlsx(this)" />
-            <button class="btn btn-ghost btn-sm" id="btn-member-select" onclick="toggleMemberSelectMode()">☐ 全選</button>
-            <button class="btn btn-danger btn-sm" id="btn-member-delete" style="display:none" onclick="deleteSelectedMembers()">🗑 刪除所選</button>
-            <button class="btn btn-primary btn-sm" onclick="openMemberModal()">＋ 新增會員</button>
-          </div>
-        </div>
-        <div id="member-dup-notice" style="display:none;background:#fff3cd;border:1.5px solid #ffc107;border-radius:8px;padding:8px 14px;font-size:12px;margin-bottom:10px;color:#856404"></div>
-        <div id="members-list" class="members-grid"></div>
-      </div>
     </div>
   </div>
 </div>
@@ -3088,7 +3087,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-61 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-62 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -6333,7 +6332,6 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   }
 </script>
-
 
 <!-- 購買平台管理 Modal -->
 <div class="modal-backdrop" id="modal-platform-mgr" style="display:none" onclick="closePlatformManager(event)">
