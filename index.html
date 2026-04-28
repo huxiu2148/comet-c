@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-41 -->
+  <!-- build:20260428-43 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -283,6 +283,8 @@
     .shipping-table tr:last-child td { border-bottom: none; }
     .shipping-table tr:hover td { background: #fff8fb; }
     .st-name  { font-weight: 700; white-space: nowrap; min-width: 80px; }
+    .shipping-table th, .shipping-table td { white-space: nowrap; }
+    .st-items { color: var(--text-muted); min-width: 160px; white-space: normal !important; line-height: 1.6; }
     .st-items { color: var(--text-muted); max-width: 220px; line-height: 1.6; }
     .st-paid  { color: #4caf50; font-weight: 700; white-space: nowrap; }
     .st-remain { display: flex; align-items: center; gap: 6px; }
@@ -2682,7 +2684,10 @@
       <div class="admin-section" id="section-purchase">
         <div class="section-header">
           <h2 class="section-title">🛒 採購記錄</h2>
-          <button class="btn btn-primary btn-sm" onclick="openNewPurchaseModal()">＋ 新增採購</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="openPlatformManager()">⚙ 管理平台</button>
+            <button class="btn btn-primary btn-sm" onclick="openNewPurchaseModal()">＋ 新增採購</button>
+          </div>
         </div>
         <!-- 主列表：按團務展開 -->
         <div id="purchase-campaign-list"></div>
@@ -2807,16 +2812,6 @@
         <span class="fee-hint">開團時規格輸入「分成員」會自動帶入此清單</span>
       </div>
 
-      <!-- 常用購買平台 -->
-      <div class="form-group">
-        <label class="form-label">常用購買平台
-          <span class="fee-hint">（採購記錄的「在哪購買」下拉選單來源，每行一個）</span>
-        </label>
-        <textarea class="form-input" id="input-group-platforms" rows="3"
-          style="font-size:13px;resize:vertical"
-          placeholder="SM Official Shop&#10;Weverse Shop&#10;代購平台"></textarea>
-      </div>
-
       <!-- 小分隊 -->
       <div class="form-group">
         <label class="form-label">小分隊
@@ -2868,6 +2863,29 @@
 
 
 
+
+
+<!-- 購買平台管理 Modal -->
+<div class="modal-backdrop" id="modal-platform-mgr" style="display:none" onclick="closePlatformManager(event)">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <h3 class="modal-title">⚙ 管理購買平台</h3>
+      <button class="modal-close" onclick="closePlatformManager()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fee-hint" style="margin-bottom:8px">新增常用購買平台，會顯示在採購記錄的「購買平台」下拉選單</div>
+      <div id="platform-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px">
+        <input class="form-input" id="new-platform-input" type="text" placeholder="輸入平台名稱" style="flex:1"
+          onkeydown="if(event.key==='Enter')addPlatformItem()" />
+        <button class="btn btn-primary btn-sm" onclick="addPlatformItem()">新增</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closePlatformManager()">關閉</button>
+    </div>
+  </div>
+</div>
 
 <!-- 新採購記錄 Modal -->
 <div class="modal-backdrop" id="modal-new-purchase" style="display:none" onclick="closeNewPurchaseModal(event)">
@@ -3304,7 +3322,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-41 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-43 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -3618,7 +3636,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     updateColorPreview();
   };
 
-  window.openGroupModal = function(id=null, name="", colors=null, abbr="", members=[], aliases=[], subgroups=[], platforms=[]) {
+  window.openGroupModal = function(id=null, name="", colors=null, abbr="", members=[], aliases=[], subgroups=[]) {
     editingGroupId = id;
     // 先設資料
     if (typeof colors === "string" && colors) groupColors = [colors];
@@ -3629,9 +3647,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       ? members.map(m => typeof m === "string" ? { display: m, aliases: [] } : m)
       : [];
     window._openGroupSubgroups = [];
-    // 載入常用購買平台
-    const platformsEl = document.getElementById("input-group-platforms");
-    if (platformsEl) platformsEl.value = Array.isArray(platforms) ? platforms.join("\n") : (platforms || "");
+
     // 顯示 Modal
     document.getElementById("modal-group-title").textContent = id ? "編輯團體" : "新增團體";
     (function(){const _el=document.getElementById("modal-group");if(_el)_el.style.display="flex";})();
@@ -3686,13 +3702,12 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     if (!colors.length) { errEl.textContent = "請至少設一個顏色"; return; }
     btn.disabled = true; btn.textContent = "儲存中..."; errEl.textContent = "";
     try {
-      const platformsRaw = document.getElementById("input-group-platforms")?.value || "";
-      const platforms = platformsRaw.split("\n").map(p=>p.trim()).filter(p=>p);
+
       const subgroups = (window._openGroupSubgroups || []).filter(sg => sg.name);
       if (editingGroupId) {
-        await updateDoc(doc(db, "groups", editingGroupId), { name, abbr, aliases, colors, color, members, subgroups, platforms });
+        await updateDoc(doc(db, "groups", editingGroupId), { name, abbr, aliases, colors, color, members, subgroups });
       } else {
-        await addDoc(collection(db, "groups"), { name, abbr, aliases, colors, color, members, subgroups, platforms, createdAt: serverTimestamp() });
+        await addDoc(collection(db, "groups"), { name, abbr, aliases, colors, color, members, subgroups, createdAt: serverTimestamp() });
       }
       (function(){const _el=document.getElementById("modal-group");if(_el)_el.style.display="none";})();
       editingGroupId = null;
@@ -8799,15 +8814,12 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       const paidStr   = o.paidAmount   || (o.status === "paid" ? rawTotalStr : "") || "";
       const remainStr = o.remainAmount || (o.status !== "paid" ? rawTotalStr : "") || "";
 
-      // 商品明細（完整展示）
+      // 商品明細：優先用原始 itemsText（原封不動），沒有才用 items 陣列
       const itemsDetail = (() => {
-        if (o.items && o.items.length) {
-          return o.items.map(it => {
-            const spec = it.specStr || Object.entries(it.specs||{}).filter(([,v])=>v).map(([k,v])=>`${k}:${v}`).join(" ");
-            return `${it.name}${spec?` (${spec})`:""}×${it.qty||1}`;
-          }).join("<br>");
-        }
         if (o.itemsText) return String(o.itemsText).replace(/\n/g,"<br>");
+        if (o.items && o.items.length) {
+          return o.items.map(it => `${it.name}×${it.qty||1}`).join("<br>");
+        }
         return "—";
       })();
 
@@ -9065,6 +9077,81 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     if (e.detail === "purchase") loadPurchaseCampaigns();
   });
 
+  // ── 購買平台管理 ──────────────────────────────────────────────
+  let _platforms = [];
+
+  async function loadPlatforms() {
+    try {
+      const snap = await getDocs(collection(db, "purchasePlatforms"));
+      _platforms = [];
+      snap.forEach(d => _platforms.push({ id: d.id, name: d.data().name }));
+      _platforms.sort((a,b) => a.name.localeCompare(b.name));
+    } catch(e) { console.warn("平台載入失敗", e); }
+  }
+
+  window.openPlatformManager = async function() {
+    await loadPlatforms();
+    renderPlatformList();
+    document.getElementById("modal-platform-mgr").style.display = "flex";
+    document.getElementById("new-platform-input").value = "";
+  };
+
+  window.closePlatformManager = function(e) {
+    if (e && e.target !== document.getElementById("modal-platform-mgr")) return;
+    document.getElementById("modal-platform-mgr").style.display = "none";
+    // 重新填充採購 Modal 的平台選單
+    refreshPlatformSelect();
+  };
+
+  function renderPlatformList() {
+    const listEl = document.getElementById("platform-list");
+    if (!listEl) return;
+    if (!_platforms.length) {
+      listEl.innerHTML = '<div style="font-size:12px;color:var(--text-muted)">尚無平台，請新增</div>';
+      return;
+    }
+    listEl.innerHTML = _platforms.map(p => `
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#fff8fb;border-radius:8px">
+        <span style="flex:1;font-size:13px">${esc(p.name)}</span>
+        <button class="btn btn-danger btn-sm" style="padding:3px 8px" onclick="deletePlatform('${p.id}','${esc(p.name)}')">✕</button>
+      </div>`).join("");
+  }
+
+  window.addPlatformItem = async function() {
+    const input = document.getElementById("new-platform-input");
+    const name = input?.value.trim();
+    if (!name) return;
+    try {
+      await addDoc(collection(db, "purchasePlatforms"), { name, createdAt: serverTimestamp() });
+      input.value = "";
+      await loadPlatforms();
+      renderPlatformList();
+    } catch(e) { alert("新增失敗：" + e.message); }
+  };
+
+  window.deletePlatform = async function(id, name) {
+    if (!confirm(`確定刪除「${name}」？`)) return;
+    try {
+      await deleteDoc(doc(db, "purchasePlatforms", id));
+      await loadPlatforms();
+      renderPlatformList();
+    } catch(e) { alert("刪除失敗：" + e.message); }
+  };
+
+  async function refreshPlatformSelect() {
+    await loadPlatforms();
+    const sel = document.getElementById("np-platform");
+    if (!sel) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— 選擇 —</option>';
+    _platforms.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p.name; opt.textContent = p.name;
+      sel.appendChild(opt);
+    });
+    if (cur) sel.value = cur;
+  }
+
   // ── 主列表：按團務分組 ─────────────────────────────────────────
   window.loadPurchaseCampaigns = async function() {
     const listEl = document.getElementById("purchase-campaign-list");
@@ -9182,6 +9269,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       const el = document.getElementById(id); if (el) el.value = "";
     });
 
+    // 載入購買平台選單
+    await refreshPlatformSelect();
+
     // 載入集運倉選單
     const warehouseSel = document.getElementById("np-warehouse");
     warehouseSel.innerHTML = '<option value="">— 選擇 —</option>';
@@ -9242,19 +9332,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         // 幣別
         const currEl = document.getElementById("np-currency");
         if (currEl && !currEl.value) currEl.value = cData.currency || "KRW";
-        // 購買平台：從 groupsCache 找該團體的平台
-        const group = (window.groupsCache || []).find(g => g.id === cData.groupId);
-        const platforms = group?.platforms || [];
-        const platSel = document.getElementById("np-platform");
-        if (platSel) {
-          platSel.innerHTML = '<option value="">— 選擇 —</option>';
-          platforms.forEach(p => {
-            const opt = document.createElement("option");
-            opt.value = p; opt.textContent = p;
-            platSel.appendChild(opt);
-          });
-          if (platforms.length === 1) platSel.value = platforms[0];
-        }
+        // 購買平台由 refreshPlatformSelect 統一管理
       }
     } catch(e) {}
     const loading = document.getElementById("np-items-loading");
