@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-39 -->
+  <!-- build:20260428-40 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3304,7 +3304,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-39 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-40 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -8968,9 +8968,14 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
             const contact      = String(row[2]||"").trim();
             const email        = String(row[3]||"").trim();
             const itemsText    = String(row[4]||"").trim();
-            const totalPrice   = String(row[5]||"").trim();
+            const amountRaw    = String(row[5]||"").trim();
             const statusRaw    = String(row[6]||"").trim();
             const returnInfo   = String(row[7]||"").trim();
+            // 依付款狀態判斷金額歸屬
+            const STATUS_NORM  = {"已核對":"paid","已付款":"paid","未核對":"pending","待確認":"pending","paid":"paid","pending":"pending"};
+            const status       = STATUS_NORM[statusRaw] || "pending";
+            const paidAmount   = status === "paid"    ? amountRaw : "";
+            const remainAmount = status === "pending" ? amountRaw : "";
             const ordered      = String(row[8]||"").toLowerCase() === "true";
             const shipped      = String(row[9]||"").toLowerCase() === "true";
             const picked       = String(row[10]||"").toLowerCase() === "true";
@@ -8980,9 +8985,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
             if (!campaignId || !itemsText) { fail++; return; }
 
             await addDoc(collection(db,"orders"), {
-              campaignId, nickname, contact, email, itemsText, totalPrice,
-              status: STATUS_MAP[statusRaw] || "pending",
-              returnInfo, ordered, shipped, picked, extraAmount, shippingNote,
+              campaignId, nickname, contact, email, itemsText,
+              totalPrice: amountRaw, paidAmount, remainAmount, status,
+              returnInfo, ordered, shipped, picked,
+              extraAmount: String(row[11]||"").trim(),
+              shippingNote: String(row[12]||"").trim(),
               userId: "imported", source: "shipping_import",
               createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
             });
