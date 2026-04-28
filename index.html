@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-44 -->
+  <!-- build:20260428-43 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -232,79 +232,43 @@
     .opi-note { font-size:11px; color:var(--text-muted); margin-top:2px; }
 
 
-
-    /* ── 採購記錄 ── */
-    .pu-campaign-card {
-      background: var(--surface); border: 1.5px solid var(--border);
-      border-radius: var(--radius); margin-bottom: 10px; overflow: hidden;
+    /* ── 採購記錄（新版）── */
+    .pu-inline-form {
+      border: 2px solid var(--pink);
+      border-radius: 10px;
+      padding: 14px;
+      margin: 8px 0;
+      background: #fff8fb;
     }
-    .pu-campaign-header {
+    .pu-inline-title {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 12px 16px; cursor: pointer; transition: background 0.15s;
+      margin-bottom: 10px; font-size: 13px;
     }
-    .pu-campaign-header:hover { background: #fff0f7; }
-    .pu-records-list { border-top: 1px solid var(--border); padding: 12px 16px; }
-    .pu-record-row {
-      background: #fff8fb; border: 1.5px solid var(--border);
-      border-radius: 8px; padding: 12px; margin-bottom: 8px;
-    }
-    .pu-record-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 6px;
-    }
-    .pu-record-batch { font-weight: 700; font-size: 13px; }
-    .pu-items-table {
-      width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px;
-    }
-    .pu-items-table th {
-      padding: 4px 8px; background: #fff0f7; font-size: 11px; font-weight: 600;
-      color: var(--text-muted); text-align: left;
-    }
-    .pu-items-table td { padding: 5px 8px; border-top: 1px dashed var(--border); }
-    .np-item-row {
-      display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
-    }
+    .pu-chip { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; background:#f0f0f0; margin:2px; }
+    .pu-chip.blue { background:#e3f0ff; color:#2d7cf6; }
+    .pu-chip.green { background:#e8f8e8; color:#2e7d32; }
+    .pu-chip.orange { background:#fff3e0; color:#e65100; }
+    .pu-meta { margin: 6px 0; }
 
-    /* ── 出貨追蹤 ── */
-    .shipping-table {
-      width: 100%; border-collapse: collapse;
-      font-size: 13px; background: var(--surface);
-      border-radius: var(--radius); overflow: hidden;
-    }
-    .shipping-table th {
-      padding: 10px 12px; background: var(--grad);
-      color: #fff; font-size: 12px; font-weight: 600;
-      text-align: left; white-space: nowrap;
-    }
-    .shipping-table td {
-      padding: 9px 12px; border-bottom: 1px solid var(--border);
-      vertical-align: middle;
-    }
-    .shipping-table tr:last-child td { border-bottom: none; }
-    .shipping-table tr:hover td { background: #fff8fb; }
-    .st-name  { font-weight: 700; white-space: nowrap; min-width: 80px; }
-    .shipping-table th, .shipping-table td { white-space: nowrap; }
-    .st-items { color: var(--text-muted); min-width: 160px; white-space: normal !important; line-height: 1.6; }
-    .st-items { color: var(--text-muted); max-width: 220px; line-height: 1.6; }
-    .st-paid  { color: #4caf50; font-weight: 700; white-space: nowrap; }
-    .st-remain { display: flex; align-items: center; gap: 6px; }
-    .st-remain-val { font-weight: 700; color: var(--pink); white-space: nowrap; }
-    .st-amount-input {
-      width: 80px; padding: 4px 6px; font-size: 12px;
-      border: 1.5px solid var(--border); border-radius: 6px;
-      background: #fff;
-    }
-    .st-amount-input:focus { border-color: var(--pink); outline: none; }
-    .st-note-input {
-      width: 120px; padding: 4px 6px; font-size: 12px;
-      border: 1.5px solid var(--border); border-radius: 6px;
-      background: #fff;
-    }
-    .st-note-input:focus { border-color: var(--pink); outline: none; }
-    .st-check {
-      width: 16px; height: 16px; accent-color: var(--pink); cursor: pointer;
-    }
-    .st-updated { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+    /* ── 記帳（新版）── */
+    .fin-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+    @media(max-width:600px){ .fin-cards { grid-template-columns:1fr; } }
+    .fin-card { border-radius:12px; padding:16px 20px; }
+    .fin-card.income  { background:linear-gradient(135deg,#e8f8e8,#c8f0c8); }
+    .fin-card.expense { background:linear-gradient(135deg,#fff0f0,#ffd0d0); }
+    .fin-card.profit.pos { background:linear-gradient(135deg,#fff0f7,#ffe0ef); }
+    .fin-card.profit.neg { background:linear-gradient(135deg,#fff0f0,#ffd0d0); }
+    .fin-card-label { font-size:12px; color:var(--text-muted); margin-bottom:6px; }
+    .fin-card-val   { font-size:22px; font-weight:800; }
+    .fin-quick-add  { background:var(--surface); border:1.5px solid var(--border); border-radius:10px; padding:14px; margin-bottom:16px; }
+    .fin-section    { margin-bottom:20px; }
+    .fin-section-title { font-size:14px; font-weight:700; margin-bottom:8px; }
+    .fin-table { width:100%; border-collapse:collapse; font-size:13px; }
+    .fin-table th { padding:8px 10px; background:#fff8fb; font-size:11px; color:var(--text-muted); font-weight:600; border-bottom:2px solid var(--border); }
+    .fin-table td { padding:8px 10px; border-bottom:1px dashed var(--border); }
+    .fin-badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+    .fin-badge.income  { background:#e8f8e8; color:#2e7d32; }
+    .fin-badge.expense { background:#fff0f0; color:#c62828; }
 
     /* ── 主內容 ── */
     main { max-width: 980px; margin: 0 auto; padding: 32px 20px; }
@@ -573,24 +537,16 @@
       position: fixed; inset: 0;
       background: rgba(255,100,180,0.10);
       backdrop-filter: blur(4px);
-      display: flex; align-items: flex-start; justify-content: center;
-      z-index: 200; padding: 20px 16px;
-      overflow-y: auto;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; padding: 16px;
     }
 
     .modal {
       background: var(--surface);
       border-radius: 20px;
       width: 100%; max-width: 440px;
-      max-height: 90vh;
-      display: flex;
-      flex-direction: column;
       box-shadow: 0 12px 40px rgba(255,132,195,0.18);
       border: 1.5px solid var(--border);
-    }
-    .modal-body {
-      overflow-y: auto;
-      flex: 1;
     }
 
     .modal-header {
@@ -616,7 +572,7 @@
 
     .modal-close:hover { background: var(--pink); color: #fff; }
 
-    .modal-body { padding: 20px 26px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+    .modal-body { padding: 20px 26px; display: flex; flex-direction: column; gap: 16px; }
 
     .modal-footer {
       padding: 0 26px 22px;
@@ -2196,8 +2152,7 @@
         <button class="subnav-btn"         data-section="campaigns" onclick="switchAdminSection('campaigns')">📦 開團系統</button>
         <button class="subnav-btn"         data-section="campaign-mgmt" onclick="switchAdminSection('campaign-mgmt')">📋 團務管理</button>
         <button class="subnav-btn"         data-section="orders"    onclick="switchAdminSection('orders')">🧾 訂單管理</button>
-        <button class="subnav-btn"         data-section="purchase"  onclick="switchAdminSection('purchase')">🛒 採購記錄</button>
-        <button class="subnav-btn"         data-section="shipping"  onclick="switchAdminSection('shipping')">📦 出貨追蹤</button>
+        <button class="subnav-btn"         data-section="purchase"  onclick="switchAdminSection('purchase')">🛒 下單管理</button>
         <button class="subnav-btn"         data-section="finance"   onclick="switchAdminSection('finance')">💰 記帳</button>
         <button class="subnav-btn"         data-section="members"   onclick="switchAdminSection('members')">👤 會員管理</button>
       </div>
@@ -2466,10 +2421,12 @@
       <div class="admin-section" id="section-orders">
         <div class="section-header">
           <h2 class="section-title">📋 訂單管理</h2>
-            <div id="order-select-bar" style="display:none;gap:6px;align-items:center">
-              <span id="order-select-count" style="font-size:12px;color:var(--text-muted)">已選 0 筆</span>
-              <button class="btn btn-danger btn-sm" onclick="deleteSelectedOrders()">🗑 刪除所選</button>
-              <button class="btn btn-ghost btn-sm" onclick="toggleOrderSelectMode(false)">✕ 取消</button>
+            <div id="order-select-bar" style="display:none;gap:8px;align-items:center;background:var(--grad);color:#fff;padding:8px 16px;border-radius:8px;margin:8px 0;flex-wrap:wrap">
+              <span id="order-select-count" style="font-size:12px;flex:1">已選 0 筆</span>
+              <button class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:#fff;border:none" onclick="selectAllOrders(true)">全選</button>
+              <button class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:#fff;border:none" onclick="selectAllOrders(false)">取消全選</button>
+              <button class="btn btn-sm" style="background:rgba(255,50,50,0.8);color:#fff;border:none" onclick="deleteSelectedOrders()">🗑 刪除所選</button>
+              <button class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none" onclick="toggleOrderSelectMode(false)">✕ 離開選取</button>
             </div>
           <div style="display:flex;gap:8px;align-items:center">
             <select class="form-input" id="orders-filter-campaign" style="font-size:13px;width:200px" onchange="loadAdminOrders()">
@@ -2481,6 +2438,10 @@
               <option value="paid">已付款</option>
               <option value="cancelled">已取消</option>
             </select>
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;white-space:nowrap">
+              <input type="checkbox" id="orders-show-done" onchange="loadAdminOrders()" style="accent-color:var(--pink)">
+              顯示已結束
+            </label>
             <select class="form-input" id="orders-sort-mode" style="font-size:13px;width:140px" onchange="loadAdminOrders()">
               <option value="time">按訂單時間</option>
               <option value="campaign">按團務分類</option>
@@ -2490,7 +2451,7 @@
             <button class="btn btn-ghost btn-sm" onclick="document.getElementById('order-import-file').click()">📤 批次匯入</button>
             <input type="file" id="order-import-file" accept=".xlsx,.csv" style="display:none" onchange="importOrders(this)" />
             <button class="btn btn-primary btn-sm" onclick="exportOrders()">匯出 CSV</button>
-            <button class="btn btn-ghost btn-sm" id="btn-order-select-toggle" onclick="toggleOrderSelectMode(true)">☐ 全選刪除</button>
+            <button class="btn btn-ghost btn-sm" id="btn-order-select-toggle" onclick="toggleOrderSelectMode(true)">☐ 選取刪除</button>
           </div>
         </div>
         <div id="admin-orders-list"></div>
@@ -2604,7 +2565,7 @@
           <input class="form-input" id="oc-return" type="text" />
         </div>
         <div class="form-group">
-          <label class="form-label">備註</label>
+          <label class="form-label">備注</label>
           <input class="form-input" id="oc-note" type="text" />
         </div>
       </div>
@@ -2660,7 +2621,7 @@
           <input class="form-input" id="oe-return" type="text" />
         </div>
         <div class="form-group">
-          <label class="form-label">備註</label>
+          <label class="form-label">備注</label>
           <input class="form-input" id="oe-note" type="text" />
         </div>
         <div class="form-group">
@@ -2683,76 +2644,57 @@
 <!-- 下單管理 -->
       <div class="admin-section" id="section-purchase">
         <div class="section-header">
-          <h2 class="section-title">🛒 採購記錄</h2>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-ghost btn-sm" onclick="openPlatformManager()">⚙ 管理平台</button>
-            <button class="btn btn-primary btn-sm" onclick="openNewPurchaseModal()">＋ 新增採購</button>
-          </div>
+          <h2 class="section-title">🛒 下單管理</h2>
+          <button class="btn btn-primary btn-sm" onclick="openPurchaseModal()">＋ 新增下單記錄</button>
         </div>
-        <!-- 主列表：按團務展開 -->
-        <div id="purchase-campaign-list"></div>
-      </div>
-      <!-- 出貨追蹤 -->
-      <div class="admin-section" id="section-shipping">
-        <div class="section-header">
-          <h2 class="section-title">📦 出貨追蹤</h2>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-ghost btn-sm" onclick="downloadShippingTemplate()">⬇ 下載範本</button>
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('shipping-import-file').click()">📤 批次匯入</button>
-            <input type="file" id="shipping-import-file" accept=".xlsx,.csv" style="display:none" onchange="importShipping(this)" />
-            <button class="btn btn-ghost btn-sm" onclick="loadShippingCampaigns()">↻ 重新整理</button>
-          </div>
+
+        <!-- 篩選列 -->
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <select class="form-input" id="purchase-filter-campaign" style="font-size:13px;width:200px" onchange="loadPurchases()">
+            <option value="">全部團務</option>
+          </select>
+          <select class="form-input" id="purchase-filter-status" style="font-size:13px;width:130px" onchange="loadPurchases()">
+            <option value="">全部狀態</option>
+            <option value="ordered">已下單</option>
+            <option value="shipped">已出貨</option>
+            <option value="arrived">到集運</option>
+            <option value="returning">運回中</option>
+            <option value="done">已完成</option>
+          </select>
         </div>
-        <!-- 團務列表 / 人員列表 -->
-        <div id="shipping-campaign-list"></div>
-        <div id="shipping-order-list" style="display:none">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-            <button class="btn btn-ghost btn-sm" onclick="backToShippingCampaigns()">← 返回</button>
-            <h3 id="shipping-campaign-title" style="font-size:15px;font-weight:700;margin:0"></h3>
-            <span id="shipping-campaign-stats" style="font-size:12px;color:var(--text-muted)"></span>
-          </div>
-          <div id="shipping-orders-table"></div>
+
+        <!-- 統計列 -->
+        <div class="purchase-stats" id="purchase-stats" style="display:none">
+          <div class="pstat"><div class="pstat-label">總筆數</div><div class="pstat-val" id="ps-count">0</div></div>
+          <div class="pstat"><div class="pstat-label">總金額</div><div class="pstat-val" id="ps-total">NT$0</div></div>
+          <div class="pstat"><div class="pstat-label">總重量</div><div class="pstat-val" id="ps-weight">0 kg</div></div>
+          <div class="pstat"><div class="pstat-label">運費合計</div><div class="pstat-val" id="ps-shipping">NT$0</div></div>
         </div>
+
+        <!-- 列表 -->
+        <div id="purchase-list"></div>
       </div>
 
       <!-- 記帳 -->
+      <div       <!-- 記帳 (v2) -->
       <div class="admin-section" id="section-finance">
-        <div class="finance-tabs">
-          <button class="copy-tab active" data-ft="ledger"  onclick="switchFinanceTab('ledger')">📒 收支記錄</button>
-          <button class="copy-tab"         data-ft="monthly" onclick="switchFinanceTab('monthly')">📊 月報表</button>
-          <button class="copy-tab"         data-ft="profit"  onclick="switchFinanceTab('profit')">💹 各團收益</button>
+        <div class="section-header">
+          <h2 class="section-title">💰 記帳</h2>
+          <button class="btn btn-ghost btn-sm" onclick="initFinanceV2()">↻ 重新整理</button>
         </div>
-
-        <!-- 收支記錄 -->
-        <div class="finance-panel active" id="ft-ledger">
-          <div class="section-header" style="margin-top:16px">
-            <h3 class="section-title" style="font-size:16px">收支記錄</h3>
-            <button class="btn btn-primary btn-sm" onclick="openLedgerModal()">＋ 新增記錄</button>
-          </div>
-          <div id="ledger-list"></div>
-        </div>
-
-        <!-- 月報表 -->
-        <div class="finance-panel" id="ft-monthly">
-          <div style="margin-top:16px" id="monthly-content">
-            <div class="loading-row">載入中...</div>
-          </div>
-        </div>
-
-        <!-- 各團收益 -->
-        <div class="finance-panel" id="ft-profit">
-          <div style="margin-top:16px" id="profit-content">
-            <div class="loading-row">載入中...</div>
-          </div>
+        <div id="finance-v2-content">
+          <div class="loading-row">載入中...</div>
         </div>
       </div>
 
-      <!-- 會員管理 -->
-      <div class="admin-section" id="section-members">
+<div class="admin-section" id="section-members">
         <div class="section-header">
           <h2 class="section-title">👤 會員管理</h2>
           <div style="display:flex;gap:8px">
-            <button class="btn btn-ghost btn-sm" onclick="openBatchMemberModal()">📋 批次匯入</button>
+            <button class="btn btn-ghost btn-sm" onclick="downloadMemberTemplate()">⬇ 下載範本</button>
+            <button class="btn btn-ghost btn-sm" onclick="openBatchMemberModal()">📋 批次匯入（文字）</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('member-xlsx-file').click()">📤 xlsx 匯入</button>
+            <input type="file" id="member-xlsx-file" accept=".xlsx,.csv" style="display:none" onchange="importMembersXlsx(this)" />
             <button class="btn btn-primary btn-sm" onclick="openMemberModal()">＋ 手動新增會員</button>
           </div>
         </div>
@@ -2812,16 +2754,6 @@
         <span class="fee-hint">開團時規格輸入「分成員」會自動帶入此清單</span>
       </div>
 
-      <!-- 小分隊 -->
-      <div class="form-group">
-        <label class="form-label">小分隊
-          <span class="fee-hint" style="font-weight:400">（開團規格輸入「分成員」後可快速選分隊）</span>
-        </label>
-        <div id="subgroup-list" style="display:flex;flex-direction:column;gap:8px"></div>
-        <button class="btn-add-spec-option" type="button" onclick="addSubgroupInput()"
-                style="margin-top:4px">＋ 新增小分隊</button>
-      </div>
-
       <p class="form-error" id="group-form-error"></p>
     </div>
     <div class="modal-footer">
@@ -2862,151 +2794,6 @@
 
 
 
-
-
-
-<!-- 購買平台管理 Modal -->
-<div class="modal-backdrop" id="modal-platform-mgr" style="display:none" onclick="closePlatformManager(event)">
-  <div class="modal" style="max-width:380px">
-    <div class="modal-header">
-      <h3 class="modal-title">⚙ 管理購買平台</h3>
-      <button class="modal-close" onclick="closePlatformManager()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="fee-hint" style="margin-bottom:8px">新增常用購買平台，會顯示在採購記錄的「購買平台」下拉選單</div>
-      <div id="platform-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
-      <div style="display:flex;gap:8px">
-        <input class="form-input" id="new-platform-input" type="text" placeholder="輸入平台名稱" style="flex:1"
-          onkeydown="if(event.key==='Enter')addPlatformItem()" />
-        <button class="btn btn-primary btn-sm" onclick="addPlatformItem()">新增</button>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost btn-sm" onclick="closePlatformManager()">關閉</button>
-    </div>
-  </div>
-</div>
-
-<!-- 新採購記錄 Modal -->
-<div class="modal-backdrop" id="modal-new-purchase" style="display:none" onclick="closeNewPurchaseModal(event)">
-  <div class="modal" style="max-width:560px">
-    <div class="modal-header">
-      <h3 class="modal-title" id="np-modal-title">🛒 新增採購記錄</h3>
-      <button class="modal-close" onclick="closeNewPurchaseModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <!-- 選團務 -->
-      <div class="form-group">
-        <label class="form-label">關聯團務 <span class="required">*</span></label>
-        <select class="form-input" id="np-campaign" onchange="onNpCampaignChange()">
-          <option value="">— 選擇團務 —</option>
-        </select>
-      </div>
-
-      <!-- 批次說明 -->
-      <div class="form-group">
-        <label class="form-label">批次說明</label>
-        <input class="form-input" id="np-batch" type="text" placeholder="例：第一批、安可加單..." />
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <!-- 購買平台 -->
-        <div class="form-group">
-          <label class="form-label">購買平台</label>
-          <select class="form-input" id="np-platform">
-            <option value="">— 選擇 —</option>
-          </select>
-        </div>
-        <!-- 集運倉 -->
-        <div class="form-group">
-          <label class="form-label">集運倉</label>
-          <select class="form-input" id="np-warehouse">
-            <option value="">— 選擇 —</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- 外幣總額 -->
-      <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
-        <div class="form-group">
-          <label class="form-label">外幣總額</label>
-          <input class="form-input" id="np-foreign-amount" type="number" min="0" placeholder="0" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">幣別</label>
-          <input class="form-input" id="np-currency" type="text" placeholder="KRW" style="text-transform:uppercase" />
-        </div>
-      </div>
-
-      <!-- 商品列表（自動帶入+可手動修改） -->
-      <div class="form-group">
-        <label class="form-label">採購商品
-          <span class="fee-hint">（從訂單自動彙算，可手動修改）</span>
-        </label>
-        <div id="np-items-loading" style="display:none;color:var(--text-muted);font-size:13px">彙算中...</div>
-        <div id="np-items-list" style="display:flex;flex-direction:column;gap:6px"></div>
-        <button class="btn-add-spec-option" type="button" onclick="addNpItem()" style="margin-top:6px">＋ 新增商品</button>
-      </div>
-
-      <!-- 總金額 -->
-      <div class="form-group">
-        <label class="form-label">總金額 NT$</label>
-        <input class="form-input" id="np-total" type="number" min="0" placeholder="自動加總或手動輸入" />
-      </div>
-
-      <!-- 物流資訊 -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group">
-          <label class="form-label">下單時間</label>
-          <input class="form-input" id="np-ordered-at" type="datetime-local" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">貨運單號</label>
-          <input class="form-input" id="np-tracking" type="text" placeholder="填入後可追蹤" />
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group">
-          <label class="form-label">到集運時間</label>
-          <input class="form-input" id="np-arrived-at" type="datetime-local" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">重量 (kg)</label>
-          <input class="form-input" id="np-weight" type="number" min="0" step="0.1" placeholder="0.0" />
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div class="form-group">
-          <label class="form-label">申請運回時間</label>
-          <input class="form-input" id="np-return-at" type="datetime-local" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">運費 NT$</label>
-          <input class="form-input" id="np-shipping-fee" type="number" min="0" placeholder="0" />
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">狀態</label>
-        <select class="form-input" id="np-status">
-          <option value="ordered">🛒 已下單</option>
-          <option value="shipped">📦 已出貨</option>
-          <option value="arrived">🏪 到集運</option>
-          <option value="returning">✈️ 運回中</option>
-          <option value="done">✅ 已完成</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">備註</label>
-        <input class="form-input" id="np-note" type="text" />
-      </div>
-      <p class="form-error" id="np-error"></p>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost btn-sm" onclick="closeNewPurchaseModal()">取消</button>
-      <button class="btn btn-primary btn-sm" onclick="saveNewPurchase()">儲存</button>
-    </div>
-  </div>
-</div>
 
 <!-- 下單管理 Modal -->
 <div class="modal-backdrop" id="modal-purchase" style="display:none" onclick="closePurchaseModal(event)">
@@ -3081,8 +2868,8 @@
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">備註</label>
-        <input class="form-input" id="pu-note" type="text" placeholder="其他備註" />
+        <label class="form-label">備注</label>
+        <input class="form-input" id="pu-note" type="text" placeholder="其他備注" />
       </div>
 
       <label class="bank-check-item" style="margin-top:4px">
@@ -3322,7 +3109,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-44 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-43 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -3417,63 +3204,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 <script type="module">
   import { db } from "./auth.js";
   import {
-    collection, doc, addDoc, setDoc, updateDoc, deleteDoc,
-    getDocs, getDoc, serverTimestamp, query, orderBy
+    collection, doc, addDoc, updateDoc, getDocs, deleteDoc,
+    serverTimestamp, query, orderBy
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-  // ── 小分隊管理 ──────────────────────────────────────────────
-  function renderSubgroupList() {
-    const container = document.getElementById("subgroup-list");
-    if (!container) return;
-    container.innerHTML = "";
-    (window._openGroupSubgroups || []).forEach((sg, i) => {
-      const div = document.createElement("div");
-      div.className = "subgroup-row";
-      div.style.cssText = "border:1.5px solid var(--border);border-radius:8px;padding:10px;background:#fff8fb;";
-      const memberCheckboxes = (window._openGroupMembers||[]).map((m, mi) => {
-        const isChecked = (sg.memberNames||[]).includes(m.display);
-        return `<label style="display:inline-flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;padding:3px 8px;border-radius:12px;margin:2px;background:${isChecked?'var(--pink)':'#f0f0f0'};color:${isChecked?'#fff':'inherit'}" id="sgl-${i}-${mi}">
-          <input type="checkbox" ${isChecked?"checked":""} style="display:none"
-            onchange="window.toggleSubgroupMember(${i},${mi},this.checked,document.getElementById('sgl-${i}-${mi}'))">
-          ${m.display.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-        </label>`;
-      }).join("");
-      div.innerHTML = `
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-          <input class="form-input" style="flex:1;font-size:13px" value="${(sg.name||"").replace(/"/g,'&quot;')}"
-            placeholder="分隊名稱（如：NCT WISH）"
-            oninput="window._openGroupSubgroups[${i}].name=this.value" />
-          <button class="btn btn-danger btn-sm" onclick="window.removeSubgroup(${i})">✕</button>
-        </div>
-        <div style="display:flex;flex-wrap:wrap">${memberCheckboxes||"<span style='font-size:12px;color:var(--text-muted)'>請先新增成員</span>"}</div>`;
-      container.appendChild(div);
-    });
-  }
-
-  window.addSubgroupInput = function() {
-    if (!window._openGroupSubgroups) window._openGroupSubgroups = [];
-    window._openGroupSubgroups.push({ name: "", memberNames: [] });
-    renderSubgroupList();
-  };
-
-  window.removeSubgroup = function(i) {
-    window._openGroupSubgroups.splice(i, 1);
-    renderSubgroupList();
-  };
-
-  window.toggleSubgroupMember = function(sgi, mi, checked, labelEl) {
-    const sg = window._openGroupSubgroups[sgi];
-    const name = (window._openGroupMembers[mi]||{}).display;
-    if (!name) return;
-    if (!sg.memberNames) sg.memberNames = [];
-    if (checked) {
-      if (!sg.memberNames.includes(name)) sg.memberNames.push(name);
-      if (labelEl) { labelEl.style.background="var(--pink)"; labelEl.style.color="#fff"; }
-    } else {
-      sg.memberNames = sg.memberNames.filter(n=>n!==name);
-      if (labelEl) { labelEl.style.background="#f0f0f0"; labelEl.style.color="inherit"; }
-    }
-  };
 
   window.switchAdminSection = function(section) {
     document.querySelectorAll(".subnav-btn").forEach(btn => {
@@ -3489,19 +3222,17 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       "campaigns":     () => { window.loadGroupsSelect?.(); window.loadGroupKeywords?.(); },
       "campaign-mgmt": () => window.loadCampaignList?.(),
       "orders":        () => { window.loadCampaignFilter?.(); window.loadAdminOrders?.(); },
-      "finance":       () => window.initFinance?.(),
+      "finance":       () => window.initFinanceV2?.(),
       "members":       () => window.loadMembers?.(),
-      "purchase":      () => { window.loadPurchaseCampaignFilter?.(); window.loadPurchases?.(); },
-      "shipping":      () => window.loadShippingCampaigns?.(),
+      "purchase":      () => window.loadPurchaseCampaigns?.(),
     };
     const readyMap = {
       "campaigns":     () => !!window.loadGroupsSelect && !!window.loadGroupKeywords,
       "campaign-mgmt": () => !!window.loadCampaignList,
       "orders":        () => !!window.loadAdminOrders,
-      "finance":       () => !!window.initFinance,
+      "finance":       () => !!window.initFinanceV2,
       "members":       () => !!window.loadMembers,
-      "purchase":      () => !!window.loadPurchases,
-      "shipping":      () => !!window.loadShippingCampaigns,
+      "purchase":      () => !!window.loadPurchaseCampaigns,
     };
     const fn    = fnMap[section];
     const ready = readyMap[section];
@@ -3548,7 +3279,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       </div>
 
       <div class="group-card-actions">
-        <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${id}" data-name="${esc(data.name)}" data-colors="${colorsJson}" data-abbr="${esc(data.abbr || '')}" data-members="${JSON.stringify(data.members || []).replace(/"/g,'&quot;')}" data-aliases="${JSON.stringify(data.aliases || []).replace(/"/g,'&quot;')}" data-subgroups="${JSON.stringify(data.subgroups || []).replace(/"/g,'&quot;')}" data-platforms="${JSON.stringify(data.platforms || []).replace(/"/g,'&quot;')}">編輯</button>
+        <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${id}" data-name="${esc(data.name)}" data-colors="${colorsJson}" data-abbr="${esc(data.abbr || '')}" data-members="${JSON.stringify(data.members || []).replace(/"/g,'&quot;')}" data-aliases="${JSON.stringify(data.aliases || []).replace(/"/g,'&quot;')}">編輯</button>
         <button class="btn btn-danger btn-sm" onclick="deleteGroup('${id}','${esc(data.name)}')">刪除</button>
       </div>`;
     // 綁定編輯按鈕（避免 onclick 字串中帶陣列出錯）
@@ -3558,11 +3289,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       let members = [], aliases = [];
       try { members = JSON.parse(btn.dataset.members.replace(/&quot;/g, '"')); } catch {}
       try { aliases = JSON.parse(btn.dataset.aliases.replace(/&quot;/g, '"')); } catch {}
-      let subgroups = [];
-      try { subgroups = JSON.parse((btn.dataset.subgroups||"[]").replace(/&quot;/g, '"')); } catch {}
-      let platforms = [];
-      try { platforms = JSON.parse((btn.dataset.platforms||"[]").replace(/&quot;/g, '"')); } catch {}
-      openGroupModal(btn.dataset.id, btn.dataset.name, colors, btn.dataset.abbr || "", members, aliases, subgroups, platforms);
+      openGroupModal(btn.dataset.id, btn.dataset.name, colors, btn.dataset.abbr || "", members, aliases);
     });
     return card;
   }
@@ -3636,7 +3363,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     updateColorPreview();
   };
 
-  window.openGroupModal = function(id=null, name="", colors=null, abbr="", members=[], aliases=[], subgroups=[]) {
+  window.openGroupModal = function(id=null, name="", colors=null, abbr="", members=[], aliases=[]) {
     editingGroupId = id;
     // 先設資料
     if (typeof colors === "string" && colors) groupColors = [colors];
@@ -3646,8 +3373,6 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     window._openGroupMembers = Array.isArray(members)
       ? members.map(m => typeof m === "string" ? { display: m, aliases: [] } : m)
       : [];
-    window._openGroupSubgroups = [];
-
     // 顯示 Modal
     document.getElementById("modal-group-title").textContent = id ? "編輯團體" : "新增團體";
     (function(){const _el=document.getElementById("modal-group");if(_el)_el.style.display="flex";})();
@@ -3702,12 +3427,10 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     if (!colors.length) { errEl.textContent = "請至少設一個顏色"; return; }
     btn.disabled = true; btn.textContent = "儲存中..."; errEl.textContent = "";
     try {
-
-      const subgroups = (window._openGroupSubgroups || []).filter(sg => sg.name);
       if (editingGroupId) {
-        await updateDoc(doc(db, "groups", editingGroupId), { name, abbr, aliases, colors, color, members, subgroups });
+        await updateDoc(doc(db, "groups", editingGroupId), { name, abbr, aliases, colors, color, members });
       } else {
-        await addDoc(collection(db, "groups"), { name, abbr, aliases, colors, color, members, subgroups, createdAt: serverTimestamp() });
+        await addDoc(collection(db, "groups"), { name, abbr, aliases, colors, color, members, createdAt: serverTimestamp() });
       }
       (function(){const _el=document.getElementById("modal-group");if(_el)_el.style.display="none";})();
       editingGroupId = null;
@@ -4045,7 +3768,6 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const group = groupsCache.find(g => g.id === groupId);
     const allMembers = group?.members || [];
     const isMemberSpec = text.includes("成員") || text.toLowerCase().includes("member");
-    console.log('[spec] groupId:', groupId, 'group:', group?.name, 'members:', allMembers.length, 'subgroups:', group?.subgroups?.length, 'isMember:', isMemberSpec);
 
     if (isMemberSpec && allMembers.length > 0) {
       // 分成員：顯示勾選 UI，讓管理者選這個商品有哪些成員可選
@@ -4058,31 +3780,12 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       if (!stored[productId]) stored[productId] = new Set(memberDisplays); // 預設全選
       window._productMemberSel = stored;
       const sel = stored[productId];
-      // 取得小分隊資料，存到 window 供按鈕呼叫
-      const subgroups = group?.subgroups || [];
-      window._specMembers = window._specMembers || {};
-      window._specMembers[productId] = memberDisplays;
-      const subgroupBtns = subgroups.length ? `
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-          <span style="font-size:11px;color:var(--text-muted);align-self:center">快選分隊：</span>
-          <button type="button" class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 10px"
-            onclick="selectSubgroup(${productId}, null)">全部</button>
-          ${subgroups.map((sg,si) => `
-            <button type="button" class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 10px"
-              onclick="selectSubgroup(${productId}, ${si})">
-              ${esc(sg.name)}
-            </button>`).join("")}
-          <button type="button" class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 10px"
-            onclick="selectSubgroup(${productId}, 'none')">清除</button>
-        </div>` : "";
-
       preview.innerHTML = `
         <div style="width:100%">
           <div style="font-size:12px;font-weight:700;color:var(--pink);margin-bottom:6px">
             此商品可選的成員（預設全選）：
           </div>
-          ${subgroupBtns}
-          <div class="member-check-grid" id="mcheck-${productId}">
+          <div class="member-check-grid">
             ${memberDisplays.map(m => `
               <label class="member-check-item" style="${sel.has(m) ? 'background:#fff0f7;border-color:var(--pink)' : ''}">
                 <input type="checkbox" value="${esc(m)}"
@@ -4092,7 +3795,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
                 <span style="font-size:12px">${esc(m)}</span>
               </label>`).join("")}
           </div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:4px" id="mcount-${productId}">
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">
             已選 ${sel.size} / ${memberDisplays.length} 位成員
           </div>
         </div>`;
@@ -4119,48 +3822,6 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     updateSpecPreview(productId);
   };
 
-  // ── 分隊快選 ────────────────────────────────────────────────
-  window.selectSubgroup = function(productId, subgroupIdx) {
-    const allMembers = (window._specMembers || {})[productId] || [];
-    const stored = window._productMemberSel || {};
-    if (!stored[productId]) stored[productId] = new Set();
-    const sel = stored[productId];
-
-    if (subgroupIdx === 'none') {
-      sel.clear();
-    } else if (subgroupIdx === null) {
-      // 全選
-      allMembers.forEach(m => sel.add(m));
-    } else {
-      // 選指定分隊
-      const groupId = document.getElementById("c-group")?.value;
-      const group = groupsCache.find(g => g.id === groupId);
-      const sg = group?.subgroups?.[subgroupIdx];
-      if (!sg) return;
-      sel.clear();
-      (sg.memberNames || []).forEach(m => sel.add(m));
-    }
-
-    window._productMemberSel = stored;
-
-    // 更新 checkbox UI
-    const grid = document.getElementById(`mcheck-${productId}`);
-    if (grid) {
-      grid.querySelectorAll('input[type="checkbox"]').forEach(cb => {
-        const m = cb.value;
-        const checked = sel.has(m);
-        cb.checked = checked;
-        const label = cb.parentElement;
-        if (label) {
-          label.style.background = checked ? '#fff0f7' : '';
-          label.style.borderColor = checked ? 'var(--pink)' : '';
-        }
-      });
-    }
-    const countEl = document.getElementById(`mcount-${productId}`);
-    if (countEl) countEl.textContent = `已選 ${sel.size} / ${allMembers.length} 位成員`;
-  };
-
   function esc(s) {
     return String(s ?? "").replace(/[&<>"']/g, c =>
       ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -4173,7 +3834,6 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const group = groupsCache.find(g => g.id === groupId);
     const allMembers = group?.members || [];
     const isMemberSpec = text.includes("成員") || text.toLowerCase().includes("member");
-    console.log('[spec] groupId:', groupId, 'group:', group?.name, 'members:', allMembers.length, 'subgroups:', group?.subgroups?.length, 'isMember:', isMemberSpec);
 
     if (isMemberSpec && allMembers.length > 0) {
       // 用勾選的成員（若沒有設定就預設全部）
@@ -4755,7 +4415,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         const data = d.data();
         const abbr = (data.abbr || window.genAbbr(data.name)).toUpperCase();
         const colors = (data.colors && data.colors.length) ? data.colors : (data.color ? [data.color] : ["#FF84C3","#FF9E23","#E1E668"]);
-        groupsCache.push({ id: d.id, name: data.name, color: data.color || colors[0], colors, abbr, aliases: data.aliases || [], members: data.members || [], subgroups: data.subgroups || [], platforms: data.platforms || [] });
+        groupsCache.push({ id: d.id, name: data.name, color: data.color || colors[0], colors, abbr, aliases: data.aliases || [], members: data.members || [] });
         const opt = document.createElement("option");
         opt.value = d.id;
         opt.textContent = `${data.name} (${abbr})`;
@@ -6382,6 +6042,112 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     alert(`✅ 匯入完成！成功 ${success} 筆${fail ? `，失敗 ${fail} 筆` : ""}`);
     await loadMembers();
   };
+  // ── 會員 xlsx 範本下載 ────────────────────────────────────────
+  window.downloadMemberTemplate = function() {
+    const BOM = "\uFEFF";
+    const rows = [
+      ["Email*","社群暱稱","聯絡帳號（LINE ID等）","備註"],
+      ["說明：為唯一識別碼，必填","LINE或其他社群暱稱","LINE ID、FB帳號等","其他備註"],
+      ["example@gmail.com","小花","line_id_here",""],
+    ];
+    const csv = BOM + rows.map(r =>
+      r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")
+    ).join("\n");
+    const a = Object.assign(document.createElement("a"), {
+      href: URL.createObjectURL(new Blob([csv], {type:"text/csv;charset=utf-8"})),
+      download: "member_template.csv"
+    });
+    a.click();
+  };
+
+  // ── 會員 xlsx/csv 批次匯入 ────────────────────────────────────
+  window.importMembersXlsx = async function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    input.value = "";
+
+    try {
+      let rows = [];
+      const ext = file.name.split(".").pop().toLowerCase();
+      if (ext === "csv") {
+        const buf = await file.arrayBuffer();
+        let text;
+        try { text = new TextDecoder("big5").decode(buf); if(text.includes("\uFFFD")) throw 0; }
+        catch { text = new TextDecoder("utf-8").decode(buf); }
+        if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+        rows = text.split(/\r?\n/).filter(l=>l.trim()).map(line => {
+          const r=[]; let cur="", inQ=false;
+          for(let i=0;i<line.length;i++){
+            const ch=line[i];
+            if(ch==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+            else if(ch===','&&!inQ){r.push(cur);cur="";}
+            else cur+=ch;
+          }
+          r.push(cur); return r;
+        });
+      } else {
+        rows = await new Promise((res,rej) => {
+          const reader = new FileReader();
+          reader.onload = e => {
+            try {
+              const XLSX = window.XLSX;
+              if (!XLSX) { rej(new Error("不支援 xlsx，請改用 csv")); return; }
+              const wb = XLSX.read(new Uint8Array(e.target.result), {type:"array"});
+              const ws = wb.Sheets[wb.SheetNames[0]];
+              res(XLSX.utils.sheet_to_json(ws,{header:1,defval:""}));
+            } catch(err) { rej(err); }
+          };
+          reader.readAsArrayBuffer(file);
+        });
+      }
+
+      // 跳過標題列
+      let skipN = 0;
+      if (rows[0]?.[0]?.includes("Email")) skipN = rows[1]?.[0]?.includes("說明") ? 2 : 1;
+      const dataRows = rows.slice(skipN).filter(r => r[0]?.toString().trim());
+
+      if (!dataRows.length) { alert("沒有有效資料"); return; }
+
+      // 讀取現有會員（用 email 查重）
+      const { collection, doc, setDoc, getDocs, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+      const snap = await getDocs(collection(db, "users"));
+      const existingEmails = new Set();
+      snap.forEach(d => { if (d.data().email) existingEmails.add(d.data().email.toLowerCase()); });
+
+      let ok=0, skip=0, fail=0;
+      for (const row of dataRows) {
+        const email   = String(row[0]||"").trim();
+        const nickname= String(row[1]||"").trim();
+        const contact = String(row[2]||"").trim();
+        const note    = String(row[3]||"").trim();
+        if (!email) { skip++; continue; }
+
+        if (existingEmails.has(email.toLowerCase())) {
+          const replace = confirm(`⚠️ Email 已存在：${email}\n確定取代？按取消略過`);
+          if (!replace) { skip++; continue; }
+        }
+
+        try {
+          // 用 email 當 key 存到 users 集合
+          const usersRef = collection(db, "users");
+          const q = (await getDocs(usersRef));
+          let uid = null;
+          q.forEach(d => { if (d.data().email?.toLowerCase() === email.toLowerCase()) uid = d.id; });
+
+          const data = { email, nickname, contact, note, updatedAt: serverTimestamp() };
+          if (uid) {
+            await setDoc(doc(db,"users",uid), data, {merge:true});
+          } else {
+            await setDoc(doc(usersRef), data);
+          }
+          ok++;
+        } catch(e) { fail++; }
+      }
+
+      alert(`✅ 匯入完成！成功 ${ok} 筆${skip?`，略過 ${skip} 筆`:""}${fail?`，失敗 ${fail} 筆`:""}`);
+      window.loadMembers?.();
+    } catch(e) { alert("解析失敗：" + e.message); }
+  };
 </script>
 
 
@@ -6582,8 +6348,18 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       const snap = await getDocs(q);
       let orders = [];
       snap.forEach(d => orders.push({ id: d.id, ...d.data() }));
+      // 過濾已結束團務（預設隱藏）
+      const showDone = document.getElementById("orders-show-done")?.checked || false;
+      if (!showDone) {
+        try {
+          const doneSnap = await getDocs(query(collection(db,"campaigns"), where("progress","==","done")));
+          const doneIds = new Set();
+          doneSnap.forEach(d => doneIds.add(d.id));
+          if (doneIds.size) orders = orders.filter(o => !doneIds.has(o.campaignId));
+        } catch(e) {}
+      }
       if (campaignId) orders = orders.filter(o => o.campaignId === campaignId);
-      if (status)     orders = orders.filter(o => (o.paymentStatus || "pending") === status);
+      if (status)     orders = orders.filter(o => (o.paymentStatus || o.status || "pending") === status);
       if (!orders.length) { list.innerHTML = '<div class="empty-row">沒有符合的訂單</div>'; return; }
       list.innerHTML = "";
       const sortMode = document.getElementById('orders-sort-mode')?.value || 'time';
@@ -6718,6 +6494,13 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   // ── 刪除訂單 ─────────────────────────────────────────────────
   // ── 全選刪除模式 ─────────────────────────────────────────────
   let _orderSelectMode = false;
+
+  window.selectAllOrders = function(checked) {
+    document.querySelectorAll('.order-checkbox').forEach(cb => {
+      cb.checked = checked;
+    });
+    onOrderCheckChange();
+  };
 
   window.toggleOrderSelectMode = function(on) {
     _orderSelectMode = on;
@@ -7421,21 +7204,8 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         const tb = b.data().createdAt?.toMillis?.() ?? 0;
         return tb - ta;
       });
-      const now = new Date();
-      const autoCloseIds = [];
-
       docs.forEach(d => {
         const data = d.data();
-
-        // 收單時間已過且狀態還是 ongoing → 自動改成 closed
-        if (data.progress === "ongoing" && data.deadline) {
-          const dl = new Date(data.deadline);
-          if (!isNaN(dl) && dl < now) {
-            autoCloseIds.push(d.id);
-            data.progress = "closed";
-          }
-        }
-
         const row = document.createElement("div");
         row.className = "campaign-admin-row";
         row.id = `campaign-row-${d.id}`;
@@ -7488,12 +7258,6 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         });
         list.appendChild(row);
       });
-      // 批次更新已過收單時間的團務
-      if (autoCloseIds.length) {
-        autoCloseIds.forEach(id => {
-          updateDoc(doc(db, "campaigns", id), { progress: "closed" }).catch(() => {});
-        });
-      }
     } catch(e) { list.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`; }
   };
 
@@ -8672,574 +8436,133 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   }
 </script>
 
-<!-- ── 出貨追蹤 JS ── -->
+<!-- ── 新功能擴充 JS ── -->
 <script type="module">
   import { db } from "./auth.js";
   import {
-    collection, doc, updateDoc, addDoc, deleteDoc,
-    getDocs, getDoc, query, orderBy, where, serverTimestamp
+    collection, doc, addDoc, updateDoc, deleteDoc, getDoc,
+    getDocs, query, orderBy, where, serverTimestamp, writeBatch
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  function esc(s) {
-    return String(s ?? "").replace(/[&<>"']/g, c =>
-      ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  }
+  function esc(s) { return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
-  let _currentShippingCampaign = null;
+  // ══════════════════════════════════════════════════════════════
+  // 出貨追蹤：自動處理 done 狀態團務
+  // ══════════════════════════════════════════════════════════════
 
-  // ── 團務列表 ─────────────────────────────────────────────────
+  // 在 loadShippingOrders 裡呼叫（hook 到已有函式後）
+  const _origLoadShippingCampaigns = window.loadShippingCampaigns;
   window.loadShippingCampaigns = async function() {
-    const listEl = document.getElementById("shipping-campaign-list");
-    const orderEl = document.getElementById("shipping-order-list");
-    if (!listEl) return;
-    listEl.style.display = "block";
-    if (orderEl) orderEl.style.display = "none";
-    listEl.innerHTML = '<div class="loading-row">載入中...</div>';
+    await _origLoadShippingCampaigns?.();
+    // 自動處理 done 狀態團務的訂單
+    autoFinalizeDoneCampaigns();
+  };
 
+  async function autoFinalizeDoneCampaigns() {
     try {
-      // 從 orders 集合讀取所有有 campaignId 的訂單，依團務分組
-      const snap = await getDocs(query(collection(db, "orders"), orderBy("createdAt", "desc")));
-      const groups = {};
-      snap.forEach(d => {
-        const o = d.data();
-        const cid = o.campaignId || "未分類";
-        if (!groups[cid]) groups[cid] = {
-          campaignId: cid,
-          campaignName: o.campaignName || cid,
-          orders: []
-        };
-        groups[cid].orders.push({ id: d.id, ...o });
-      });
+      const doneSnap = await getDocs(query(collection(db,"campaigns"), where("progress","==","done")));
+      const doneIds = [];
+      doneSnap.forEach(d => doneIds.push(d.id));
+      if (!doneIds.size && !doneIds.length) return;
 
-      if (!Object.keys(groups).length) {
-        listEl.innerHTML = '<div class="empty-row">尚無訂單資料</div>';
-        return;
+      for (const cid of doneIds) {
+        const oSnap = await getDocs(query(collection(db,"orders"), where("campaignId","==",cid)));
+        const toUpdate = [];
+        oSnap.forEach(d => {
+          const o = d.data();
+          if (!o.ordered || !o.shipped || !o.picked) {
+            toUpdate.push({ id: d.id, data: o });
+          }
+        });
+        if (!toUpdate.length) continue;
+        // 批次更新
+        const batch = writeBatch(db);
+        toUpdate.forEach(({ id, data: o }) => {
+          const paidStr   = o.paidAmount || (o.status==="paid" ? (o.totalPrice||"") : "");
+          const remainStr = o.remainAmount || "";
+          const extraStr  = o.extraAmount  || "";
+          // 剩餘+補款合併進已付
+          const newPaid = addAmountStr(paidStr, remainStr, extraStr);
+          batch.update(doc(db,"orders",id), {
+            ordered: true, shipped: true, picked: true,
+            paidAmount: newPaid, remainAmount: "", extraAmount: "",
+            updatedAt: serverTimestamp()
+          });
+        });
+        await batch.commit();
       }
-
-      listEl.innerHTML = "";
-      Object.values(groups).forEach(g => {
-        const paidCount = g.orders.filter(o => o.status === "paid").length;
-        const pickedCount = g.orders.filter(o => o.picked).length;
-        const card = document.createElement("div");
-        card.className = "campaign-admin-row";
-        card.style.cursor = "pointer";
-        card.innerHTML = `
-          <div class="car-main" style="flex:1">
-            <div class="car-name">${esc(g.campaignName)}</div>
-            <div class="car-meta">
-              <span>${esc(g.campaignId)}</span>
-              <span>・共 ${g.orders.length} 筆</span>
-              <span>・已付 ${paidCount} 筆</span>
-              <span>・取貨 ${pickedCount} 筆</span>
-            </div>
-          </div>
-          <div style="color:var(--text-muted);font-size:13px">▶</div>`;
-        card.addEventListener("click", () => loadShippingOrders(g));
-        listEl.appendChild(card);
-      });
-    } catch(e) {
-      listEl.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
-    }
-  };
-
-  // ── 返回團務列表 ─────────────────────────────────────────────
-  window.backToShippingCampaigns = function() {
-    document.getElementById("shipping-campaign-list").style.display = "block";
-    document.getElementById("shipping-order-list").style.display  = "none";
-  };
-
-  // ── 團務的出貨追蹤表 ─────────────────────────────────────────
-  async function loadShippingOrders(g) {
-    _currentShippingCampaign = g;
-    document.getElementById("shipping-campaign-list").style.display = "none";
-    const orderEl = document.getElementById("shipping-order-list");
-    orderEl.style.display = "block";
-    document.getElementById("shipping-campaign-title").textContent = g.campaignName;
-
-    const tableEl = document.getElementById("shipping-orders-table");
-    tableEl.innerHTML = '<div class="loading-row">載入中...</div>';
-
-    // 重新從 Firestore 讀最新資料
-    try {
-      // 用 where 過濾（不加 orderBy 避免需要複合 index）
-      const snap = await getDocs(
-        query(collection(db, "orders"), where("campaignId", "==", g.campaignId))
-      );
-      const orders = [];
-      snap.forEach(d => orders.push({ id: d.id, ...d.data() }));
-
-      const stats = `${orders.length} 筆 | 已付 ${orders.filter(o=>o.status==="paid").length} | 取貨 ${orders.filter(o=>o.picked).length}`;
-      document.getElementById("shipping-campaign-stats").textContent = stats;
-
-      if (!orders.length) { tableEl.innerHTML = '<div class="empty-row">此團務尚無訂單</div>'; return; }
-
-      renderShippingTable(orders, tableEl);
-    } catch(e) {
-      tableEl.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
-    }
+    } catch(e) { console.warn("autoFinalize error:", e); }
   }
 
-  function renderShippingTable(orders, tableEl) {
-    tableEl.innerHTML = "";
-    const wrapper = document.createElement("div");
-    wrapper.style.overflowX = "auto";
-    wrapper.innerHTML = `
-      <table class="shipping-table">
-        <thead>
-          <tr>
-            <th>社群暱稱</th>
-            <th>訂購商品</th>
-            <th>已付金額</th>
-            <th>剩餘金額</th>
-            <th style="text-align:center">
-              下單<br>
-              <label style="font-size:10px;cursor:pointer;font-weight:400">
-                <input type="checkbox" id="chk-all-ordered" style="accent-color:#fff;width:12px;height:12px"
-                  onchange="checkAllShipping('ordered',this.checked)"> 全
-              </label>
-            </th>
-            <th style="text-align:center">
-              出貨<br>
-              <label style="font-size:10px;cursor:pointer;font-weight:400">
-                <input type="checkbox" id="chk-all-shipped" style="accent-color:#fff;width:12px;height:12px"
-                  onchange="checkAllShipping('shipped',this.checked)"> 全
-              </label>
-            </th>
-            <th style="text-align:center">
-              取貨<br>
-              <label style="font-size:10px;cursor:pointer;font-weight:400">
-                <input type="checkbox" id="chk-all-picked" style="accent-color:#fff;width:12px;height:12px"
-                  onchange="checkAllShipping('picked',this.checked)"> 全
-              </label>
-            </th>
-            <th>備註</th>
-            <th>最後更新</th>
-          </tr>
-        </thead>
-        <tbody id="shipping-tbody"></tbody>
-      </table>`;
-    tableEl.appendChild(wrapper);
-
-    const tbody = document.getElementById("shipping-tbody");
-    orders.forEach(o => {
-      const row = document.createElement("tr");
-      row.id = `srow-${o.id}`;
-      row.dataset.shippingId = o.id;
-
-      // 金額計算（原封不動保留括號等特殊字元）
-      const rawTotalStr = String(o.totalPrice || o.total || o.totalAmount || "").trim();
-      const extraStr    = String(o.extraAmount || "").trim();
-      // 已付：status=paid 顯示原始金額字串；取貨後顯示 paidAmount（手動存的）
-      const paidStr   = o.paidAmount   || (o.status === "paid" ? rawTotalStr : "") || "";
-      const remainStr = o.remainAmount || (o.status !== "paid" ? rawTotalStr : "") || "";
-
-      // 商品明細：優先用原始 itemsText（原封不動），沒有才用 items 陣列
-      const itemsDetail = (() => {
-        if (o.itemsText) return String(o.itemsText).replace(/\n/g,"<br>");
-        if (o.items && o.items.length) {
-          return o.items.map(it => `${it.name}×${it.qty||1}`).join("<br>");
-        }
-        return "—";
-      })();
-
-      // 更新時間
-      const updatedAt = o.updatedAt?.toDate ? window.fmtDateTime(o.updatedAt.toDate()) : "—";
-
-      row.innerHTML = `
-        <td class="st-name">${esc(o.nickname || o.buyerName || o.email || "—")}</td>
-        <td class="st-items">${itemsDetail}</td>
-        <td class="st-paid">
-          <input class="st-amount-input" id="st-paid-${o.id}" type="text"
-            value="${esc(paidStr)}" placeholder="已付金額"
-            onchange="saveShippingAmount(\'${o.id}\', \'paid\', this.value)" />
-        </td>
-        <td class="st-remain">
-          <input class="st-amount-input" id="st-remain-${o.id}" type="text"
-            value="${esc(remainStr)}" placeholder="剩餘金額"
-            onchange="saveShippingAmount(\'${o.id}\', \'remain\', this.value)" />
-          <input class="st-amount-input" id="st-extra-${o.id}" type="text"
-            value="${esc(extraStr)}" placeholder="補款" style="margin-top:3px"
-            onchange="saveExtraAmount(\'${o.id}\', this.value)" />
-        </td>        <td style="text-align:center">
-          <input type="checkbox" class="st-check st-check-ordered" ${o.ordered ? "checked" : ""}
-            onchange="saveShippingFlag('${o.id}','ordered',this.checked)" />
-        </td>
-        <td style="text-align:center">
-          <input type="checkbox" class="st-check st-check-shipped" ${o.shipped ? "checked" : ""}
-            onchange="saveShippingFlag('${o.id}','shipped',this.checked)" />
-        </td>
-        <td style="text-align:center">
-          <input type="checkbox" class="st-check st-check-picked" ${o.picked ? "checked" : ""}
-            onchange="onPickedChange('${o.id}',this.checked)" />
-        </td>
-        <td><input class="st-note-input" id="st-note-${o.id}" type="text"
-          value="${esc(o.shippingNote||'')}" placeholder="備註"
-          onchange="saveShippingNote('${o.id}',this.value)" /></td>
-        <td class="st-updated">${updatedAt}</td>`;
-      tbody.appendChild(row);
-    });
-  }
-
-  // ── 一鍵全選 ──────────────────────────────────────────────────
-  window.checkAllShipping = async function(field, checked) {
-    const rows = document.querySelectorAll(`[data-shipping-id]`);
-    for (const row of rows) {
-      const orderId = row.dataset.shippingId;
-      const cb = row.querySelector(`.st-check-${field}`);
-      if (!cb || cb.checked === checked) continue;
-      cb.checked = checked;
-      if (field === 'picked') {
-        await onPickedChange(orderId, checked);
-      } else {
-        await saveShippingFlag(orderId, field, checked);
-      }
-    }
-  };
-
-  // ── 勾選下單/出貨 ────────────────────────────────────────────
-  window.saveShippingFlag = async function(orderId, field, value) {
-    try {
-      await updateDoc(doc(db,"orders",orderId), {
-        [field]: value, updatedAt: serverTimestamp()
-      });
-    } catch(e) { alert(`儲存失敗：${e.message}`); }
-  };
-
-  // ── 取貨勾選：剩餘金額移入已付 ─────────────────────────────
-  window.onPickedChange = async function(orderId, picked) {
-    const paidEl   = document.getElementById(`st-paid-${orderId}`);
-    const remainEl = document.getElementById(`st-remain-${orderId}`);
-    const extraEl  = document.getElementById(`st-extra-${orderId}`);
-    try {
-      const updates = { picked, updatedAt: serverTimestamp() };
-      if (picked) {
-        // 取貨：剩餘 + 補款 → 合併進已付
-        const remainVal = remainEl?.value?.trim() || "";
-        const extraVal  = extraEl?.value?.trim()  || "";
-        // 字串合併：「320(250)」+ 「20」→ 「340(270)」（嘗試數字加法，失敗則拼接）
-        const newPaid = addAmountStr(paidEl?.value?.trim() || "", remainVal, extraVal);
-        updates.paidAmount   = newPaid;
-        updates.remainAmount = "";
-        updates.extraAmount  = "";
-        if (paidEl)   paidEl.value   = newPaid;
-        if (remainEl) remainEl.value = "";
-        if (extraEl)  extraEl.value  = "";
-      }
-      await updateDoc(doc(db,"orders",orderId), updates);
-    } catch(e) { alert(`儲存失敗：${e.message}`); }
-  };
-
-  // 字串金額加法：支援「320(250)」格式，有括號就括號內外分別加
   function addAmountStr(...strs) {
-    // 先試試所有值是否都是純數字（含括號的忽略括號外加）
-    const vals = strs.filter(s => s);
+    const vals = strs.map(s=>String(s||"").trim()).filter(Boolean);
     if (!vals.length) return "";
-
-    // 嘗試解析：支援 「320(250)」格式 → 主金額:320, 括號金額:250
     const parse = s => {
       const m = String(s).match(/^([\d.]+)\(([\d.]+)\)$/);
       if (m) return { main: parseFloat(m[1]), sub: parseFloat(m[2]) };
       const n = parseFloat(String(s).replace(/[^\d.]/g,""));
       return isNaN(n) ? null : { main: n, sub: null };
     };
-
     const parsed = vals.map(parse);
-    if (parsed.some(p => !p)) return vals.join("+"); // 無法解析就拼接
-
-    const totalMain = parsed.reduce((s,p) => s + p.main, 0);
-    const hasSub = parsed.some(p => p.sub !== null);
+    if (parsed.some(p=>!p)) return vals.join("+");
+    const totalMain = parsed.reduce((s,p)=>s+p.main,0);
+    const hasSub = parsed.some(p=>p.sub!==null);
     if (hasSub) {
-      const totalSub = parsed.reduce((s,p) => s + (p.sub ?? p.main), 0);
+      const totalSub = parsed.reduce((s,p)=>s+(p.sub??p.main),0);
       return `${totalMain}(${totalSub})`;
     }
     return String(totalMain);
   }
 
-  // ── 補款金額 ─────────────────────────────────────────────────
-  window.saveExtraAmount = async function(orderId, value) {
-    try {
-      await updateDoc(doc(db,"orders",orderId), {
-        extraAmount: String(value||"").trim(), updatedAt: serverTimestamp()
-      });
-    } catch(e) { alert(`儲存失敗：${e.message}`); }
-  };
-
-  // 手動修改已付/剩餘金額
-  window.saveShippingAmount = async function(orderId, field, value) {
-    const key = field === 'paid' ? 'paidAmount' : 'remainAmount';
-    try {
-      await updateDoc(doc(db,"orders",orderId), {
-        [key]: String(value||"").trim(), updatedAt: serverTimestamp()
-      });
-    } catch(e) { alert(`儲存失敗：${e.message}`); }
-  };
-
-  // ── 備註 ─────────────────────────────────────────────────────
-  window.saveShippingNote = async function(orderId, value) {
-    try {
-      await updateDoc(doc(db,"orders",orderId), {
-        shippingNote: value, updatedAt: serverTimestamp()
-      });
-    } catch(e) { alert(`儲存失敗：${e.message}`); }
-  };
-
-  // ── 下載範本 CSV ─────────────────────────────────────────────
-  window.downloadShippingTemplate = function() {
-    // 直接連結到 GitHub repo 的 xlsx 範本
-    const a = document.createElement("a");
-    a.href = "https://huxiu2148.github.io/comet-c/shipping_template.xlsx";
-    a.download = "shipping_template.xlsx";
-    a.click();
-  };
-
-  // ── 批次匯入 ─────────────────────────────────────────────────
-  window.importShipping = async function(input) {
-    const file = input.files[0];
-    if (!file) return;
-    input.value = "";
-
-    try {
-      const rows = await parseShippingFile(file);
-      if (!rows.length) { alert("檔案內沒有有效資料"); return; }
-
-      const STATUS_MAP = {"已核對":"paid","已付款":"paid","未核對":"pending","待確認":"pending","paid":"paid","pending":"pending"};
-
-      // 預先載入所有 campaigns 取得名稱對照
-      const campaignNames = {};
-      try {
-        const cSnap = await getDocs(collection(db, "campaigns"));
-        cSnap.forEach(d => { campaignNames[d.id] = d.data().name || d.id; });
-      } catch(e) {}
-
-      // 預先讀取現有訂單（同一 campaignId + nickname 的）
-      const existingMap = {}; // key: "campaignId|nickname" → doc id
-      try {
-        const oSnap = await getDocs(collection(db, "orders"));
-        oSnap.forEach(d => {
-          const o = d.data();
-          if (o.campaignId && (o.nickname || o.buyerName)) {
-            const key = `${o.campaignId}|${o.nickname || o.buyerName}`;
-            existingMap[key] = d.id;
-          }
-        });
-      } catch(e) {}
-
-      let ok = 0, skip = 0, replace = 0, fail = 0;
-
-      for (const row of rows) {
-        try {
-          const campaignId   = String(row[0]||"").trim();
-          const nickname     = String(row[1]||"").trim();
-          const contact      = String(row[2]||"").trim();
-          const email        = String(row[3]||"").trim();
-          const itemsText    = String(row[4]||"").trim();
-          const amountRaw    = String(row[5]||"").trim();
-          const statusRaw    = String(row[6]||"").trim();
-          const returnInfo   = String(row[7]||"").trim();
-          const ordered      = String(row[8]||"").toLowerCase() === "true";
-          const shipped      = String(row[9]||"").toLowerCase() === "true";
-          const picked       = String(row[10]||"").toLowerCase() === "true";
-          const extraAmount  = String(row[11]||"").trim();
-          const shippingNote = String(row[12]||"").trim();
-
-          if (!campaignId || !itemsText) { skip++; continue; }
-
-          const status       = STATUS_MAP[statusRaw] || "pending";
-          const paidAmount   = status === "paid"    ? amountRaw : "";
-          const remainAmount = status === "pending" ? amountRaw : "";
-          const campaignName = campaignNames[campaignId] || campaignId;
-
-          const docData = {
-            campaignId, campaignName, nickname, contact, email, itemsText,
-            totalPrice: amountRaw, paidAmount, remainAmount, status,
-            returnInfo, ordered, shipped, picked, extraAmount, shippingNote,
-            userId: "imported", source: "shipping_import",
-            updatedAt: serverTimestamp(),
-          };
-
-          // 重複檢查
-          const dupKey = `${campaignId}|${nickname}`;
-          const existingId = existingMap[dupKey];
-
-          if (existingId) {
-            const choice = confirm(
-              `⚠️ 發現重複資料\n\n` +
-              `團務：${campaignName}\n` +
-              `暱稱：${nickname}\n` +
-              `商品：${itemsText.slice(0,40)}${itemsText.length>40?"…":""}\n\n` +
-              `確定「取代」請按確定，按取消則「略過」`
-            );
-            if (choice) {
-              await updateDoc(doc(db, "orders", existingId), docData);
-              replace++;
-            } else {
-              skip++;
-            }
-          } else {
-            docData.createdAt = serverTimestamp();
-            const newDoc = await addDoc(collection(db, "orders"), docData);
-            existingMap[dupKey] = newDoc.id; // 避免同批次重複
-            ok++;
-          }
-        } catch(e) { fail++; console.error(e); }
-      }
-
-      const msg = `✅ 匯入完成！新增 ${ok} 筆${replace?`，取代 ${replace} 筆`:""}${skip?`，略過 ${skip} 筆`:""}${fail?`，失敗 ${fail} 筆`:""}`;
-      alert(msg);
-      window.loadShippingCampaigns?.();
-    } catch(e) { alert("解析失敗：" + e.message); }
-  };
-
-
-  async function parseShippingFile(file) {
-    const ext = file.name.split(".").pop().toLowerCase();
-    if (ext === "csv") {
-      const buf = await file.arrayBuffer();
-      let text;
-      try { text = new TextDecoder("big5").decode(buf); if (text.includes("\uFFFD")) throw 0; }
-      catch { text = new TextDecoder("utf-8").decode(buf); }
-      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-      return parseCSVRows(text).slice(2).filter(r => r[0]);
-    }
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        try {
-          const XLSX = window.XLSX;
-          if (!XLSX) { reject(new Error("請改用 CSV 格式")); return; }
-          const wb = XLSX.read(new Uint8Array(e.target.result), { type:"array" });
-          const ws = wb.Sheets[wb.SheetNames[0]];
-          resolve(XLSX.utils.sheet_to_json(ws,{header:1,defval:""}).slice(2).filter(r=>r[0]));
-        } catch(err) { reject(err); }
-      };
-      reader.readAsArrayBuffer(file);
-    });
-  }
-
-  function parseCSVRows(text) {
-    return text.split(/\r?\n/).filter(l=>l.trim()).map(line => {
-      const row=[]; let cur="", inQ=false;
-      for (let i=0;i<line.length;i++) {
-        const ch=line[i];
-        if (ch==='"') { if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ; }
-        else if (ch===','&&!inQ) { row.push(cur); cur=""; }
-        else cur+=ch;
-      }
-      row.push(cur); return row;
-    });
-  }
-</script>
-
-<!-- ── 採購記錄（重新設計）JS ── -->
-<script type="module">
-  import { db } from "./auth.js";
-  import {
-    collection, doc, addDoc, updateDoc, deleteDoc,
-    getDocs, getDoc, query, orderBy, where, serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-  function esc(s) {
-    return String(s ?? "").replace(/[&<>"']/g, c =>
-      ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  }
+  // ══════════════════════════════════════════════════════════════
+  // 採購記錄（重新設計）
+  // ══════════════════════════════════════════════════════════════
 
   const PU_STATUS = {
-    ordered: "🛒 已下單", shipped: "📦 已出貨",
-    arrived: "🏪 到集運", returning: "✈️ 運回中", done: "✅ 已完成"
+    ordered:"🛒 已下單", shipped:"📦 已出貨",
+    arrived:"🏪 到集運", returning:"✈️ 運回中", done:"✅ 已完成"
   };
 
-  // ── 切換觸發 ──────────────────────────────────────────────────
-  document.addEventListener("adminSectionChanged", e => {
-    if (e.detail === "purchase") loadPurchaseCampaigns();
-  });
+  let _purchaseCampaignNames = {}; // id → name
+  let _purchaseAllCampaigns  = []; // [{id, name, progress, currency, returnAt}]
 
-  // ── 購買平台管理 ──────────────────────────────────────────────
-  let _platforms = [];
-
-  async function loadPlatforms() {
-    try {
-      const snap = await getDocs(collection(db, "purchasePlatforms"));
-      _platforms = [];
-      snap.forEach(d => _platforms.push({ id: d.id, name: d.data().name }));
-      _platforms.sort((a,b) => a.name.localeCompare(b.name));
-    } catch(e) { console.warn("平台載入失敗", e); }
-  }
-
-  window.openPlatformManager = async function() {
-    await loadPlatforms();
-    renderPlatformList();
-    document.getElementById("modal-platform-mgr").style.display = "flex";
-    document.getElementById("new-platform-input").value = "";
-  };
-
-  window.closePlatformManager = function(e) {
-    if (e && e.target !== document.getElementById("modal-platform-mgr")) return;
-    document.getElementById("modal-platform-mgr").style.display = "none";
-    // 重新填充採購 Modal 的平台選單
-    refreshPlatformSelect();
-  };
-
-  function renderPlatformList() {
-    const listEl = document.getElementById("platform-list");
-    if (!listEl) return;
-    if (!_platforms.length) {
-      listEl.innerHTML = '<div style="font-size:12px;color:var(--text-muted)">尚無平台，請新增</div>';
-      return;
-    }
-    listEl.innerHTML = _platforms.map(p => `
-      <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#fff8fb;border-radius:8px">
-        <span style="flex:1;font-size:13px">${esc(p.name)}</span>
-        <button class="btn btn-danger btn-sm" style="padding:3px 8px" onclick="deletePlatform('${p.id}','${esc(p.name)}')">✕</button>
-      </div>`).join("");
-  }
-
-  window.addPlatformItem = async function() {
-    const input = document.getElementById("new-platform-input");
-    const name = input?.value.trim();
-    if (!name) return;
-    try {
-      await addDoc(collection(db, "purchasePlatforms"), { name, createdAt: serverTimestamp() });
-      input.value = "";
-      await loadPlatforms();
-      renderPlatformList();
-    } catch(e) { alert("新增失敗：" + e.message); }
-  };
-
-  window.deletePlatform = async function(id, name) {
-    if (!confirm(`確定刪除「${name}」？`)) return;
-    try {
-      await deleteDoc(doc(db, "purchasePlatforms", id));
-      await loadPlatforms();
-      renderPlatformList();
-    } catch(e) { alert("刪除失敗：" + e.message); }
-  };
-
-  async function refreshPlatformSelect() {
-    await loadPlatforms();
-    const sel = document.getElementById("np-platform");
-    if (!sel) return;
-    const cur = sel.value;
-    sel.innerHTML = '<option value="">— 選擇 —</option>';
-    _platforms.forEach(p => {
-      const opt = document.createElement("option");
-      opt.value = p.name; opt.textContent = p.name;
-      sel.appendChild(opt);
-    });
-    if (cur) sel.value = cur;
-  }
-
-  // ── 主列表：按團務分組 ─────────────────────────────────────────
   window.loadPurchaseCampaigns = async function() {
     const listEl = document.getElementById("purchase-campaign-list");
     if (!listEl) return;
     listEl.innerHTML = '<div class="loading-row">載入中...</div>';
+
+    const showDone = document.getElementById("pu-show-done")?.checked || false;
+
     try {
-      const snap = await getDocs(query(collection(db, "purchases"), orderBy("createdAt", "desc")));
+      // 載入所有 campaigns
+      const cSnap = await getDocs(query(collection(db,"campaigns"), orderBy("createdAt","desc")));
+      _purchaseAllCampaigns = [];
+      _purchaseCampaignNames = {};
+      cSnap.forEach(d => {
+        const c = d.data();
+        _purchaseCampaignNames[d.id] = c.name;
+        _purchaseAllCampaigns.push({ id: d.id, ...c });
+      });
+
+      // 載入採購記錄
+      const pSnap = await getDocs(query(collection(db,"purchases"), orderBy("createdAt","desc")));
       const groups = {};
-      snap.forEach(d => {
+      pSnap.forEach(d => {
         const p = d.data();
         const cid = p.campaignId || "未分類";
-        if (!groups[cid]) groups[cid] = { campaignId: cid, campaignName: p.campaignName || cid, records: [] };
+        const camp = _purchaseAllCampaigns.find(c => c.id === cid);
+
+        // 隱藏已結束且運回時間已到
+        if (!showDone && camp?.progress === "done") {
+          const returnAt = p.returnAt?.toDate ? p.returnAt.toDate() : (p.returnAt ? new Date(p.returnAt) : null);
+          if (returnAt && returnAt < new Date()) return;
+        }
+
+        if (!groups[cid]) groups[cid] = {
+          campaignId: cid,
+          campaignName: _purchaseCampaignNames[cid] || p.campaignName || cid,
+          records: []
+        };
         groups[cid].records.push({ id: d.id, ...p });
       });
 
@@ -9249,329 +8572,608 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       }
 
       listEl.innerHTML = "";
-      Object.values(groups).forEach(g => renderPurchaseCampaignCard(g, listEl));
+      Object.values(groups).forEach(g => renderPuCampaignCard(g, listEl));
     } catch(e) {
       listEl.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
     }
   };
 
-  function renderPurchaseCampaignCard(g, container) {
+  function renderPuCampaignCard(g, container) {
     const card = document.createElement("div");
     card.className = "pu-campaign-card";
     card.innerHTML = `
-      <div class="pu-campaign-header" onclick="togglePuCampaign('${g.campaignId}')">
+      <div class="pu-campaign-header" onclick="togglePuCampaign('${esc(g.campaignId)}')">
         <div>
           <div style="font-weight:700;font-size:14px">${esc(g.campaignName)}</div>
           <div style="font-size:11px;color:var(--text-muted)">${esc(g.campaignId)} ・ ${g.records.length} 筆採購</div>
         </div>
-        <span style="color:var(--text-muted);font-size:13px" id="pu-toggle-${g.campaignId}">▶</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-ghost btn-sm" style="font-size:11px"
+            onclick="event.stopPropagation();openInlinePurchase('${esc(g.campaignId)}','${esc(g.campaignName)}')">＋ 新增採購</button>
+          <span style="color:var(--text-muted);font-size:13px" id="pu-toggle-${esc(g.campaignId)}">▶</span>
+        </div>
       </div>
-      <div class="pu-records-list" id="pu-records-${g.campaignId}" style="display:none">
-        ${g.records.map(r => renderPurchaseRecordHTML(r)).join("")}
-        <button class="btn btn-ghost btn-sm" style="margin:8px 0 4px"
-          onclick="openNewPurchaseModal('${g.campaignId}')">＋ 新增這個團務的採購</button>
+      <div class="pu-records-list" id="pu-records-${esc(g.campaignId)}" style="display:none">
+        ${g.records.map(r => renderPuRecordHTML(r)).join("")}
+        <div id="pu-inline-${esc(g.campaignId)}"></div>
       </div>`;
     container.appendChild(card);
   }
 
-  function renderPurchaseRecordHTML(r) {
-    const itemsHTML = (r.items || []).map(it =>
-      `<tr>
-        <td>${esc(it.name)}</td>
-        <td style="text-align:center">${it.qty || 1}</td>
-        <td style="text-align:right">${it.unitPrice ? `NT$${Number(it.unitPrice).toLocaleString()}` : "—"}</td>
-        <td style="text-align:right;font-weight:700">${it.subtotal ? `NT$${Number(it.subtotal).toLocaleString()}` : "—"}</td>
-      </tr>`
-    ).join("");
-
+  function renderPuRecordHTML(r) {
     const chips = [];
     if (r.platform)     chips.push(`<span class="pu-chip">${esc(r.platform)}</span>`);
     if (r.warehouse)    chips.push(`<span class="pu-chip blue">🏭 ${esc(r.warehouse)}</span>`);
     if (r.foreignAmount && r.currency) chips.push(`<span class="pu-chip orange">${Number(r.foreignAmount).toLocaleString()} ${esc(r.currency)}</span>`);
-    if (r.orderedAt)    chips.push(`<span class="pu-chip">下單：${window.fmtDateTime?.(r.orderedAt?.toDate?.() || r.orderedAt)?.slice(0,16) || "—"}</span>`);
     if (r.tracking)     chips.push(`<span class="pu-chip blue">單號：${esc(r.tracking)}</span>`);
-    if (r.arrivedAt)    chips.push(`<span class="pu-chip green">到倉：${window.fmtDateTime?.(r.arrivedAt?.toDate?.() || r.arrivedAt)?.slice(0,16) || "—"}</span>`);
+    if (r.arrivedAt)    chips.push(`<span class="pu-chip green">到倉：${fmtDate(r.arrivedAt)}</span>`);
     if (r.weight)       chips.push(`<span class="pu-chip green">${r.weight} kg</span>`);
     if (r.shippingFee)  chips.push(`<span class="pu-chip orange">運費 NT$${Number(r.shippingFee).toLocaleString()}</span>`);
+
+    const itemsHTML = (r.items||[]).map(it =>
+      `<tr><td>${esc(it.name)}</td><td style="text-align:center">${it.qty||1}</td>
+       <td style="text-align:right">${it.unitPrice?`NT$${Number(it.unitPrice).toLocaleString()}`:"—"}</td>
+       <td style="text-align:right;font-weight:700">${it.subtotal?`NT$${Number(it.subtotal).toLocaleString()}`:"—"}</td></tr>`
+    ).join("");
 
     return `<div class="pu-record-row" id="pur-${r.id}">
       <div class="pu-record-header">
         <div>
-          <span class="pu-record-batch">${esc(r.batchName || "採購批次")}</span>
-          <span style="font-size:11px;margin-left:8px">${PU_STATUS[r.status] || r.status}</span>
+          <span class="pu-record-batch">${esc(r.batchName||"採購批次")}</span>
+          <span style="font-size:11px;margin-left:8px">${PU_STATUS[r.status]||r.status||""}</span>
         </div>
-        <div style="display:flex;gap:6px">
-          ${r.total ? `<span style="font-weight:700;color:var(--pink)">NT$${Number(r.total).toLocaleString()}</span>` : ""}
-          <button class="btn btn-ghost btn-sm" onclick="editPurchaseRecord('${r.id}')">編輯</button>
-          <button class="btn btn-danger btn-sm" onclick="deletePurchaseRecord('${r.id}')">刪除</button>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${r.total?`<span style="font-weight:700;color:var(--pink)">NT$${Number(r.total).toLocaleString()}</span>`:""}
+          <button class="btn btn-danger btn-sm" onclick="deletePuRecord('${r.id}')">刪除</button>
         </div>
       </div>
-      ${chips.length ? `<div class="pu-meta">${chips.join("")}</div>` : ""}
-      ${itemsHTML ? `<table class="pu-items-table">
+      ${chips.length?`<div class="pu-meta">${chips.join("")}</div>`:""}
+      ${itemsHTML?`<table class="pu-items-table">
         <thead><tr><th>商品</th><th>數量</th><th>單價</th><th>小計</th></tr></thead>
-        <tbody>${itemsHTML}</tbody>
-      </table>` : ""}
-      ${r.note ? `<div style="font-size:12px;color:var(--text-muted);margin-top:4px">${esc(r.note)}</div>` : ""}
+        <tbody>${itemsHTML}</tbody></table>`:""}
+      ${r.note?`<div style="font-size:12px;color:var(--text-muted);margin-top:4px">${esc(r.note)}</div>`:""}
     </div>`;
   }
 
+  function fmtDate(v) {
+    if (!v) return "—";
+    const d = v?.toDate ? v.toDate() : new Date(v);
+    if (isNaN(d)) return "—";
+    return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}`;
+  }
+
   window.togglePuCampaign = function(cid) {
-    const el = document.getElementById(`pu-records-${cid}`);
+    const el   = document.getElementById(`pu-records-${cid}`);
     const icon = document.getElementById(`pu-toggle-${cid}`);
-    const open = el.style.display === "none";
-    el.style.display  = open ? "block" : "none";
-    icon.textContent  = open ? "▼" : "▶";
+    const open = el?.style.display === "none";
+    if (el)   el.style.display   = open ? "block" : "none";
+    if (icon) icon.textContent   = open ? "▼" : "▶";
   };
 
-  // ── 新增採購 Modal ─────────────────────────────────────────────
-  let _editingPurchaseRecordId = null;
+  // ── 行內新增採購 ────────────────────────────────────────────
+  let _inlineOrderSummary = {}; // campaignId → {itemKey: {name, specs, total, remaining}}
 
-  window.openNewPurchaseModal = async function(presetCampaignId = null) {
-    _editingPurchaseRecordId = null;
-    document.getElementById("np-modal-title").textContent = "🛒 新增採購記錄";
-    document.getElementById("np-error").textContent = "";
-    // 清空
-    ["np-batch","np-tracking","np-note","np-total","np-weight","np-shipping-fee"].forEach(id => {
-      const el = document.getElementById(id); if (el) el.value = "";
-    });
-    ["np-ordered-at","np-arrived-at","np-return-at"].forEach(id => {
-      const el = document.getElementById(id); if (el) el.value = "";
-    });
-    document.getElementById("np-status").value = "ordered";
-    document.getElementById("np-items-list").innerHTML = "";
+  window.openInlinePurchase = async function(campaignId, campaignName) {
+    // 先展開
+    const recEl = document.getElementById(`pu-records-${campaignId}`);
+    if (recEl?.style.display === "none") togglePuCampaign(campaignId);
 
-    // 重置新欄位
-    ["np-platform","np-foreign-amount","np-currency"].forEach(id => {
-      const el = document.getElementById(id); if (el) el.value = "";
-    });
+    const container = document.getElementById(`pu-inline-${campaignId}`);
+    if (!container) return;
+    if (container.innerHTML.includes("pu-inline-form")) return; // 已開啟
 
-    // 載入購買平台選單
-    await refreshPlatformSelect();
+    // 彙算訂單商品
+    container.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:8px">彙算訂單中...</div>';
+    const summary = await buildOrderSummary(campaignId);
+    _inlineOrderSummary[campaignId] = summary;
 
-    // 載入集運倉選單
-    const warehouseSel = document.getElementById("np-warehouse");
-    warehouseSel.innerHTML = '<option value="">— 選擇 —</option>';
-    try {
-      const wSnap = await getDocs(collection(db, "warehouses"));
-      wSnap.forEach(d => {
-        const opt = document.createElement("option");
-        opt.value = d.data().name || d.id;
-        opt.textContent = d.data().name || d.id;
-        warehouseSel.appendChild(opt);
+    // 已有採購記錄的數量
+    const pSnap = await getDocs(query(collection(db,"purchases"), where("campaignId","==",campaignId)));
+    const alreadyOrdered = {}; // itemKey → qty
+    pSnap.forEach(d => {
+      (d.data().items||[]).forEach(it => {
+        const k = itemKey(it.name, it.specs||"");
+        alreadyOrdered[k] = (alreadyOrdered[k]||0) + (it.qty||1);
       });
-    } catch(e) {}
+    });
 
-    // 載入團務選單
-    const sel = document.getElementById("np-campaign");
-    sel.innerHTML = '<option value="">— 選擇團務 —</option>';
-    try {
-      const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt", "desc")));
-      snap.forEach(d => {
-        const opt = document.createElement("option");
-        opt.value = d.id;
-        opt.dataset.name = d.data().name;
-        opt.textContent = `${d.data().name} (${d.id})`;
-        sel.appendChild(opt);
-      });
-    } catch(e) {}
+    // 計算剩餘
+    const remaining = {};
+    Object.entries(summary).forEach(([k,v]) => {
+      remaining[k] = { ...v, remaining: Math.max(0, v.total - (alreadyOrdered[k]||0)) };
+    });
 
-    if (presetCampaignId) {
-      sel.value = presetCampaignId;
-      onNpCampaignChange();
-    }
-
-    // 預設下單時間
-    const now = new Date();
-    const pad = n => String(n).padStart(2,"0");
-    document.getElementById("np-ordered-at").value =
-      `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
-
-    document.getElementById("modal-new-purchase").style.display = "flex";
+    renderInlineForm(campaignId, campaignName, remaining);
   };
 
-  window.closeNewPurchaseModal = function(e) {
-    if (e && e.target !== document.getElementById("modal-new-purchase")) return;
-    document.getElementById("modal-new-purchase").style.display = "none";
-  };
+  function itemKey(name, specs) {
+    return `${name}||${typeof specs === "object" ? JSON.stringify(specs) : (specs||"")}`;
+  }
 
-  // 選了團務後自動彙算訂單商品，並帶入幣別和購買平台
-  window.onNpCampaignChange = async function() {
-    const sel = document.getElementById("np-campaign");
-    const cid = sel.value;
-    if (!cid) return;
-
-    // 從 campaigns 取幣別和 groupId
+  async function buildOrderSummary(campaignId) {
+    const summary = {}; // key → {name, specs, specStr, total, unitPrice, foreignPrice}
     try {
-      const cSnap = await getDoc(doc(db, "campaigns", cid));
-      if (cSnap.exists()) {
-        const cData = cSnap.data();
-        // 幣別
-        const currEl = document.getElementById("np-currency");
-        if (currEl && !currEl.value) currEl.value = cData.currency || "KRW";
-        // 購買平台由 refreshPlatformSelect 統一管理
-      }
-    } catch(e) {}
-    const loading = document.getElementById("np-items-loading");
-    const listEl  = document.getElementById("np-items-list");
-    loading.style.display = "block";
-    listEl.innerHTML = "";
-
-    try {
-      // 從 orders 集合讀取該團務的所有訂單，彙算商品數量
-      const snap = await getDocs(query(collection(db, "orders"), where("campaignId", "==", cid)));
-      const itemMap = {}; // name -> qty
-
+      const snap = await getDocs(query(collection(db,"orders"), where("campaignId","==",campaignId)));
       snap.forEach(d => {
         const o = d.data();
         if (o.items && o.items.length) {
           o.items.forEach(it => {
-            const key = it.name || it.specStr || "未知商品";
-            itemMap[key] = (itemMap[key] || 0) + (it.qty || 1);
+            const specs = it.specs || {};
+            const specStr = it.specStr || Object.entries(specs).filter(([,v])=>v).map(([k,v])=>`${k}:${v}`).join(" ");
+            const k = itemKey(it.name, specs);
+            if (!summary[k]) summary[k] = { name: it.name, specs, specStr, total: 0, unitPrice: it.price||0 };
+            summary[k].total += (it.qty||1);
           });
         } else if (o.itemsText) {
-          // 文字格式解析：「商品A x2\n商品B x1」
-          String(o.itemsText).split(/\n|；/).forEach(line => {
+          String(o.itemsText).split(/\n/).forEach(line => {
             const m = line.trim().match(/^(.+?)\s*[xX×]\s*(\d+)\s*$/);
             if (m) {
-              itemMap[m[1].trim()] = (itemMap[m[1].trim()] || 0) + parseInt(m[2]);
-            } else if (line.trim()) {
-              itemMap[line.trim()] = (itemMap[line.trim()] || 0) + 1;
+              const k = itemKey(m[1].trim(), "");
+              if (!summary[k]) summary[k] = { name: m[1].trim(), specs:{}, specStr:"", total:0, unitPrice:0 };
+              summary[k].total += parseInt(m[2]);
             }
           });
         }
       });
+    } catch(e) {}
+    return summary;
+  }
 
-      loading.style.display = "none";
+  function renderInlineForm(campaignId, campaignName, remaining) {
+    const container = document.getElementById(`pu-inline-${campaignId}`);
+    if (!container) return;
 
-      if (!Object.keys(itemMap).length) {
-        listEl.innerHTML = '<div style="font-size:12px;color:var(--text-muted)">此團務尚無訂單，請手動新增商品</div>';
-        addNpItem();
-        return;
-      }
+    // 取得幣別
+    const camp = _purchaseAllCampaigns.find(c => c.id === campaignId);
+    const currency = camp?.currency || "KRW";
 
-      // 渲染商品列表
-      Object.entries(itemMap).forEach(([name, qty]) => {
-        addNpItem(name, qty);
+    const summaryKeys = Object.keys(remaining);
+
+    container.innerHTML = `
+      <div class="pu-inline-form" id="pu-inline-form-${campaignId}">
+        <div class="pu-inline-title">
+          <span style="font-weight:700">＋ 新增採購記錄</span>
+          <button class="btn btn-ghost btn-sm" onclick="closeInlinePurchase('${campaignId}')">✕</button>
+        </div>
+
+        <!-- 快速帶入商品 -->
+        ${summaryKeys.length ? `<div style="margin-bottom:10px">
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">點擊快速加入（括號內為訂單總數，已採購後顯示剩餘）：</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px">
+            ${summaryKeys.map(k => {
+              const v = remaining[k];
+              const label = v.specStr ? `${v.name} ${v.specStr}` : v.name;
+              return `<button class="btn btn-ghost btn-sm" style="font-size:11px"
+                onclick="quickAddPuItem('${campaignId}','${k.replace(/'/g,"&#39;")}')"
+                id="pu-quick-${campaignId}-${encodeURIComponent(k).slice(0,20)}">
+                ${esc(label)} <span style="opacity:.6">(${v.remaining}/${v.total})</span>
+              </button>`;
+            }).join("")}
+          </div>
+        </div>` : ""}
+
+        <!-- 商品列表 -->
+        <div id="pu-items-${campaignId}" style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px"></div>
+        <button class="btn-add-spec-option" onclick="manualAddPuItem('${campaignId}')">＋ 手動新增商品</button>
+
+        <!-- 基本資訊 -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">批次說明</label>
+            <input class="form-input" id="pu-il-batch-${campaignId}" type="text" placeholder="第一批、安可加單..." style="font-size:13px" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">狀態</label>
+            <select class="form-input" id="pu-il-status-${campaignId}" style="font-size:13px">
+              <option value="ordered">🛒 已下單</option>
+              <option value="shipped">📦 已出貨</option>
+              <option value="arrived">🏪 到集運</option>
+              <option value="returning">✈️ 運回中</option>
+              <option value="done">✅ 已完成</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">購買平台</label>
+            <select class="form-input" id="pu-il-platform-${campaignId}" style="font-size:13px">
+              <option value="">— 選擇 —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">集運倉</label>
+            <select class="form-input" id="pu-il-warehouse-${campaignId}" style="font-size:13px">
+              <option value="">— 選擇 —</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px">
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">台幣總額 NT$</label>
+            <input class="form-input" id="pu-il-total-${campaignId}" type="number" min="0" placeholder="自動加總" style="font-size:13px" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">外幣總額</label>
+            <input class="form-input" id="pu-il-foreign-${campaignId}" type="number" min="0" placeholder="0" style="font-size:13px" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">幣別</label>
+            <input class="form-input" id="pu-il-currency-${campaignId}" type="text" value="${esc(currency)}" style="font-size:13px;text-transform:uppercase" />
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">貨運單號</label>
+            <input class="form-input" id="pu-il-tracking-${campaignId}" type="text" style="font-size:13px" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">備註</label>
+            <input class="form-input" id="pu-il-note-${campaignId}" type="text" style="font-size:13px" />
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end">
+          <button class="btn btn-ghost btn-sm" onclick="closeInlinePurchase('${campaignId}')">取消</button>
+          <button class="btn btn-primary btn-sm" onclick="saveInlinePurchase('${campaignId}','${esc(campaignName)}')">💾 儲存採購</button>
+        </div>
+      </div>`;
+
+    // 載入平台和集運倉
+    loadInlineSelects(campaignId);
+  }
+
+  async function loadInlineSelects(campaignId) {
+    try {
+      const platSnap = await getDocs(collection(db,"purchasePlatforms"));
+      const platSel  = document.getElementById(`pu-il-platform-${campaignId}`);
+      if (platSel) platSnap.forEach(d => {
+        const o = document.createElement("option");
+        o.value = o.textContent = d.data().name; platSel.appendChild(o);
       });
-    } catch(e) {
-      loading.style.display = "none";
-      listEl.innerHTML = `<div style="color:var(--danger);font-size:12px">彙算失敗：${e.message}</div>`;
+    } catch(e) {}
+    try {
+      const wSnap   = await getDocs(collection(db,"warehouses"));
+      const wSel    = document.getElementById(`pu-il-warehouse-${campaignId}`);
+      if (wSel) wSnap.forEach(d => {
+        const o = document.createElement("option");
+        o.value = o.textContent = d.data().name||d.id; wSel.appendChild(o);
+      });
+    } catch(e) {}
+  }
+
+  window.closeInlinePurchase = function(cid) {
+    const c = document.getElementById(`pu-inline-${cid}`);
+    if (c) c.innerHTML = "";
+  };
+
+  // 快速點按帶入商品
+  window.quickAddPuItem = function(campaignId, key) {
+    const summary = _inlineOrderSummary[campaignId]||{};
+    const v = summary[key];
+    if (!v) return;
+    const itemsEl = document.getElementById(`pu-items-${campaignId}`);
+    if (!itemsEl) return;
+
+    // 找是否已有同款
+    const existing = itemsEl.querySelector(`[data-key="${CSS.escape(key)}"]`);
+    if (existing) {
+      // 累計數量
+      const qtyEl = existing.querySelector(".pu-item-qty");
+      if (qtyEl) {
+        qtyEl.value = parseInt(qtyEl.value||1) + 1;
+        updatePuSubtotal(existing);
+      }
+      return;
+    }
+    addPuItemRow(campaignId, key, v.name, v.specStr, 1, v.unitPrice||0);
+  };
+
+  window.manualAddPuItem = function(campaignId) {
+    addPuItemRow(campaignId, `manual-${Date.now()}`, "", "", 1, 0);
+  };
+
+  function addPuItemRow(campaignId, key, name, specStr, qty, price) {
+    const itemsEl = document.getElementById(`pu-items-${campaignId}`);
+    if (!itemsEl) return;
+    const row = document.createElement("div");
+    row.className = "pu-item-row";
+    row.dataset.key = key;
+    const displayName = specStr ? `${name} ${specStr}` : name;
+    row.innerHTML = `
+      <input class="form-input pu-item-name" style="flex:2;font-size:12px" value="${esc(displayName)}" placeholder="商品名稱" />
+      <input class="form-input pu-item-qty"  style="width:55px;font-size:12px;text-align:center" type="number" min="1" value="${qty}" oninput="updatePuSubtotal(this.closest('.pu-item-row'))" />
+      <input class="form-input pu-item-price" style="width:80px;font-size:12px" type="number" min="0" value="${price||""}" placeholder="單價" oninput="updatePuSubtotal(this.closest('.pu-item-row'))" />
+      <input class="form-input pu-item-sub"  style="width:80px;font-size:12px" type="number" min="0" placeholder="小計" />
+      <button class="btn btn-danger btn-sm" style="padding:3px 7px" onclick="this.closest('.pu-item-row').remove();updatePuTotal('${campaignId}')">✕</button>`;
+    itemsEl.appendChild(row);
+    updatePuSubtotal(row, campaignId);
+  }
+
+  window.updatePuSubtotal = function(row, campaignId) {
+    const qty   = parseFloat(row.querySelector(".pu-item-qty")?.value) || 0;
+    const price = parseFloat(row.querySelector(".pu-item-price")?.value) || 0;
+    const sub   = row.querySelector(".pu-item-sub");
+    if (sub && qty && price) sub.value = qty * price;
+    // 找 campaignId
+    const form = row.closest(".pu-inline-form");
+    if (form) {
+      const cid = form.id.replace("pu-inline-form-","");
+      updatePuTotal(cid);
     }
   };
 
-  // 新增商品行
-  let _npItemIdx = 0;
-  window.addNpItem = function(name = "", qty = 1, unitPrice = "", subtotal = "") {
-    const idx = _npItemIdx++;
-    const listEl = document.getElementById("np-items-list");
-    const row = document.createElement("div");
-    row.className = "np-item-row";
-    row.id = `np-item-${idx}`;
-    row.innerHTML = `
-      <input class="form-input" style="flex:2;font-size:13px" placeholder="商品名稱"
-        value="${esc(name)}" id="np-item-name-${idx}" />
-      <input class="form-input" style="width:60px;font-size:13px;text-align:center" placeholder="數量"
-        type="number" min="1" value="${qty}" id="np-item-qty-${idx}"
-        oninput="updateNpSubtotal(${idx})" />
-      <input class="form-input" style="width:90px;font-size:13px" placeholder="單價"
-        type="number" min="0" value="${unitPrice}" id="np-item-price-${idx}"
-        oninput="updateNpSubtotal(${idx})" />
-      <input class="form-input" style="width:90px;font-size:13px" placeholder="小計"
-        type="number" min="0" value="${subtotal}" id="np-item-sub-${idx}" />
-      <button class="btn btn-danger btn-sm" style="padding:4px 8px;flex-shrink:0"
-        onclick="document.getElementById('np-item-${idx}').remove();updateNpTotal()">✕</button>`;
-    listEl.appendChild(row);
-    updateNpTotal();
-  };
-
-  window.updateNpSubtotal = function(idx) {
-    const qty   = parseFloat(document.getElementById(`np-item-qty-${idx}`)?.value) || 0;
-    const price = parseFloat(document.getElementById(`np-item-price-${idx}`)?.value) || 0;
-    const subEl = document.getElementById(`np-item-sub-${idx}`);
-    if (subEl && qty && price) subEl.value = qty * price;
-    updateNpTotal();
-  };
-
-  function updateNpTotal() {
-    const rows = document.querySelectorAll('[id^="np-item-"]');
+  function updatePuTotal(campaignId) {
+    const itemsEl = document.getElementById(`pu-items-${campaignId}`);
+    if (!itemsEl) return;
     let total = 0;
-    rows.forEach(row => {
-      const sub = parseFloat(row.querySelector('[id^="np-item-sub-"]')?.value) || 0;
-      total += sub;
+    itemsEl.querySelectorAll(".pu-item-sub").forEach(el => {
+      total += parseFloat(el.value) || 0;
     });
-    const totalEl = document.getElementById("np-total");
+    const totalEl = document.getElementById(`pu-il-total-${campaignId}`);
     if (totalEl && total > 0) totalEl.value = total;
   }
 
   // ── 儲存採購記錄 ──────────────────────────────────────────────
-  window.saveNewPurchase = async function() {
-    const campaignId = document.getElementById("np-campaign").value;
-    const errEl = document.getElementById("np-error");
-    if (!campaignId) { errEl.textContent = "請選擇團務"; return; }
+  window.saveInlinePurchase = async function(campaignId, campaignName) {
+    const itemsEl = document.getElementById(`pu-items-${campaignId}`);
+    if (!itemsEl) return;
 
-    const sel = document.getElementById("np-campaign");
-    const campaignName = sel.options[sel.selectedIndex]?.dataset.name || "";
-
-    // 收集商品
     const items = [];
-    document.querySelectorAll('[id^="np-item-"]:not([id*="-name-"]):not([id*="-qty-"]):not([id*="-price-"]):not([id*="-sub-"])').forEach(row => {
-      const idx = row.id.replace("np-item-","");
-      const name     = document.getElementById(`np-item-name-${idx}`)?.value.trim();
-      const qty      = parseFloat(document.getElementById(`np-item-qty-${idx}`)?.value) || 1;
-      const unitPrice= parseFloat(document.getElementById(`np-item-price-${idx}`)?.value) || 0;
-      const subtotal = parseFloat(document.getElementById(`np-item-sub-${idx}`)?.value) || 0;
+    itemsEl.querySelectorAll(".pu-item-row").forEach(row => {
+      const name     = row.querySelector(".pu-item-name")?.value.trim();
+      const qty      = parseFloat(row.querySelector(".pu-item-qty")?.value) || 1;
+      const unitPrice= parseFloat(row.querySelector(".pu-item-price")?.value) || 0;
+      const subtotal = parseFloat(row.querySelector(".pu-item-sub")?.value) || 0;
       if (name) items.push({ name, qty, unitPrice, subtotal });
     });
 
-    const toDate = id => {
-      const v = document.getElementById(id)?.value;
-      return v ? new Date(v) : null;
-    };
+    const g = v => document.getElementById(`pu-il-${v}-${campaignId}`)?.value || "";
+    const total       = parseFloat(g("total")) || 0;
+    const foreignAmt  = parseFloat(g("foreign")) || 0;
+    const currency    = g("currency").trim().toUpperCase() || "KRW";
+    const batchName   = g("batch").trim() || `批次${Date.now().toString().slice(-4)}`;
 
     const data = {
       campaignId, campaignName,
-      batchName:     document.getElementById("np-batch").value.trim() || `批次${Date.now().toString().slice(-4)}`,
-      platform:      document.getElementById("np-platform").value,
-      warehouse:     document.getElementById("np-warehouse").value,
-      foreignAmount: parseFloat(document.getElementById("np-foreign-amount").value) || 0,
-      currency:      document.getElementById("np-currency").value.trim().toUpperCase() || "KRW",
-      items,
-      total:         parseFloat(document.getElementById("np-total").value) || 0,
-      tracking:      document.getElementById("np-tracking").value.trim(),
-      weight:      parseFloat(document.getElementById("np-weight").value) || 0,
-      shippingFee: parseFloat(document.getElementById("np-shipping-fee").value) || 0,
-      note:        document.getElementById("np-note").value.trim(),
-      status:      document.getElementById("np-status").value,
-      orderedAt:   toDate("np-ordered-at"),
-      arrivedAt:   toDate("np-arrived-at"),
-      returnAt:    toDate("np-return-at"),
+      batchName, items, total, foreignAmount: foreignAmt, currency,
+      platform:    g("platform"),
+      warehouse:   g("warehouse"),
+      tracking:    g("tracking"),
+      note:        g("note"),
+      status:      g("status") || "ordered",
+      createdAt:   serverTimestamp(),
       updatedAt:   serverTimestamp(),
     };
 
     try {
-      if (_editingPurchaseRecordId) {
-        await updateDoc(doc(db, "purchases", _editingPurchaseRecordId), data);
-      } else {
-        data.createdAt = serverTimestamp();
-        await addDoc(collection(db, "purchases"), data);
+      await addDoc(collection(db,"purchases"), data);
+
+      // 同步到記帳（收支 ledger）
+      if (total > 0) {
+        await addDoc(collection(db,"ledger"), {
+          type: "expense",
+          category: "採購成本",
+          campaignId, campaignName, batchName,
+          amount: total,
+          note: `採購：${batchName}`,
+          date: serverTimestamp(),
+          createdAt: serverTimestamp(),
+          source: "purchase_auto"
+        });
       }
-      document.getElementById("modal-new-purchase").style.display = "none";
-      await window.loadPurchaseCampaigns?.();
-    } catch(e) { errEl.textContent = "儲存失敗：" + e.message; }
+
+      closeInlinePurchase(campaignId);
+      window.loadPurchaseCampaigns?.();
+    } catch(e) { alert("儲存失敗：" + e.message); }
   };
 
-  // ── 刪除採購記錄 ──────────────────────────────────────────────
-  window.deletePurchaseRecord = async function(id) {
+  window.deletePuRecord = async function(id) {
     if (!confirm("確定刪除此採購記錄？")) return;
     try {
-      await deleteDoc(doc(db, "purchases", id));
+      await deleteDoc(doc(db,"purchases",id));
       document.getElementById(`pur-${id}`)?.remove();
     } catch(e) { alert("刪除失敗：" + e.message); }
   };
 
-  // ── 編輯採購記錄（待實作）──────────────────────────────────────
-  window.editPurchaseRecord = async function(id) {
-    // TODO: 載入資料回填 modal
-    alert("編輯功能開發中");
+  // ══════════════════════════════════════════════════════════════
+  // 記帳（全新設計）
+  // ══════════════════════════════════════════════════════════════
+
+  let _ledgerData = [];
+  let _ledgerCampaigns = {};
+
+  window.initFinanceV2 = async function() {
+    await loadLedgerData();
+    renderFinanceDashboard();
+  };
+
+  async function loadLedgerData() {
+    try {
+      const snap = await getDocs(query(collection(db,"ledger"), orderBy("date","desc")));
+      _ledgerData = [];
+      snap.forEach(d => _ledgerData.push({ id: d.id, ...d.data() }));
+      // 載入團務名稱
+      const cSnap = await getDocs(collection(db,"campaigns"));
+      cSnap.forEach(d => { _ledgerCampaigns[d.id] = d.data().name; });
+    } catch(e) {}
+  }
+
+  function renderFinanceDashboard() {
+    const el = document.getElementById("finance-v2-content");
+    if (!el) return;
+
+    const now = new Date();
+    const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+
+    // 彙算
+    const income  = _ledgerData.filter(l=>l.type==="income").reduce((s,l)=>s+(l.amount||0),0);
+    const expense = _ledgerData.filter(l=>l.type==="expense").reduce((s,l)=>s+(l.amount||0),0);
+    const profit  = income - expense;
+
+    // 月度
+    const monthlyMap = {};
+    _ledgerData.forEach(l => {
+      const d = l.date?.toDate ? l.date.toDate() : new Date(l.date||0);
+      const m = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+      if (!monthlyMap[m]) monthlyMap[m] = {income:0,expense:0};
+      if (l.type==="income")  monthlyMap[m].income  += l.amount||0;
+      if (l.type==="expense") monthlyMap[m].expense += l.amount||0;
+    });
+    const months = Object.keys(monthlyMap).sort().reverse().slice(0,6);
+
+    // 各團收益
+    const campaignMap = {};
+    _ledgerData.forEach(l => {
+      if (!l.campaignId) return;
+      if (!campaignMap[l.campaignId]) campaignMap[l.campaignId] = {name: _ledgerCampaigns[l.campaignId]||l.campaignId, income:0,expense:0};
+      if (l.type==="income")  campaignMap[l.campaignId].income  += l.amount||0;
+      if (l.type==="expense") campaignMap[l.campaignId].expense += l.amount||0;
+    });
+
+    el.innerHTML = `
+      <!-- 總覽卡片 -->
+      <div class="fin-cards">
+        <div class="fin-card income">
+          <div class="fin-card-label">💰 總收入</div>
+          <div class="fin-card-val">NT$${income.toLocaleString()}</div>
+        </div>
+        <div class="fin-card expense">
+          <div class="fin-card-label">💸 總支出</div>
+          <div class="fin-card-val">NT$${expense.toLocaleString()}</div>
+        </div>
+        <div class="fin-card profit ${profit>=0?'pos':'neg'}">
+          <div class="fin-card-label">📊 淨利潤</div>
+          <div class="fin-card-val">${profit>=0?"":"-"}NT$${Math.abs(profit).toLocaleString()}</div>
+        </div>
+      </div>
+
+      <!-- 快速新增 -->
+      <div class="fin-quick-add">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px">快速記帳</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+          <select class="form-input" id="fin-type" style="width:90px;font-size:12px">
+            <option value="income">收入</option>
+            <option value="expense">支出</option>
+          </select>
+          <select class="form-input" id="fin-category" style="width:110px;font-size:12px">
+            <option value="訂單金額">訂單金額</option>
+            <option value="採購成本">採購成本</option>
+            <option value="運費">運費</option>
+            <option value="其他支出">其他支出</option>
+            <option value="其他收入">其他收入</option>
+          </select>
+          <select class="form-input" id="fin-campaign-sel" style="width:160px;font-size:12px">
+            <option value="">— 關聯團務（選填）—</option>
+            ${Object.entries(_ledgerCampaigns).map(([id,name])=>`<option value="${esc(id)}">${esc(name)}</option>`).join("")}
+          </select>
+          <input class="form-input" id="fin-amount" type="number" min="0" placeholder="金額 NT$" style="width:110px;font-size:12px" />
+          <input class="form-input" id="fin-note"   type="text" placeholder="備註" style="flex:1;min-width:100px;font-size:12px" />
+          <button class="btn btn-primary btn-sm" onclick="addLedgerEntry()">記帳</button>
+        </div>
+      </div>
+
+      <!-- 月報表 -->
+      <div class="fin-section">
+        <div class="fin-section-title">📅 近6個月報表</div>
+        <table class="fin-table">
+          <thead><tr><th>月份</th><th>收入</th><th>支出</th><th>利潤</th></tr></thead>
+          <tbody>
+            ${months.map(m => {
+              const d = monthlyMap[m];
+              const p = d.income - d.expense;
+              return `<tr>
+                <td>${m}</td>
+                <td style="color:#4caf50">NT$${d.income.toLocaleString()}</td>
+                <td style="color:var(--danger)">NT$${d.expense.toLocaleString()}</td>
+                <td style="font-weight:700;color:${p>=0?'#4caf50':'var(--danger)'}">${p>=0?"":"-"}NT$${Math.abs(p).toLocaleString()}</td>
+              </tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 各團收益 -->
+      <div class="fin-section">
+        <div class="fin-section-title">🏷️ 各團收益</div>
+        <table class="fin-table">
+          <thead><tr><th>團務</th><th>收入</th><th>成本</th><th>利潤</th></tr></thead>
+          <tbody>
+            ${Object.values(campaignMap).sort((a,b)=>(b.income-b.expense)-(a.income-a.expense)).map(c => {
+              const p = c.income - c.expense;
+              return `<tr>
+                <td>${esc(c.name)}</td>
+                <td style="color:#4caf50">NT$${c.income.toLocaleString()}</td>
+                <td style="color:var(--danger)">NT$${c.expense.toLocaleString()}</td>
+                <td style="font-weight:700;color:${p>=0?'#4caf50':'var(--danger)'}">${p>=0?"":"-"}NT$${Math.abs(p).toLocaleString()}</td>
+              </tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 明細 -->
+      <div class="fin-section">
+        <div class="fin-section-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>📋 收支明細</span>
+          <select class="form-input" id="fin-filter-type" onchange="renderFinanceDashboard()" style="width:100px;font-size:12px">
+            <option value="">全部</option>
+            <option value="income">收入</option>
+            <option value="expense">支出</option>
+          </select>
+        </div>
+        <table class="fin-table">
+          <thead><tr><th>日期</th><th>類型</th><th>分類</th><th>關聯團務</th><th>金額</th><th>備註</th><th></th></tr></thead>
+          <tbody>
+            ${_ledgerData.slice(0,50).filter(l => {
+              const ft = document.getElementById("fin-filter-type")?.value;
+              return !ft || l.type === ft;
+            }).map(l => {
+              const d = l.date?.toDate ? l.date.toDate() : new Date(l.date||0);
+              const ds = isNaN(d) ? "—" : `${d.getMonth()+1}/${d.getDate()}`;
+              return `<tr>
+                <td style="white-space:nowrap">${ds}</td>
+                <td><span class="fin-badge ${l.type}">${l.type==="income"?"收入":"支出"}</span></td>
+                <td>${esc(l.category||"—")}</td>
+                <td style="font-size:11px;color:var(--text-muted)">${esc(_ledgerCampaigns[l.campaignId]||l.campaignId||"—")}</td>
+                <td style="font-weight:700;color:${l.type==="income"?"#4caf50":"var(--danger)"}">
+                  ${l.type==="expense"?"-":""}NT$${(l.amount||0).toLocaleString()}
+                </td>
+                <td style="font-size:12px;color:var(--text-muted)">${esc(l.note||"")}</td>
+                <td><button class="btn btn-ghost btn-sm" style="padding:2px 6px;font-size:11px"
+                  onclick="deleteLedgerEntry('${l.id}')">✕</button></td>
+              </tr>`;
+            }).join("")}
+          </tbody>
+        </table>
+      </div>`;
+  }
+
+  window.addLedgerEntry = async function() {
+    const type     = document.getElementById("fin-type")?.value || "expense";
+    const category = document.getElementById("fin-category")?.value || "";
+    const amount   = parseFloat(document.getElementById("fin-amount")?.value) || 0;
+    const note     = document.getElementById("fin-note")?.value.trim() || "";
+    const cid      = document.getElementById("fin-campaign-sel")?.value || "";
+    if (!amount) { alert("請輸入金額"); return; }
+    try {
+      await addDoc(collection(db,"ledger"), {
+        type, category, amount, note,
+        campaignId: cid || null,
+        campaignName: cid ? (_ledgerCampaigns[cid]||cid) : null,
+        date: serverTimestamp(), createdAt: serverTimestamp(), source: "manual"
+      });
+      document.getElementById("fin-amount").value = "";
+      document.getElementById("fin-note").value   = "";
+      await loadLedgerData();
+      renderFinanceDashboard();
+    } catch(e) { alert("記帳失敗：" + e.message); }
+  };
+
+  window.deleteLedgerEntry = async function(id) {
+    if (!confirm("確定刪除此記帳記錄？")) return;
+    try {
+      await deleteDoc(doc(db,"ledger",id));
+      _ledgerData = _ledgerData.filter(l => l.id !== id);
+      renderFinanceDashboard();
+    } catch(e) { alert("刪除失敗：" + e.message); }
   };
 </script>
