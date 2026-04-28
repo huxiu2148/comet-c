@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-55 -->
+  <!-- build:20260428-56 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2491,6 +2491,7 @@
             <input type="file" id="order-import-file" accept=".xlsx,.csv" style="display:none" onchange="importOrders(this)" />
             <button class="btn btn-primary btn-sm" onclick="exportOrders()">匯出 CSV</button>
             <button class="btn btn-ghost btn-sm" onclick="syncOrdersToMembers()">👤 同步到會員</button>
+            <button class="btn btn-ghost btn-sm" onclick="findMergeableOrders()">🔀 合併重複訂單</button>
             <button class="btn btn-ghost btn-sm" id="btn-order-select-toggle" onclick="toggleOrderSelectMode()">☐ 全選</button>
             <button class="btn btn-danger btn-sm" id="btn-order-delete-selected" style="display:none" onclick="deleteSelectedOrders()">🗑 刪除所選</button>
           </div>
@@ -3034,7 +3035,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-55 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-56 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -6303,6 +6304,27 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   </div>
 </div>
 
+
+<!-- 合併訂單 Modal -->
+<div class="modal-backdrop" id="modal-merge-orders" style="display:none" onclick="closeMergeModal(event)">
+  <div class="modal" style="max-width:640px">
+    <div class="modal-header">
+      <h3 class="modal-title">🔀 合併重複訂單</h3>
+      <button class="modal-close" onclick="closeMergeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fee-hint" style="margin-bottom:10px">
+        條件：同一團務 + 相同社群暱稱 + 相同 Email + 兩筆都已付款（paid）
+      </div>
+      <div id="merge-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeMergeModal()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmMergeSelected()">✅ 合併所選</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
 
@@ -6764,6 +6786,150 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   };
 
   // ── 同步訂單到會員管理 ──────────────────────────────────────
+  // ── 合併重複訂單 ─────────────────────────────────────────────
+  let _mergeGroups = []; // 待合併的群組
+
+  window.findMergeableOrders = async function() {
+    const modal  = document.getElementById("modal-merge-orders");
+    const listEl = document.getElementById("merge-list");
+    listEl.innerHTML = '<div class="loading-row">分析中...</div>';
+    modal.style.display = "flex";
+
+    try {
+      const snap = await getDocs(query(collection(db,"orders"), orderBy("createdAt","asc")));
+      const all = [];
+      snap.forEach(d => all.push({ id: d.id, ...d.data() }));
+
+      // 找可合併的：同團務 + 相同暱稱 + 相同email + 全部 paid
+      const buckets = {};
+      all.forEach(o => {
+        const nick  = String(o.nickname || o.buyerName || "").trim();
+        const email = String(o.email || "").trim().toLowerCase();
+        const cid   = String(o.campaignId || "").trim();
+        if (!cid || !nick) return;
+        const key = `${cid}||${nick}||${email}`;
+        if (!buckets[key]) buckets[key] = [];
+        buckets[key].push(o);
+      });
+
+      // 篩選：需要 ≥2 筆 且全部 paid
+      _mergeGroups = Object.entries(buckets)
+        .filter(([, orders]) => orders.length >= 2 && orders.every(o => o.status === "paid"))
+        .map(([key, orders]) => {
+          const [cid] = key.split("||");
+          return {
+            key,
+            campaignId:   cid,
+            campaignName: orders[0].campaignName || cid,
+            nickname:     orders[0].nickname || orders[0].buyerName,
+            email:        orders[0].email,
+            orders,
+          };
+        });
+
+      if (!_mergeGroups.length) {
+        listEl.innerHTML = '<div class="empty-row">沒有可合併的訂單（需兩筆以上相同人員且都已付款）</div>';
+        return;
+      }
+
+      listEl.innerHTML = _mergeGroups.map((g, gi) => {
+        const totalAmt = g.orders.map(o => parseFloat(String(o.totalPrice||o.total||0).replace(/[^\d.]/g,""))||0).reduce((s,v)=>s+v,0);
+        const allItems = g.orders.flatMap(o => {
+          if (o.items && o.items.length) return o.items.map(it => (it.name||"") + (it.specStr ? " "+it.specStr : "") + "×" + (it.qty||1));
+          return String(o.itemsText||"").split("\n").filter(Boolean);
+        });
+        return `<div class="merge-group-card" style="border:1.5px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px">
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+            <input type="checkbox" class="merge-checkbox" data-gi="${gi}"
+              style="margin-top:3px;width:16px;height:16px;accent-color:var(--pink);flex-shrink:0" checked />
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:13px">${esc(g.nickname)} <span style="font-size:11px;color:var(--text-muted)">${esc(g.campaignName)}</span></div>
+              <div style="font-size:11px;color:var(--text-muted);margin:3px 0">${esc(g.email||"—")} ・ ${g.orders.length} 筆 → 合併為 1 筆</div>
+              <div style="font-size:12px;margin-top:4px">${allItems.map(i=>`<span style="display:inline-block;background:#fff0f7;border-radius:10px;padding:1px 7px;margin:2px;font-size:11px">${esc(i)}</span>`).join("")}</div>
+              <div style="font-size:12px;color:var(--pink);font-weight:700;margin-top:4px">合計：NT$${totalAmt.toLocaleString()}</div>
+            </div>
+          </label>
+        </div>`;
+      }).join("");
+    } catch(e) {
+      listEl.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
+    }
+  };
+
+  window.closeMergeModal = function(e) {
+    if (e && e.target !== document.getElementById("modal-merge-orders")) return;
+    document.getElementById("modal-merge-orders").style.display = "none";
+  };
+
+  window.confirmMergeSelected = async function() {
+    const checked = Array.from(document.querySelectorAll(".merge-checkbox:checked"))
+      .map(cb => _mergeGroups[parseInt(cb.dataset.gi)]).filter(Boolean);
+
+    if (!checked.length) { alert("請選取要合併的群組"); return; }
+    if (!confirm(`確定合併 ${checked.length} 個群組？合併後原始訂單將被刪除。`)) return;
+
+    let ok = 0, fail = 0;
+    for (const g of checked) {
+      try {
+        // 合併商品明細
+        const mergedItems = [];
+        const itemMap = {}; // key → item
+        g.orders.forEach(o => {
+          if (o.items?.length) {
+            o.items.forEach(it => {
+              const k = `${it.name}||${it.specStr||""}`;
+              if (itemMap[k]) {
+                itemMap[k].qty = (itemMap[k].qty||1) + (it.qty||1);
+                itemMap[k].subtotal = (itemMap[k].subtotal||0) + (it.subtotal||0);
+              } else {
+                itemMap[k] = { ...it };
+              }
+            });
+          }
+        });
+        Object.values(itemMap).forEach(it => mergedItems.push(it));
+
+        // 合併 itemsText
+        const allTexts = g.orders
+          .map(o => o.itemsText || (o.items||[]).map(i => i.name+"×"+(i.qty||1)).join("\n"))
+          .filter(Boolean);
+        const mergedText = allTexts.join("\n");
+
+        // 合併金額（字串加法）
+        const amounts = g.orders.map(o => String(o.totalPrice||o.total||o.paidAmount||"")).filter(Boolean);
+        const mergedTotal = amounts.reduce((acc, v) => {
+          const n = parseFloat(String(v).replace(/[^\d.]/g,"")) || 0;
+          return (parseFloat(String(acc).replace(/[^\d.]/g,""))||0) + n;
+        }, 0);
+
+        // 保留最早那筆，更新內容
+        const sorted = [...g.orders].sort((a,b) =>
+          (a.createdAt?.toMillis?.()??0) - (b.createdAt?.toMillis?.()??0));
+        const keepId  = sorted[0].id;
+        const delIds  = sorted.slice(1).map(o => o.id);
+
+        await updateDoc(doc(db,"orders",keepId), {
+          items:      mergedItems,
+          itemsText:  mergedText,
+          totalPrice: String(mergedTotal),
+          total:      mergedTotal,
+          paidAmount: String(mergedTotal),
+          updatedAt:  serverTimestamp(),
+          mergedFrom: delIds,
+        });
+
+        for (const did of delIds) {
+          await deleteDoc(doc(db,"orders",did));
+        }
+        ok++;
+      } catch(e) { fail++; console.error(e); }
+    }
+
+    alert(`✅ 合併完成：${ok} 個群組${fail?`，失敗 ${fail} 個`:""}`);
+    document.getElementById("modal-merge-orders").style.display = "none";
+    window.loadAdminOrders?.();
+  };
+
   window.syncOrdersToMembers = async function() {
     const btn = event?.target;
     if (btn) { btn.disabled = true; btn.textContent = "同步中..."; }
