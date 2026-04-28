@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-56 -->
+  <!-- build:20260428-57 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2712,10 +2712,12 @@
         </div>
         <div id="shipping-campaign-list"></div>
         <div id="shipping-order-list" style="display:none">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
             <button class="btn btn-ghost btn-sm" onclick="backToShippingCampaigns()">← 返回</button>
-            <h3 id="shipping-campaign-title" style="font-size:15px;font-weight:700;margin:0"></h3>
+            <h3 id="shipping-campaign-title" style="font-size:15px;font-weight:700;margin:0;flex:1"></h3>
             <span id="shipping-campaign-stats" style="font-size:12px;color:var(--text-muted)"></span>
+            <button class="btn btn-ghost btn-sm" id="btn-shipping-select" onclick="toggleShippingSelectMode()">☐ 全選</button>
+            <button class="btn btn-danger btn-sm" id="btn-shipping-delete" style="display:none" onclick="deleteSelectedShipping()">🗑 刪除所選</button>
           </div>
           <div id="shipping-orders-table"></div>
         </div>
@@ -3035,7 +3037,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-56 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-57 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -9564,6 +9566,19 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         `${orders.length} 筆 | 已付 ${orders.filter(o=>o.status==="paid").length} | 取貨 ${orders.filter(o=>o.picked).length}`;
 
       if (!orders.length) { tableEl.innerHTML = '<div class="empty-row">此團務尚無訂單</div>'; return; }
+
+      // 排序：paid 在前，依最早 paid 時間（paidAt 或 updatedAt）升序
+      orders.sort((a, b) => {
+        const aPaid = a.status === "paid";
+        const bPaid = b.status === "paid";
+        if (aPaid && !bPaid) return -1;
+        if (!aPaid && bPaid) return 1;
+        // 同為 paid：依對帳時間升序（最早對帳的在最上方）
+        const aT = a.paidAt?.toMillis?.() || a.updatedAt?.toMillis?.() || 0;
+        const bT = b.paidAt?.toMillis?.() || b.updatedAt?.toMillis?.() || 0;
+        return aT - bT;
+      });
+
       renderShippingTable(orders, tableEl);
     } catch(e) {
       if (tableEl) tableEl.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
@@ -9578,6 +9593,10 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       <table class="shipping-table">
         <thead>
           <tr>
+            <th style="width:32px">
+              <input type="checkbox" id="chk-all-rows" style="accent-color:#fff;width:14px;height:14px"
+                onchange="toggleShippingSelectMode(this.checked ? true : false)">
+            </th>
             <th>社群暱稱</th>
             <th>訂購商品</th>
             <th>已付金額</th>
@@ -9616,6 +9635,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       const row = document.createElement("tr");
       row.id = `srow-${o.id}`;
       row.dataset.shippingId = o.id;
+      row.dataset.paidAt = o.paidAt?.toMillis?.() || o.updatedAt?.toMillis?.() || 0;
 
       const paidStr   = o.paidAmount   || (o.status==="paid"    ? (o.totalPrice||"") : "");
       const remainStr = o.remainAmount || (o.status!=="paid"    ? (o.totalPrice||"") : "");
@@ -9632,6 +9652,10 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         : "—";
 
       row.innerHTML = `
+        <td style="width:32px;text-align:center;padding:0 6px">
+          <input type="checkbox" class="st-row-checkbox" data-oid="${o.id}"
+            style="width:14px;height:14px;accent-color:var(--pink);display:none;cursor:pointer">
+        </td>
         <td class="st-name">${esc(o.nickname||o.buyerName||o.email||"—")}</td>
         <td class="st-items">${itemsDetail}</td>
         <td class="st-paid">
@@ -9668,6 +9692,45 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       tbody.appendChild(row);
     });
   }
+
+  // ── 出貨追蹤全選刪除 ──────────────────────────────────────────
+  let _shippingSelectMode = false;
+
+  window.toggleShippingSelectMode = function(forceOn) {
+    _shippingSelectMode = forceOn !== undefined ? forceOn : !_shippingSelectMode;
+    const btn    = document.getElementById("btn-shipping-select");
+    const delBtn = document.getElementById("btn-shipping-delete");
+    const boxes  = document.querySelectorAll(".st-row-checkbox");
+    const allChk = document.getElementById("chk-all-rows");
+    boxes.forEach(cb => cb.style.display = _shippingSelectMode ? "inline-block" : "none");
+    if (_shippingSelectMode) {
+      if (btn)    btn.textContent = "✕ 取消選取";
+      if (delBtn) delBtn.style.display = "inline-flex";
+      boxes.forEach(cb => cb.checked = true);
+      if (allChk) allChk.checked = true;
+    } else {
+      if (btn)    btn.textContent = "☐ 全選";
+      if (delBtn) delBtn.style.display = "none";
+      boxes.forEach(cb => cb.checked = false);
+      if (allChk) allChk.checked = false;
+    }
+  };
+
+  window.deleteSelectedShipping = async function() {
+    const checked = Array.from(document.querySelectorAll(".st-row-checkbox:checked"));
+    if (!checked.length) { alert("沒有選取任何訂單"); return; }
+    if (!confirm(`確定刪除選取的 ${checked.length} 筆訂單？此操作無法復原。`)) return;
+    let ok = 0, fail = 0;
+    for (const cb of checked) {
+      try {
+        await deleteDoc(doc(db,"orders",cb.dataset.oid));
+        document.getElementById(`srow-${cb.dataset.oid}`)?.remove();
+        ok++;
+      } catch(e) { fail++; }
+    }
+    alert(`✅ 刪除完成：${ok} 筆${fail?`，失敗 ${fail} 筆`:""}`);
+    toggleShippingSelectMode(false);
+  };
 
   // ── 一鍵全選 ──────────────────────────────────────────────────
   window.checkAllShipping = async function(field, checked) {
