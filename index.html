@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-54 -->
+  <!-- build:20260428-55 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3034,7 +3034,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-54 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-55 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -8620,7 +8620,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const showDone = document.getElementById("pu-show-done")?.checked || false;
 
     try {
-      // 載入所有 campaigns
+      // 先載入所有 campaigns，確保有採購記錄才顯示卡片
       const cSnap = await getDocs(query(collection(db,"campaigns"), orderBy("createdAt","desc")));
       _purchaseAllCampaigns = [];
       _purchaseCampaignNames = {};
@@ -8630,30 +8630,37 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         _purchaseAllCampaigns.push({ id: d.id, ...c });
       });
 
-      // 載入採購記錄
+      // 載入採購記錄，按 campaignId 分組
       const pSnap = await getDocs(query(collection(db,"purchases"), orderBy("createdAt","desc")));
-      const groups = {};
+      const purchaseGroups = {}; // campaignId → records[]
       pSnap.forEach(d => {
         const p = d.data();
         const cid = p.campaignId || "未分類";
-        const camp = _purchaseAllCampaigns.find(c => c.id === cid);
+        if (!purchaseGroups[cid]) purchaseGroups[cid] = [];
+        purchaseGroups[cid].push({ id: d.id, ...p });
+      });
 
-        // 隱藏已結束且運回時間已到
-        if (!showDone && camp?.progress === "done") {
-          const returnAt = p.returnAt?.toDate ? p.returnAt.toDate() : (p.returnAt ? new Date(p.returnAt) : null);
-          if (returnAt && returnAt < new Date()) return;
+      // 建立 groups：以 campaigns 為主，每個團務都顯示
+      const groups = {};
+      _purchaseAllCampaigns.forEach(c => {
+        // 隱藏條件：done + returnAt 已到
+        if (!showDone && c.progress === "done") {
+          const recs = purchaseGroups[c.id] || [];
+          const allExpired = recs.length === 0 || recs.every(r => {
+            const ra = r.returnAt?.toDate ? r.returnAt.toDate() : (r.returnAt ? new Date(r.returnAt) : null);
+            return ra && ra < new Date();
+          });
+          if (allExpired) return;
         }
-
-        if (!groups[cid]) groups[cid] = {
-          campaignId: cid,
-          campaignName: _purchaseCampaignNames[cid] || p.campaignName || cid,
-          records: []
+        groups[c.id] = {
+          campaignId:   c.id,
+          campaignName: c.name || c.id,
+          records:      purchaseGroups[c.id] || [],
         };
-        groups[cid].records.push({ id: d.id, ...p });
       });
 
       if (!Object.keys(groups).length) {
-        listEl.innerHTML = '<div class="empty-row">尚無採購記錄</div>';
+        listEl.innerHTML = '<div class="empty-row">尚無團務</div>';
         return;
       }
 
