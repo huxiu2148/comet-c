@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-46 -->
+  <!-- build:20260428-47 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3176,7 +3176,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-46 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-47 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -9313,6 +9313,433 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       await deleteDoc(doc(db,"ledger",id));
       _ledgerData = _ledgerData.filter(l => l.id !== id);
       renderFinanceDashboard();
+    } catch(e) { alert("刪除失敗：" + e.message); }
+  };
+</script>
+
+<!-- ── 出貨追蹤完整 JS ── -->
+<script type="module">
+  import { db } from "./auth.js";
+  import {
+    collection, doc, updateDoc, addDoc, deleteDoc,
+    getDocs, query, where, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c =>
+      ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  let _currentShippingCampaign = null;
+
+  // ── 返回團務列表 ─────────────────────────────────────────────
+  window.backToShippingCampaigns = function() {
+    const l = document.getElementById("shipping-campaign-list");
+    const o = document.getElementById("shipping-order-list");
+    if (l) l.style.display = "block";
+    if (o) o.style.display = "none";
+  };
+
+  // ── 點進團務：載入出貨追蹤表 ─────────────────────────────────
+  window.loadShippingOrders = async function(g) {
+    _currentShippingCampaign = g;
+    const listEl  = document.getElementById("shipping-campaign-list");
+    const orderEl = document.getElementById("shipping-order-list");
+    if (listEl)  listEl.style.display  = "none";
+    if (orderEl) orderEl.style.display = "block";
+
+    const titleEl = document.getElementById("shipping-campaign-title");
+    const tableEl = document.getElementById("shipping-orders-table");
+    if (titleEl) titleEl.textContent = g.campaignName;
+    if (tableEl) tableEl.innerHTML = '<div class="loading-row">載入中...</div>';
+
+    try {
+      const snap = await getDocs(query(collection(db,"orders"), where("campaignId","==",g.campaignId)));
+      const orders = [];
+      snap.forEach(d => orders.push({ id: d.id, ...d.data() }));
+
+      const statsEl = document.getElementById("shipping-campaign-stats");
+      if (statsEl) statsEl.textContent =
+        `${orders.length} 筆 | 已付 ${orders.filter(o=>o.status==="paid").length} | 取貨 ${orders.filter(o=>o.picked).length}`;
+
+      if (!orders.length) { tableEl.innerHTML = '<div class="empty-row">此團務尚無訂單</div>'; return; }
+      renderShippingTable(orders, tableEl);
+    } catch(e) {
+      if (tableEl) tableEl.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
+    }
+  };
+
+  function renderShippingTable(orders, tableEl) {
+    tableEl.innerHTML = "";
+    const wrapper = document.createElement("div");
+    wrapper.style.overflowX = "auto";
+    wrapper.innerHTML = `
+      <table class="shipping-table">
+        <thead>
+          <tr>
+            <th>社群暱稱</th>
+            <th>訂購商品</th>
+            <th>已付金額</th>
+            <th>剩餘金額</th>
+            <th style="text-align:center">
+              下單<br>
+              <label style="font-size:10px;cursor:pointer;font-weight:400">
+                <input type="checkbox" id="chk-all-ordered" style="accent-color:#fff;width:12px;height:12px"
+                  onchange="checkAllShipping('ordered',this.checked)"> 全
+              </label>
+            </th>
+            <th style="text-align:center">
+              出貨<br>
+              <label style="font-size:10px;cursor:pointer;font-weight:400">
+                <input type="checkbox" id="chk-all-shipped" style="accent-color:#fff;width:12px;height:12px"
+                  onchange="checkAllShipping('shipped',this.checked)"> 全
+              </label>
+            </th>
+            <th style="text-align:center">
+              取貨<br>
+              <label style="font-size:10px;cursor:pointer;font-weight:400">
+                <input type="checkbox" id="chk-all-picked" style="accent-color:#fff;width:12px;height:12px"
+                  onchange="checkAllShipping('picked',this.checked)"> 全
+              </label>
+            </th>
+            <th>備註</th>
+            <th>最後更新</th>
+          </tr>
+        </thead>
+        <tbody id="shipping-tbody"></tbody>
+      </table>`;
+    tableEl.appendChild(wrapper);
+
+    const tbody = document.getElementById("shipping-tbody");
+    orders.forEach(o => {
+      const row = document.createElement("tr");
+      row.id = `srow-${o.id}`;
+      row.dataset.shippingId = o.id;
+
+      const paidStr   = o.paidAmount   || (o.status==="paid"    ? (o.totalPrice||"") : "");
+      const remainStr = o.remainAmount || (o.status!=="paid"    ? (o.totalPrice||"") : "");
+      const extraStr  = String(o.extraAmount || "").trim();
+
+      const itemsDetail = (() => {
+        if (o.itemsText) return String(o.itemsText).replace(/\n/g,"<br>");
+        if (o.items && o.items.length) return o.items.map(it=>`${it.name}×${it.qty||1}`).join("<br>");
+        return "—";
+      })();
+
+      const updatedAt = o.updatedAt?.toDate
+        ? (window.fmtDateTime?.(o.updatedAt.toDate()) || "—")
+        : "—";
+
+      row.innerHTML = `
+        <td class="st-name">${esc(o.nickname||o.buyerName||o.email||"—")}</td>
+        <td class="st-items">${itemsDetail}</td>
+        <td class="st-paid">
+          <input class="st-amount-input" id="st-paid-${o.id}" type="text"
+            value="${esc(paidStr)}" placeholder="已付金額"
+            onchange="saveShippingAmount('${o.id}','paid',this.value)" />
+        </td>
+        <td class="st-remain">
+          <input class="st-amount-input" id="st-remain-${o.id}" type="text"
+            value="${esc(remainStr)}" placeholder="剩餘金額"
+            onchange="saveShippingAmount('${o.id}','remain',this.value)" />
+          <input class="st-amount-input" id="st-extra-${o.id}" type="text"
+            value="${esc(extraStr)}" placeholder="補款" style="margin-top:3px"
+            onchange="saveExtraAmount('${o.id}',this.value)" />
+        </td>
+        <td style="text-align:center">
+          <input type="checkbox" class="st-check st-check-ordered" ${o.ordered?"checked":""}
+            onchange="saveShippingFlag('${o.id}','ordered',this.checked)" />
+        </td>
+        <td style="text-align:center">
+          <input type="checkbox" class="st-check st-check-shipped" ${o.shipped?"checked":""}
+            onchange="saveShippingFlag('${o.id}','shipped',this.checked)" />
+        </td>
+        <td style="text-align:center">
+          <input type="checkbox" class="st-check st-check-picked" ${o.picked?"checked":""}
+            onchange="onPickedChange('${o.id}',this.checked)" />
+        </td>
+        <td>
+          <input class="st-note-input" id="st-note-${o.id}" type="text"
+            value="${esc(o.shippingNote||'')}" placeholder="備註"
+            onchange="saveShippingNote('${o.id}',this.value)" />
+        </td>
+        <td class="st-updated">${updatedAt}</td>`;
+      tbody.appendChild(row);
+    });
+  }
+
+  // ── 一鍵全選 ──────────────────────────────────────────────────
+  window.checkAllShipping = async function(field, checked) {
+    const rows = document.querySelectorAll("[data-shipping-id]");
+    for (const row of rows) {
+      const orderId = row.dataset.shippingId;
+      const cb = row.querySelector(`.st-check-${field}`);
+      if (!cb || cb.checked === checked) continue;
+      cb.checked = checked;
+      if (field === "picked") {
+        await onPickedChange(orderId, checked);
+      } else {
+        await saveShippingFlag(orderId, field, checked);
+      }
+    }
+  };
+
+  // ── 勾選下單/出貨 ─────────────────────────────────────────────
+  window.saveShippingFlag = async function(orderId, field, value) {
+    try {
+      await updateDoc(doc(db,"orders",orderId), { [field]: value, updatedAt: serverTimestamp() });
+    } catch(e) { alert(`儲存失敗：${e.message}`); }
+  };
+
+  // ── 取貨勾選：剩餘+補款移入已付 ──────────────────────────────
+  window.onPickedChange = async function(orderId, picked) {
+    const paidEl   = document.getElementById(`st-paid-${orderId}`);
+    const remainEl = document.getElementById(`st-remain-${orderId}`);
+    const extraEl  = document.getElementById(`st-extra-${orderId}`);
+    try {
+      const updates = { picked, updatedAt: serverTimestamp() };
+      if (picked) {
+        const newPaid = addAmountStr(paidEl?.value?.trim()||"", remainEl?.value?.trim()||"", extraEl?.value?.trim()||"");
+        updates.paidAmount   = newPaid;
+        updates.remainAmount = "";
+        updates.extraAmount  = "";
+        if (paidEl)   paidEl.value   = newPaid;
+        if (remainEl) remainEl.value = "";
+        if (extraEl)  extraEl.value  = "";
+      }
+      await updateDoc(doc(db,"orders",orderId), updates);
+    } catch(e) { alert(`儲存失敗：${e.message}`); }
+  };
+
+  function addAmountStr(...strs) {
+    const vals = strs.map(s=>String(s||"").trim()).filter(Boolean);
+    if (!vals.length) return "";
+    const parse = s => {
+      const m = String(s).match(/^([\d.]+)\(([\d.]+)\)$/);
+      if (m) return { main: parseFloat(m[1]), sub: parseFloat(m[2]) };
+      const n = parseFloat(String(s).replace(/[^\d.]/g,""));
+      return isNaN(n) ? null : { main: n, sub: null };
+    };
+    const parsed = vals.map(parse);
+    if (parsed.some(p=>!p)) return vals.join("+");
+    const totalMain = parsed.reduce((s,p)=>s+p.main,0);
+    const hasSub = parsed.some(p=>p.sub!==null);
+    if (hasSub) {
+      const totalSub = parsed.reduce((s,p)=>s+(p.sub??p.main),0);
+      return `${totalMain}(${totalSub})`;
+    }
+    return String(totalMain);
+  }
+
+  // ── 手動修改金額 ──────────────────────────────────────────────
+  window.saveShippingAmount = async function(orderId, field, value) {
+    const key = field === "paid" ? "paidAmount" : "remainAmount";
+    try {
+      await updateDoc(doc(db,"orders",orderId), { [key]: String(value||"").trim(), updatedAt: serverTimestamp() });
+    } catch(e) { alert(`儲存失敗：${e.message}`); }
+  };
+
+  window.saveExtraAmount = async function(orderId, value) {
+    try {
+      await updateDoc(doc(db,"orders",orderId), { extraAmount: String(value||"").trim(), updatedAt: serverTimestamp() });
+    } catch(e) { alert(`儲存失敗：${e.message}`); }
+  };
+
+  window.saveShippingNote = async function(orderId, value) {
+    try {
+      await updateDoc(doc(db,"orders",orderId), { shippingNote: value, updatedAt: serverTimestamp() });
+    } catch(e) { alert(`儲存失敗：${e.message}`); }
+  };
+
+  // ── 下載範本 ─────────────────────────────────────────────────
+  window.downloadShippingTemplate = function() {
+    const a = document.createElement("a");
+    a.href = "https://huxiu2148.github.io/comet-c/shipping_template.xlsx";
+    a.download = "shipping_template.xlsx";
+    a.click();
+  };
+
+  // ── 批次匯入 ─────────────────────────────────────────────────
+  window.importShipping = async function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    input.value = "";
+    try {
+      const rows = await parseShippingFile(file);
+      if (!rows.length) { alert("檔案內沒有有效資料"); return; }
+
+      const STATUS_MAP = {"已核對":"paid","已付款":"paid","未核對":"pending","待確認":"pending","paid":"paid","pending":"pending"};
+
+      // 預先載入 campaign 名稱對照
+      const campaignNames = {};
+      try {
+        const cSnap = await getDocs(collection(db,"campaigns"));
+        cSnap.forEach(d => { campaignNames[d.id] = d.data().name || d.id; });
+      } catch(e) {}
+
+      // 讀取現有訂單（重複判斷：campaignId + nickname）
+      const existingMap = {};
+      try {
+        const oSnap = await getDocs(collection(db,"orders"));
+        oSnap.forEach(d => {
+          const o = d.data();
+          if (o.campaignId && (o.nickname || o.buyerName)) {
+            const key = `${o.campaignId}|${o.nickname||o.buyerName}`;
+            existingMap[key] = d.id;
+          }
+        });
+      } catch(e) {}
+
+      let ok = 0, skip = 0, replace = 0, fail = 0;
+      for (const row of rows) {
+        try {
+          const campaignId   = String(row[0]||"").trim();
+          const nickname     = String(row[1]||"").trim();
+          const contact      = String(row[2]||"").trim();
+          const email        = String(row[3]||"").trim();
+          const itemsText    = String(row[4]||"").trim();
+          const amountRaw    = String(row[5]||"").trim();
+          const statusRaw    = String(row[6]||"").trim();
+          const returnInfo   = String(row[7]||"").trim();
+          const ordered      = String(row[8]||"").toLowerCase() === "true";
+          const shipped      = String(row[9]||"").toLowerCase() === "true";
+          const picked       = String(row[10]||"").toLowerCase() === "true";
+          const extraAmount  = String(row[11]||"").trim();
+          const shippingNote = String(row[12]||"").trim();
+
+          if (!campaignId || !itemsText) { skip++; continue; }
+
+          const status       = STATUS_MAP[statusRaw] || "pending";
+          const paidAmount   = status === "paid"    ? amountRaw : "";
+          const remainAmount = status === "pending" ? amountRaw : "";
+          const campaignName = campaignNames[campaignId] || campaignId;
+
+          const docData = {
+            campaignId, campaignName, nickname, contact, email, itemsText,
+            totalPrice: amountRaw, paidAmount, remainAmount, status,
+            returnInfo, ordered, shipped, picked, extraAmount, shippingNote,
+            userId: "imported", source: "shipping_import",
+            updatedAt: serverTimestamp(),
+          };
+
+          const dupKey = `${campaignId}|${nickname}`;
+          const existingId = existingMap[dupKey];
+
+          if (existingId) {
+            const choice = confirm(
+              `⚠️ 發現重複資料\n\n團務：${campaignName}\n暱稱：${nickname}\n\n確定「取代」請按確定，按取消則「略過」`
+            );
+            if (choice) {
+              await updateDoc(doc(db,"orders",existingId), docData);
+              replace++;
+            } else { skip++; }
+          } else {
+            docData.createdAt = serverTimestamp();
+            const newRef = await addDoc(collection(db,"orders"), docData);
+            existingMap[dupKey] = newRef.id;
+            ok++;
+          }
+        } catch(e) { fail++; console.error(e); }
+      }
+
+      alert(`✅ 匯入完成！新增 ${ok} 筆${replace?`，取代 ${replace} 筆`:""}${skip?`，略過 ${skip} 筆`:""}${fail?`，失敗 ${fail} 筆`:""}`);
+      window.loadShippingCampaigns?.();
+    } catch(e) { alert("解析失敗：" + e.message); }
+  };
+
+  async function parseShippingFile(file) {
+    const ext = file.name.split(".").pop().toLowerCase();
+    if (ext === "csv") {
+      const buf = await file.arrayBuffer();
+      let text;
+      try { text = new TextDecoder("big5").decode(buf); if (text.includes("\uFFFD")) throw 0; }
+      catch { text = new TextDecoder("utf-8").decode(buf); }
+      if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+      return parseCSVRows(text).slice(2).filter(r => r[0]);
+    }
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const XLSX = window.XLSX;
+          if (!XLSX) { reject(new Error("請改用 CSV 格式")); return; }
+          const wb = XLSX.read(new Uint8Array(e.target.result), { type:"array" });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          resolve(XLSX.utils.sheet_to_json(ws,{header:1,defval:""}).slice(2).filter(r=>r[0]));
+        } catch(err) { reject(err); }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  function parseCSVRows(text) {
+    return text.split(/\r?\n/).filter(l=>l.trim()).map(line => {
+      const row=[]; let cur="", inQ=false;
+      for (let i=0;i<line.length;i++) {
+        const ch=line[i];
+        if (ch==='"') { if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ; }
+        else if (ch===','&&!inQ) { row.push(cur); cur=""; }
+        else cur+=ch;
+      }
+      row.push(cur); return row;
+    });
+  }
+
+  // ── 出貨追蹤平台管理 ─────────────────────────────────────────
+  let _platforms = [];
+
+  async function loadPlatforms() {
+    try {
+      const snap = await getDocs(collection(db,"purchasePlatforms"));
+      _platforms = [];
+      snap.forEach(d => _platforms.push({ id: d.id, name: d.data().name }));
+    } catch(e) {}
+  }
+
+  window.openPlatformManager = async function() {
+    await loadPlatforms();
+    renderPlatformList();
+    document.getElementById("modal-platform-mgr").style.display = "flex";
+  };
+
+  window.closePlatformManager = function(e) {
+    if (e && e.target !== document.getElementById("modal-platform-mgr")) return;
+    document.getElementById("modal-platform-mgr").style.display = "none";
+  };
+
+  function renderPlatformList() {
+    const listEl = document.getElementById("platform-list");
+    if (!listEl) return;
+    if (!_platforms.length) {
+      listEl.innerHTML = '<div style="font-size:12px;color:var(--text-muted)">尚無平台，請新增</div>';
+      return;
+    }
+    function escH(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+    listEl.innerHTML = _platforms.map(p => `
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:#fff8fb;border-radius:8px">
+        <span style="flex:1;font-size:13px">${escH(p.name)}</span>
+        <button class="btn btn-danger btn-sm" style="padding:3px 8px" onclick="deletePlatform('${p.id}','${escH(p.name)}')">✕</button>
+      </div>`).join("");
+  }
+
+  window.addPlatformItem = async function() {
+    const input = document.getElementById("new-platform-input");
+    const name = input?.value.trim();
+    if (!name) return;
+    try {
+      await addDoc(collection(db,"purchasePlatforms"), { name, createdAt: serverTimestamp() });
+      input.value = "";
+      await loadPlatforms();
+      renderPlatformList();
+    } catch(e) { alert("新增失敗：" + e.message); }
+  };
+
+  window.deletePlatform = async function(id, name) {
+    if (!confirm(`確定刪除「${name}」？`)) return;
+    try {
+      await deleteDoc(doc(db,"purchasePlatforms",id));
+      await loadPlatforms();
+      renderPlatformList();
     } catch(e) { alert("刪除失敗：" + e.message); }
   };
 </script>
