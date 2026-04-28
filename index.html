@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-58 -->
+  <!-- build:20260428-59 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -312,6 +312,16 @@
       margin-bottom: 8px;
     }
     .campaign-admin-row:hover { border-color: var(--pink); }
+
+
+    /* ── 雜項支出 ── */
+    .misc-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; background: var(--surface);
+      border: 1.5px solid var(--border); border-radius: 8px;
+      margin-bottom: 6px;
+    }
+    .misc-row:hover { border-color: var(--pink); }
 
     /* ── 主內容 ── */
     main { max-width: 980px; margin: 0 auto; padding: 32px 20px; }
@@ -2698,6 +2708,17 @@
         <div id="purchase-campaign-list">
           <div class="loading-row">載入中...</div>
         </div>
+
+        <!-- 雜項支出 -->
+        <div style="margin-top:24px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <h3 style="font-size:14px;font-weight:700;margin:0">📦 雜項支出</h3>
+            <button class="btn btn-ghost btn-sm" onclick="openMiscModal()">＋ 新增</button>
+          </div>
+          <div id="misc-expense-list">
+            <div class="loading-row">載入中...</div>
+          </div>
+        </div>
       </div>
       <!-- 出貨追蹤 -->
       <div class="admin-section" id="section-shipping">
@@ -3037,7 +3058,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-58 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-59 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -6323,6 +6344,51 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" onclick="closeMergeModal()">取消</button>
       <button class="btn btn-primary btn-sm" onclick="confirmMergeSelected()">✅ 合併所選</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- 雜項支出 Modal -->
+<div class="modal-backdrop" id="modal-misc" style="display:none" onclick="closeMiscModal(event)">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3 class="modal-title" id="misc-modal-title">＋ 新增雜項支出</h3>
+      <button class="modal-close" onclick="closeMiscModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">項目名稱 <span class="required">*</span></label>
+        <input class="form-input" id="misc-name" type="text" placeholder="例：包材費、運費墊付..." />
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">金額 NT$ <span class="required">*</span></label>
+          <input class="form-input" id="misc-amount" type="number" min="0" placeholder="0" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">分類</label>
+          <select class="form-input" id="misc-category">
+            <option value="包材">包材</option>
+            <option value="運費">運費</option>
+            <option value="代墊">代墊費用</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">日期</label>
+        <input class="form-input" id="misc-date" type="date" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">備註</label>
+        <input class="form-input" id="misc-note" type="text" placeholder="補充說明..." />
+      </div>
+      <p class="form-error" id="misc-error"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeMiscModal()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveMiscExpense()">儲存</button>
     </div>
   </div>
 </div>
@@ -10019,5 +10085,152 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       await loadPlatforms();
       renderPlatformList();
     } catch(e) { alert("刪除失敗：" + e.message); }
+  };
+</script>
+
+<!-- ── 雜項支出 JS ── -->
+<script type="module">
+  import { db } from "./auth.js";
+  import {
+    collection, doc, addDoc, updateDoc, deleteDoc,
+    getDocs, query, orderBy, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  function esc(s) { return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+  let _editingMiscId = null;
+
+  // ── 載入雜項支出 ─────────────────────────────────────────────
+  window.loadMiscExpenses = async function() {
+    const listEl = document.getElementById("misc-expense-list");
+    if (!listEl) return;
+    listEl.innerHTML = '<div class="loading-row">載入中...</div>';
+    try {
+      const snap = await getDocs(query(collection(db,"miscExpenses"), orderBy("date","desc")));
+      if (snap.empty) {
+        listEl.innerHTML = '<div class="empty-row">尚無雜項支出記錄</div>';
+        return;
+      }
+      listEl.innerHTML = "";
+      snap.forEach(d => {
+        const r = d.data();
+        const dateStr = r.date?.toDate ? r.date.toDate().toLocaleDateString("zh-TW") :
+                        (r.date ? new Date(r.date).toLocaleDateString("zh-TW") : "—");
+        const row = document.createElement("div");
+        row.className = "misc-row";
+        row.id = `misc-row-${d.id}`;
+        row.innerHTML = `
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:13px">${esc(r.name)}</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">
+              <span class="pu-chip">${esc(r.category||"其他")}</span>
+              ${dateStr}
+              ${r.note ? `・${esc(r.note)}` : ""}
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            <span style="font-weight:700;color:var(--danger)">-NT$${Number(r.amount||0).toLocaleString()}</span>
+            <button class="btn btn-ghost btn-sm" onclick="openMiscModal('${d.id}')">編輯</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteMiscExpense('${d.id}')">刪除</button>
+          </div>`;
+        listEl.appendChild(row);
+      });
+    } catch(e) {
+      listEl.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
+    }
+  };
+
+  // ── 開啟 Modal ────────────────────────────────────────────────
+  window.openMiscModal = async function(id = null) {
+    _editingMiscId = id;
+    const modal = document.getElementById("modal-misc");
+    const title = document.getElementById("misc-modal-title");
+    document.getElementById("misc-error").textContent = "";
+
+    if (id) {
+      title.textContent = "✏️ 編輯雜項支出";
+      try {
+        const snap = await getDocs(collection(db,"miscExpenses"));
+        let data = null;
+        snap.forEach(d => { if (d.id === id) data = d.data(); });
+        if (data) {
+          document.getElementById("misc-name").value     = data.name || "";
+          document.getElementById("misc-amount").value   = data.amount || "";
+          document.getElementById("misc-category").value = data.category || "其他";
+          document.getElementById("misc-note").value     = data.note || "";
+          const d = data.date?.toDate ? data.date.toDate() : new Date(data.date||0);
+          document.getElementById("misc-date").value = isNaN(d) ? "" :
+            `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+        }
+      } catch(e) {}
+    } else {
+      title.textContent = "＋ 新增雜項支出";
+      document.getElementById("misc-name").value     = "";
+      document.getElementById("misc-amount").value   = "";
+      document.getElementById("misc-category").value = "包材";
+      document.getElementById("misc-note").value     = "";
+      // 預設今天
+      const now = new Date();
+      document.getElementById("misc-date").value =
+        `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+    }
+    modal.style.display = "flex";
+  };
+
+  window.closeMiscModal = function(e) {
+    if (e && e.target !== document.getElementById("modal-misc")) return;
+    document.getElementById("modal-misc").style.display = "none";
+  };
+
+  // ── 儲存 ─────────────────────────────────────────────────────
+  window.saveMiscExpense = async function() {
+    const name     = document.getElementById("misc-name").value.trim();
+    const amount   = parseFloat(document.getElementById("misc-amount").value) || 0;
+    const category = document.getElementById("misc-category").value;
+    const note     = document.getElementById("misc-note").value.trim();
+    const dateVal  = document.getElementById("misc-date").value;
+    const errEl    = document.getElementById("misc-error");
+
+    if (!name)   { errEl.textContent = "請填寫項目名稱"; return; }
+    if (!amount) { errEl.textContent = "請填寫金額"; return; }
+
+    const data = {
+      name, amount, category, note,
+      date: dateVal ? new Date(dateVal) : new Date(),
+      updatedAt: serverTimestamp(),
+    };
+
+    try {
+      if (_editingMiscId) {
+        await updateDoc(doc(db,"miscExpenses",_editingMiscId), data);
+      } else {
+        data.createdAt = serverTimestamp();
+        await addDoc(collection(db,"miscExpenses"), data);
+        // 同步到記帳
+        await addDoc(collection(db,"ledger"), {
+          type: "expense", category,
+          amount, note: `雜項：${name}${note?" ("+note+")":""}`,
+          date: data.date, createdAt: serverTimestamp(), source: "misc_auto"
+        });
+      }
+      document.getElementById("modal-misc").style.display = "none";
+      loadMiscExpenses();
+    } catch(e) { errEl.textContent = "儲存失敗：" + e.message; }
+  };
+
+  // ── 刪除 ─────────────────────────────────────────────────────
+  window.deleteMiscExpense = async function(id) {
+    if (!confirm("確定刪除此筆雜項支出？")) return;
+    try {
+      await deleteDoc(doc(db,"miscExpenses",id));
+      document.getElementById(`misc-row-${id}`)?.remove();
+    } catch(e) { alert("刪除失敗：" + e.message); }
+  };
+
+  // ── 切換採購記錄時也載入雜項 ─────────────────────────────────
+  const _origLoadPurchaseCampaigns = window.loadPurchaseCampaigns;
+  window.loadPurchaseCampaigns = async function() {
+    await _origLoadPurchaseCampaigns?.();
+    loadMiscExpenses();
   };
 </script>
