@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-53 -->
+  <!-- build:20260428-54 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3034,7 +3034,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-53 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-54 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -9312,10 +9312,25 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         if (!groups[cid]) groups[cid] = {
           campaignId:   cid,
           campaignName: o.campaignName || cid,
-          orders: []
+          orders: [],
+          latestCreatedAt: null
         };
         groups[cid].orders.push({ id: d.id, ...o });
+        // 記錄最新建立時間（用於排序）
+        const t = o.createdAt?.toMillis?.() || 0;
+        if (t > (groups[cid].latestCreatedAt || 0)) groups[cid].latestCreatedAt = t;
       });
+
+      // 從 campaigns 集合取得正式建立時間，讓排序和團務管理一致
+      try {
+        const cSnap = await getDocs(collection(db, "campaigns"));
+        cSnap.forEach(d => {
+          if (groups[d.id]) {
+            groups[d.id].campaignCreatedAt = d.data().createdAt?.toMillis?.() || 0;
+            groups[d.id].campaignName = d.data().name || groups[d.id].campaignName;
+          }
+        });
+      } catch(e) {}
 
       if (!Object.keys(groups).length) {
         listEl.innerHTML = '<div class="empty-row">尚無訂單資料</div>';
@@ -9323,7 +9338,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       }
 
       listEl.innerHTML = "";
-      Object.values(groups).sort((a,b) => a.campaignId.localeCompare(b.campaignId)).forEach(g => {
+      Object.values(groups).sort((a,b) => (b.campaignCreatedAt||b.latestCreatedAt||0) - (a.campaignCreatedAt||a.latestCreatedAt||0)).forEach(g => {
         const paidCount   = g.orders.filter(o => o.status === "paid").length;
         const pickedCount = g.orders.filter(o => o.picked).length;
         const card = document.createElement("div");
