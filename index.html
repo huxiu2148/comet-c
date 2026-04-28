@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-38 -->
+  <!-- build:20260428-39 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2807,6 +2807,16 @@
         <span class="fee-hint">開團時規格輸入「分成員」會自動帶入此清單</span>
       </div>
 
+      <!-- 常用購買平台 -->
+      <div class="form-group">
+        <label class="form-label">常用購買平台
+          <span class="fee-hint">（採購記錄的「在哪購買」下拉選單來源，每行一個）</span>
+        </label>
+        <textarea class="form-input" id="input-group-platforms" rows="3"
+          style="font-size:13px;resize:vertical"
+          placeholder="SM Official Shop&#10;Weverse Shop&#10;代購平台"></textarea>
+      </div>
+
       <!-- 小分隊 -->
       <div class="form-group">
         <label class="form-label">小分隊
@@ -2879,6 +2889,35 @@
       <div class="form-group">
         <label class="form-label">批次說明</label>
         <input class="form-input" id="np-batch" type="text" placeholder="例：第一批、安可加單..." />
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <!-- 購買平台 -->
+        <div class="form-group">
+          <label class="form-label">購買平台</label>
+          <select class="form-input" id="np-platform">
+            <option value="">— 選擇 —</option>
+          </select>
+        </div>
+        <!-- 集運倉 -->
+        <div class="form-group">
+          <label class="form-label">集運倉</label>
+          <select class="form-input" id="np-warehouse">
+            <option value="">— 選擇 —</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 外幣總額 -->
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">外幣總額</label>
+          <input class="form-input" id="np-foreign-amount" type="number" min="0" placeholder="0" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">幣別</label>
+          <input class="form-input" id="np-currency" type="text" placeholder="KRW" style="text-transform:uppercase" />
+        </div>
       </div>
 
       <!-- 商品列表（自動帶入+可手動修改） -->
@@ -3265,7 +3304,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-38 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-39 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -3491,7 +3530,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       </div>
 
       <div class="group-card-actions">
-        <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${id}" data-name="${esc(data.name)}" data-colors="${colorsJson}" data-abbr="${esc(data.abbr || '')}" data-members="${JSON.stringify(data.members || []).replace(/"/g,'&quot;')}" data-aliases="${JSON.stringify(data.aliases || []).replace(/"/g,'&quot;')}" data-subgroups="${JSON.stringify(data.subgroups || []).replace(/"/g,'&quot;')}">編輯</button>
+        <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${id}" data-name="${esc(data.name)}" data-colors="${colorsJson}" data-abbr="${esc(data.abbr || '')}" data-members="${JSON.stringify(data.members || []).replace(/"/g,'&quot;')}" data-aliases="${JSON.stringify(data.aliases || []).replace(/"/g,'&quot;')}" data-subgroups="${JSON.stringify(data.subgroups || []).replace(/"/g,'&quot;')}" data-platforms="${JSON.stringify(data.platforms || []).replace(/"/g,'&quot;')}">編輯</button>
         <button class="btn btn-danger btn-sm" onclick="deleteGroup('${id}','${esc(data.name)}')">刪除</button>
       </div>`;
     // 綁定編輯按鈕（避免 onclick 字串中帶陣列出錯）
@@ -3503,7 +3542,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       try { aliases = JSON.parse(btn.dataset.aliases.replace(/&quot;/g, '"')); } catch {}
       let subgroups = [];
       try { subgroups = JSON.parse((btn.dataset.subgroups||"[]").replace(/&quot;/g, '"')); } catch {}
-      openGroupModal(btn.dataset.id, btn.dataset.name, colors, btn.dataset.abbr || "", members, aliases, subgroups);
+      let platforms = [];
+      try { platforms = JSON.parse((btn.dataset.platforms||"[]").replace(/&quot;/g, '"')); } catch {}
+      openGroupModal(btn.dataset.id, btn.dataset.name, colors, btn.dataset.abbr || "", members, aliases, subgroups, platforms);
     });
     return card;
   }
@@ -3588,6 +3629,10 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       ? members.map(m => typeof m === "string" ? { display: m, aliases: [] } : m)
       : [];
     window._openGroupSubgroups = [];
+    // 載入常用購買平台（第8個參數）
+    const platformsData = arguments[7];
+    const platformsEl = document.getElementById("input-group-platforms");
+    if (platformsEl) platformsEl.value = Array.isArray(platformsData) ? platformsData.join("\n") : (platformsData || "");
     // 顯示 Modal
     document.getElementById("modal-group-title").textContent = id ? "編輯團體" : "新增團體";
     (function(){const _el=document.getElementById("modal-group");if(_el)_el.style.display="flex";})();
@@ -3642,11 +3687,13 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     if (!colors.length) { errEl.textContent = "請至少設一個顏色"; return; }
     btn.disabled = true; btn.textContent = "儲存中..."; errEl.textContent = "";
     try {
+      const platformsRaw = document.getElementById("input-group-platforms")?.value || "";
+      const platforms = platformsRaw.split("\n").map(p=>p.trim()).filter(p=>p);
       const subgroups = (window._openGroupSubgroups || []).filter(sg => sg.name);
       if (editingGroupId) {
-        await updateDoc(doc(db, "groups", editingGroupId), { name, abbr, aliases, colors, color, members, subgroups });
+        await updateDoc(doc(db, "groups", editingGroupId), { name, abbr, aliases, colors, color, members, subgroups, platforms });
       } else {
-        await addDoc(collection(db, "groups"), { name, abbr, aliases, colors, color, members, subgroups, createdAt: serverTimestamp() });
+        await addDoc(collection(db, "groups"), { name, abbr, aliases, colors, color, members, subgroups, platforms, createdAt: serverTimestamp() });
       }
       (function(){const _el=document.getElementById("modal-group");if(_el)_el.style.display="none";})();
       editingGroupId = null;
@@ -4694,7 +4741,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         const data = d.data();
         const abbr = (data.abbr || window.genAbbr(data.name)).toUpperCase();
         const colors = (data.colors && data.colors.length) ? data.colors : (data.color ? [data.color] : ["#FF84C3","#FF9E23","#E1E668"]);
-        groupsCache.push({ id: d.id, name: data.name, color: data.color || colors[0], colors, abbr, aliases: data.aliases || [], members: data.members || [], subgroups: data.subgroups || [] });
+        groupsCache.push({ id: d.id, name: data.name, color: data.color || colors[0], colors, abbr, aliases: data.aliases || [], members: data.members || [], subgroups: data.subgroups || [], platforms: data.platforms || [] });
         const opt = document.createElement("option");
         opt.value = d.id;
         opt.textContent = `${data.name} (${abbr})`;
@@ -9069,6 +9116,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     ).join("");
 
     const chips = [];
+    if (r.platform)     chips.push(`<span class="pu-chip">${esc(r.platform)}</span>`);
+    if (r.warehouse)    chips.push(`<span class="pu-chip blue">🏭 ${esc(r.warehouse)}</span>`);
+    if (r.foreignAmount && r.currency) chips.push(`<span class="pu-chip orange">${Number(r.foreignAmount).toLocaleString()} ${esc(r.currency)}</span>`);
     if (r.orderedAt)    chips.push(`<span class="pu-chip">下單：${window.fmtDateTime?.(r.orderedAt?.toDate?.() || r.orderedAt)?.slice(0,16) || "—"}</span>`);
     if (r.tracking)     chips.push(`<span class="pu-chip blue">單號：${esc(r.tracking)}</span>`);
     if (r.arrivedAt)    chips.push(`<span class="pu-chip green">到倉：${window.fmtDateTime?.(r.arrivedAt?.toDate?.() || r.arrivedAt)?.slice(0,16) || "—"}</span>`);
@@ -9121,6 +9171,24 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     document.getElementById("np-status").value = "ordered";
     document.getElementById("np-items-list").innerHTML = "";
 
+    // 重置新欄位
+    ["np-platform","np-foreign-amount","np-currency"].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = "";
+    });
+
+    // 載入集運倉選單
+    const warehouseSel = document.getElementById("np-warehouse");
+    warehouseSel.innerHTML = '<option value="">— 選擇 —</option>';
+    try {
+      const wSnap = await getDocs(collection(db, "warehouses"));
+      wSnap.forEach(d => {
+        const opt = document.createElement("option");
+        opt.value = d.data().name || d.id;
+        opt.textContent = d.data().name || d.id;
+        warehouseSel.appendChild(opt);
+      });
+    } catch(e) {}
+
     // 載入團務選單
     const sel = document.getElementById("np-campaign");
     sel.innerHTML = '<option value="">— 選擇團務 —</option>';
@@ -9154,11 +9222,35 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     document.getElementById("modal-new-purchase").style.display = "none";
   };
 
-  // 選了團務後自動彙算訂單商品
+  // 選了團務後自動彙算訂單商品，並帶入幣別和購買平台
   window.onNpCampaignChange = async function() {
     const sel = document.getElementById("np-campaign");
     const cid = sel.value;
     if (!cid) return;
+
+    // 從 campaigns 取幣別和 groupId
+    try {
+      const cSnap = await getDoc(doc(db, "campaigns", cid));
+      if (cSnap.exists()) {
+        const cData = cSnap.data();
+        // 幣別
+        const currEl = document.getElementById("np-currency");
+        if (currEl && !currEl.value) currEl.value = cData.currency || "KRW";
+        // 購買平台：從 groupsCache 找該團體的平台
+        const group = (window.groupsCache || []).find(g => g.id === cData.groupId);
+        const platforms = group?.platforms || [];
+        const platSel = document.getElementById("np-platform");
+        if (platSel) {
+          platSel.innerHTML = '<option value="">— 選擇 —</option>';
+          platforms.forEach(p => {
+            const opt = document.createElement("option");
+            opt.value = p; opt.textContent = p;
+            platSel.appendChild(opt);
+          });
+          if (platforms.length === 1) platSel.value = platforms[0];
+        }
+      }
+    } catch(e) {}
     const loading = document.getElementById("np-items-loading");
     const listEl  = document.getElementById("np-items-list");
     loading.style.display = "block";
@@ -9278,10 +9370,14 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
     const data = {
       campaignId, campaignName,
-      batchName:   document.getElementById("np-batch").value.trim() || `批次${Date.now().toString().slice(-4)}`,
+      batchName:     document.getElementById("np-batch").value.trim() || `批次${Date.now().toString().slice(-4)}`,
+      platform:      document.getElementById("np-platform").value,
+      warehouse:     document.getElementById("np-warehouse").value,
+      foreignAmount: parseFloat(document.getElementById("np-foreign-amount").value) || 0,
+      currency:      document.getElementById("np-currency").value.trim().toUpperCase() || "KRW",
       items,
-      total:       parseFloat(document.getElementById("np-total").value) || 0,
-      tracking:    document.getElementById("np-tracking").value.trim(),
+      total:         parseFloat(document.getElementById("np-total").value) || 0,
+      tracking:      document.getElementById("np-tracking").value.trim(),
       weight:      parseFloat(document.getElementById("np-weight").value) || 0,
       shippingFee: parseFloat(document.getElementById("np-shipping-fee").value) || 0,
       note:        document.getElementById("np-note").value.trim(),
