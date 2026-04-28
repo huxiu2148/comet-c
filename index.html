@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-52 -->
+  <!-- build:20260428-53 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3034,7 +3034,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-52 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-53 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -6279,6 +6279,29 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   }
 </script>
+
+
+<!-- 購買平台管理 Modal -->
+<div class="modal-backdrop" id="modal-platform-mgr" style="display:none" onclick="closePlatformManager(event)">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <h3 class="modal-title">⚙ 管理購買平台</h3>
+      <button class="modal-close" onclick="closePlatformManager()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fee-hint" style="margin-bottom:8px">新增後會出現在採購記錄的「購買平台」下拉選單</div>
+      <div id="platform-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
+      <div style="display:flex;gap:8px">
+        <input class="form-input" id="new-platform-input" type="text" placeholder="輸入平台名稱"
+          style="flex:1" onkeydown="if(event.key==='Enter')addPlatformItem()" />
+        <button class="btn btn-primary btn-sm" onclick="addPlatformItem()">新增</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closePlatformManager()">關閉</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
