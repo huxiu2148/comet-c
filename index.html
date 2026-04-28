@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-37 -->
+  <!-- build:20260428-38 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -231,6 +231,39 @@
     /* 無規格商品 */
     .opi-note { font-size:11px; color:var(--text-muted); margin-top:2px; }
 
+
+
+    /* ── 採購記錄 ── */
+    .pu-campaign-card {
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: var(--radius); margin-bottom: 10px; overflow: hidden;
+    }
+    .pu-campaign-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 16px; cursor: pointer; transition: background 0.15s;
+    }
+    .pu-campaign-header:hover { background: #fff0f7; }
+    .pu-records-list { border-top: 1px solid var(--border); padding: 12px 16px; }
+    .pu-record-row {
+      background: #fff8fb; border: 1.5px solid var(--border);
+      border-radius: 8px; padding: 12px; margin-bottom: 8px;
+    }
+    .pu-record-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 6px;
+    }
+    .pu-record-batch { font-weight: 700; font-size: 13px; }
+    .pu-items-table {
+      width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px;
+    }
+    .pu-items-table th {
+      padding: 4px 8px; background: #fff0f7; font-size: 11px; font-weight: 600;
+      color: var(--text-muted); text-align: left;
+    }
+    .pu-items-table td { padding: 5px 8px; border-top: 1px dashed var(--border); }
+    .np-item-row {
+      display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+    }
 
     /* ── 出貨追蹤 ── */
     .shipping-table {
@@ -2649,36 +2682,11 @@
       <div class="admin-section" id="section-purchase">
         <div class="section-header">
           <h2 class="section-title">🛒 採購記錄</h2>
-          <button class="btn btn-primary btn-sm" onclick="openPurchaseModal()">＋ 新增下單記錄</button>
+          <button class="btn btn-primary btn-sm" onclick="openNewPurchaseModal()">＋ 新增採購</button>
         </div>
-
-        <!-- 篩選列 -->
-        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-          <select class="form-input" id="purchase-filter-campaign" style="font-size:13px;width:200px" onchange="loadPurchases()">
-            <option value="">全部團務</option>
-          </select>
-          <select class="form-input" id="purchase-filter-status" style="font-size:13px;width:130px" onchange="loadPurchases()">
-            <option value="">全部狀態</option>
-            <option value="ordered">已下單</option>
-            <option value="shipped">已出貨</option>
-            <option value="arrived">到集運</option>
-            <option value="returning">運回中</option>
-            <option value="done">已完成</option>
-          </select>
-        </div>
-
-        <!-- 統計列 -->
-        <div class="purchase-stats" id="purchase-stats" style="display:none">
-          <div class="pstat"><div class="pstat-label">總筆數</div><div class="pstat-val" id="ps-count">0</div></div>
-          <div class="pstat"><div class="pstat-label">總金額</div><div class="pstat-val" id="ps-total">NT$0</div></div>
-          <div class="pstat"><div class="pstat-label">總重量</div><div class="pstat-val" id="ps-weight">0 kg</div></div>
-          <div class="pstat"><div class="pstat-label">運費合計</div><div class="pstat-val" id="ps-shipping">NT$0</div></div>
-        </div>
-
-        <!-- 列表 -->
-        <div id="purchase-list"></div>
+        <!-- 主列表：按團務展開 -->
+        <div id="purchase-campaign-list"></div>
       </div>
-
       <!-- 出貨追蹤 -->
       <div class="admin-section" id="section-shipping">
         <div class="section-header">
@@ -2849,6 +2857,99 @@
 
 
 
+
+
+<!-- 新採購記錄 Modal -->
+<div class="modal-backdrop" id="modal-new-purchase" style="display:none" onclick="closeNewPurchaseModal(event)">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <h3 class="modal-title" id="np-modal-title">🛒 新增採購記錄</h3>
+      <button class="modal-close" onclick="closeNewPurchaseModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- 選團務 -->
+      <div class="form-group">
+        <label class="form-label">關聯團務 <span class="required">*</span></label>
+        <select class="form-input" id="np-campaign" onchange="onNpCampaignChange()">
+          <option value="">— 選擇團務 —</option>
+        </select>
+      </div>
+
+      <!-- 批次說明 -->
+      <div class="form-group">
+        <label class="form-label">批次說明</label>
+        <input class="form-input" id="np-batch" type="text" placeholder="例：第一批、安可加單..." />
+      </div>
+
+      <!-- 商品列表（自動帶入+可手動修改） -->
+      <div class="form-group">
+        <label class="form-label">採購商品
+          <span class="fee-hint">（從訂單自動彙算，可手動修改）</span>
+        </label>
+        <div id="np-items-loading" style="display:none;color:var(--text-muted);font-size:13px">彙算中...</div>
+        <div id="np-items-list" style="display:flex;flex-direction:column;gap:6px"></div>
+        <button class="btn-add-spec-option" type="button" onclick="addNpItem()" style="margin-top:6px">＋ 新增商品</button>
+      </div>
+
+      <!-- 總金額 -->
+      <div class="form-group">
+        <label class="form-label">總金額 NT$</label>
+        <input class="form-input" id="np-total" type="number" min="0" placeholder="自動加總或手動輸入" />
+      </div>
+
+      <!-- 物流資訊 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">下單時間</label>
+          <input class="form-input" id="np-ordered-at" type="datetime-local" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">貨運單號</label>
+          <input class="form-input" id="np-tracking" type="text" placeholder="填入後可追蹤" />
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">到集運時間</label>
+          <input class="form-input" id="np-arrived-at" type="datetime-local" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">重量 (kg)</label>
+          <input class="form-input" id="np-weight" type="number" min="0" step="0.1" placeholder="0.0" />
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">申請運回時間</label>
+          <input class="form-input" id="np-return-at" type="datetime-local" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">運費 NT$</label>
+          <input class="form-input" id="np-shipping-fee" type="number" min="0" placeholder="0" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">狀態</label>
+        <select class="form-input" id="np-status">
+          <option value="ordered">🛒 已下單</option>
+          <option value="shipped">📦 已出貨</option>
+          <option value="arrived">🏪 到集運</option>
+          <option value="returning">✈️ 運回中</option>
+          <option value="done">✅ 已完成</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">備注</label>
+        <input class="form-input" id="np-note" type="text" />
+      </div>
+      <p class="form-error" id="np-error"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeNewPurchaseModal()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveNewPurchase()">儲存</button>
+    </div>
+  </div>
+</div>
 
 <!-- 下單管理 Modal -->
 <div class="modal-backdrop" id="modal-purchase" style="display:none" onclick="closePurchaseModal(event)">
@@ -3164,7 +3265,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-37 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-38 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -8886,4 +8987,335 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       row.push(cur); return row;
     });
   }
+</script>
+
+<!-- ── 採購記錄（重新設計）JS ── -->
+<script type="module">
+  import { db } from "./auth.js";
+  import {
+    collection, doc, addDoc, updateDoc, deleteDoc,
+    getDocs, getDoc, query, orderBy, where, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  function esc(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c =>
+      ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+
+  const PU_STATUS = {
+    ordered: "🛒 已下單", shipped: "📦 已出貨",
+    arrived: "🏪 到集運", returning: "✈️ 運回中", done: "✅ 已完成"
+  };
+
+  // ── 切換觸發 ──────────────────────────────────────────────────
+  document.addEventListener("adminSectionChanged", e => {
+    if (e.detail === "purchase") loadPurchaseCampaigns();
+  });
+
+  // ── 主列表：按團務分組 ─────────────────────────────────────────
+  window.loadPurchaseCampaigns = async function() {
+    const listEl = document.getElementById("purchase-campaign-list");
+    if (!listEl) return;
+    listEl.innerHTML = '<div class="loading-row">載入中...</div>';
+    try {
+      const snap = await getDocs(query(collection(db, "purchases"), orderBy("createdAt", "desc")));
+      const groups = {};
+      snap.forEach(d => {
+        const p = d.data();
+        const cid = p.campaignId || "未分類";
+        if (!groups[cid]) groups[cid] = { campaignId: cid, campaignName: p.campaignName || cid, records: [] };
+        groups[cid].records.push({ id: d.id, ...p });
+      });
+
+      if (!Object.keys(groups).length) {
+        listEl.innerHTML = '<div class="empty-row">尚無採購記錄</div>';
+        return;
+      }
+
+      listEl.innerHTML = "";
+      Object.values(groups).forEach(g => renderPurchaseCampaignCard(g, listEl));
+    } catch(e) {
+      listEl.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
+    }
+  };
+
+  function renderPurchaseCampaignCard(g, container) {
+    const card = document.createElement("div");
+    card.className = "pu-campaign-card";
+    card.innerHTML = `
+      <div class="pu-campaign-header" onclick="togglePuCampaign('${g.campaignId}')">
+        <div>
+          <div style="font-weight:700;font-size:14px">${esc(g.campaignName)}</div>
+          <div style="font-size:11px;color:var(--text-muted)">${esc(g.campaignId)} ・ ${g.records.length} 筆採購</div>
+        </div>
+        <span style="color:var(--text-muted);font-size:13px" id="pu-toggle-${g.campaignId}">▶</span>
+      </div>
+      <div class="pu-records-list" id="pu-records-${g.campaignId}" style="display:none">
+        ${g.records.map(r => renderPurchaseRecordHTML(r)).join("")}
+        <button class="btn btn-ghost btn-sm" style="margin:8px 0 4px"
+          onclick="openNewPurchaseModal('${g.campaignId}')">＋ 新增這個團務的採購</button>
+      </div>`;
+    container.appendChild(card);
+  }
+
+  function renderPurchaseRecordHTML(r) {
+    const itemsHTML = (r.items || []).map(it =>
+      `<tr>
+        <td>${esc(it.name)}</td>
+        <td style="text-align:center">${it.qty || 1}</td>
+        <td style="text-align:right">${it.unitPrice ? `NT$${Number(it.unitPrice).toLocaleString()}` : "—"}</td>
+        <td style="text-align:right;font-weight:700">${it.subtotal ? `NT$${Number(it.subtotal).toLocaleString()}` : "—"}</td>
+      </tr>`
+    ).join("");
+
+    const chips = [];
+    if (r.orderedAt)    chips.push(`<span class="pu-chip">下單：${window.fmtDateTime?.(r.orderedAt?.toDate?.() || r.orderedAt)?.slice(0,16) || "—"}</span>`);
+    if (r.tracking)     chips.push(`<span class="pu-chip blue">單號：${esc(r.tracking)}</span>`);
+    if (r.arrivedAt)    chips.push(`<span class="pu-chip green">到倉：${window.fmtDateTime?.(r.arrivedAt?.toDate?.() || r.arrivedAt)?.slice(0,16) || "—"}</span>`);
+    if (r.weight)       chips.push(`<span class="pu-chip green">${r.weight} kg</span>`);
+    if (r.shippingFee)  chips.push(`<span class="pu-chip orange">運費 NT$${Number(r.shippingFee).toLocaleString()}</span>`);
+
+    return `<div class="pu-record-row" id="pur-${r.id}">
+      <div class="pu-record-header">
+        <div>
+          <span class="pu-record-batch">${esc(r.batchName || "採購批次")}</span>
+          <span style="font-size:11px;margin-left:8px">${PU_STATUS[r.status] || r.status}</span>
+        </div>
+        <div style="display:flex;gap:6px">
+          ${r.total ? `<span style="font-weight:700;color:var(--pink)">NT$${Number(r.total).toLocaleString()}</span>` : ""}
+          <button class="btn btn-ghost btn-sm" onclick="editPurchaseRecord('${r.id}')">編輯</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePurchaseRecord('${r.id}')">刪除</button>
+        </div>
+      </div>
+      ${chips.length ? `<div class="pu-meta">${chips.join("")}</div>` : ""}
+      ${itemsHTML ? `<table class="pu-items-table">
+        <thead><tr><th>商品</th><th>數量</th><th>單價</th><th>小計</th></tr></thead>
+        <tbody>${itemsHTML}</tbody>
+      </table>` : ""}
+      ${r.note ? `<div style="font-size:12px;color:var(--text-muted);margin-top:4px">${esc(r.note)}</div>` : ""}
+    </div>`;
+  }
+
+  window.togglePuCampaign = function(cid) {
+    const el = document.getElementById(`pu-records-${cid}`);
+    const icon = document.getElementById(`pu-toggle-${cid}`);
+    const open = el.style.display === "none";
+    el.style.display  = open ? "block" : "none";
+    icon.textContent  = open ? "▼" : "▶";
+  };
+
+  // ── 新增採購 Modal ─────────────────────────────────────────────
+  let _editingPurchaseRecordId = null;
+
+  window.openNewPurchaseModal = async function(presetCampaignId = null) {
+    _editingPurchaseRecordId = null;
+    document.getElementById("np-modal-title").textContent = "🛒 新增採購記錄";
+    document.getElementById("np-error").textContent = "";
+    // 清空
+    ["np-batch","np-tracking","np-note","np-total","np-weight","np-shipping-fee"].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = "";
+    });
+    ["np-ordered-at","np-arrived-at","np-return-at"].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = "";
+    });
+    document.getElementById("np-status").value = "ordered";
+    document.getElementById("np-items-list").innerHTML = "";
+
+    // 載入團務選單
+    const sel = document.getElementById("np-campaign");
+    sel.innerHTML = '<option value="">— 選擇團務 —</option>';
+    try {
+      const snap = await getDocs(query(collection(db, "campaigns"), orderBy("createdAt", "desc")));
+      snap.forEach(d => {
+        const opt = document.createElement("option");
+        opt.value = d.id;
+        opt.dataset.name = d.data().name;
+        opt.textContent = `${d.data().name} (${d.id})`;
+        sel.appendChild(opt);
+      });
+    } catch(e) {}
+
+    if (presetCampaignId) {
+      sel.value = presetCampaignId;
+      onNpCampaignChange();
+    }
+
+    // 預設下單時間
+    const now = new Date();
+    const pad = n => String(n).padStart(2,"0");
+    document.getElementById("np-ordered-at").value =
+      `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+    document.getElementById("modal-new-purchase").style.display = "flex";
+  };
+
+  window.closeNewPurchaseModal = function(e) {
+    if (e && e.target !== document.getElementById("modal-new-purchase")) return;
+    document.getElementById("modal-new-purchase").style.display = "none";
+  };
+
+  // 選了團務後自動彙算訂單商品
+  window.onNpCampaignChange = async function() {
+    const sel = document.getElementById("np-campaign");
+    const cid = sel.value;
+    if (!cid) return;
+    const loading = document.getElementById("np-items-loading");
+    const listEl  = document.getElementById("np-items-list");
+    loading.style.display = "block";
+    listEl.innerHTML = "";
+
+    try {
+      // 從 orders 集合讀取該團務的所有訂單，彙算商品數量
+      const snap = await getDocs(query(collection(db, "orders"), where("campaignId", "==", cid)));
+      const itemMap = {}; // name -> qty
+
+      snap.forEach(d => {
+        const o = d.data();
+        if (o.items && o.items.length) {
+          o.items.forEach(it => {
+            const key = it.name || it.specStr || "未知商品";
+            itemMap[key] = (itemMap[key] || 0) + (it.qty || 1);
+          });
+        } else if (o.itemsText) {
+          // 文字格式解析：「商品A x2\n商品B x1」
+          String(o.itemsText).split(/\n|；/).forEach(line => {
+            const m = line.trim().match(/^(.+?)\s*[xX×]\s*(\d+)\s*$/);
+            if (m) {
+              itemMap[m[1].trim()] = (itemMap[m[1].trim()] || 0) + parseInt(m[2]);
+            } else if (line.trim()) {
+              itemMap[line.trim()] = (itemMap[line.trim()] || 0) + 1;
+            }
+          });
+        }
+      });
+
+      loading.style.display = "none";
+
+      if (!Object.keys(itemMap).length) {
+        listEl.innerHTML = '<div style="font-size:12px;color:var(--text-muted)">此團務尚無訂單，請手動新增商品</div>';
+        addNpItem();
+        return;
+      }
+
+      // 渲染商品列表
+      Object.entries(itemMap).forEach(([name, qty]) => {
+        addNpItem(name, qty);
+      });
+    } catch(e) {
+      loading.style.display = "none";
+      listEl.innerHTML = `<div style="color:var(--danger);font-size:12px">彙算失敗：${e.message}</div>`;
+    }
+  };
+
+  // 新增商品行
+  let _npItemIdx = 0;
+  window.addNpItem = function(name = "", qty = 1, unitPrice = "", subtotal = "") {
+    const idx = _npItemIdx++;
+    const listEl = document.getElementById("np-items-list");
+    const row = document.createElement("div");
+    row.className = "np-item-row";
+    row.id = `np-item-${idx}`;
+    row.innerHTML = `
+      <input class="form-input" style="flex:2;font-size:13px" placeholder="商品名稱"
+        value="${esc(name)}" id="np-item-name-${idx}" />
+      <input class="form-input" style="width:60px;font-size:13px;text-align:center" placeholder="數量"
+        type="number" min="1" value="${qty}" id="np-item-qty-${idx}"
+        oninput="updateNpSubtotal(${idx})" />
+      <input class="form-input" style="width:90px;font-size:13px" placeholder="單價"
+        type="number" min="0" value="${unitPrice}" id="np-item-price-${idx}"
+        oninput="updateNpSubtotal(${idx})" />
+      <input class="form-input" style="width:90px;font-size:13px" placeholder="小計"
+        type="number" min="0" value="${subtotal}" id="np-item-sub-${idx}" />
+      <button class="btn btn-danger btn-sm" style="padding:4px 8px;flex-shrink:0"
+        onclick="document.getElementById('np-item-${idx}').remove();updateNpTotal()">✕</button>`;
+    listEl.appendChild(row);
+    updateNpTotal();
+  };
+
+  window.updateNpSubtotal = function(idx) {
+    const qty   = parseFloat(document.getElementById(`np-item-qty-${idx}`)?.value) || 0;
+    const price = parseFloat(document.getElementById(`np-item-price-${idx}`)?.value) || 0;
+    const subEl = document.getElementById(`np-item-sub-${idx}`);
+    if (subEl && qty && price) subEl.value = qty * price;
+    updateNpTotal();
+  };
+
+  function updateNpTotal() {
+    const rows = document.querySelectorAll('[id^="np-item-"]');
+    let total = 0;
+    rows.forEach(row => {
+      const sub = parseFloat(row.querySelector('[id^="np-item-sub-"]')?.value) || 0;
+      total += sub;
+    });
+    const totalEl = document.getElementById("np-total");
+    if (totalEl && total > 0) totalEl.value = total;
+  }
+
+  // ── 儲存採購記錄 ──────────────────────────────────────────────
+  window.saveNewPurchase = async function() {
+    const campaignId = document.getElementById("np-campaign").value;
+    const errEl = document.getElementById("np-error");
+    if (!campaignId) { errEl.textContent = "請選擇團務"; return; }
+
+    const sel = document.getElementById("np-campaign");
+    const campaignName = sel.options[sel.selectedIndex]?.dataset.name || "";
+
+    // 收集商品
+    const items = [];
+    document.querySelectorAll('[id^="np-item-"]:not([id*="-name-"]):not([id*="-qty-"]):not([id*="-price-"]):not([id*="-sub-"])').forEach(row => {
+      const idx = row.id.replace("np-item-","");
+      const name     = document.getElementById(`np-item-name-${idx}`)?.value.trim();
+      const qty      = parseFloat(document.getElementById(`np-item-qty-${idx}`)?.value) || 1;
+      const unitPrice= parseFloat(document.getElementById(`np-item-price-${idx}`)?.value) || 0;
+      const subtotal = parseFloat(document.getElementById(`np-item-sub-${idx}`)?.value) || 0;
+      if (name) items.push({ name, qty, unitPrice, subtotal });
+    });
+
+    const toDate = id => {
+      const v = document.getElementById(id)?.value;
+      return v ? new Date(v) : null;
+    };
+
+    const data = {
+      campaignId, campaignName,
+      batchName:   document.getElementById("np-batch").value.trim() || `批次${Date.now().toString().slice(-4)}`,
+      items,
+      total:       parseFloat(document.getElementById("np-total").value) || 0,
+      tracking:    document.getElementById("np-tracking").value.trim(),
+      weight:      parseFloat(document.getElementById("np-weight").value) || 0,
+      shippingFee: parseFloat(document.getElementById("np-shipping-fee").value) || 0,
+      note:        document.getElementById("np-note").value.trim(),
+      status:      document.getElementById("np-status").value,
+      orderedAt:   toDate("np-ordered-at"),
+      arrivedAt:   toDate("np-arrived-at"),
+      returnAt:    toDate("np-return-at"),
+      updatedAt:   serverTimestamp(),
+    };
+
+    try {
+      if (_editingPurchaseRecordId) {
+        await updateDoc(doc(db, "purchases", _editingPurchaseRecordId), data);
+      } else {
+        data.createdAt = serverTimestamp();
+        await addDoc(collection(db, "purchases"), data);
+      }
+      document.getElementById("modal-new-purchase").style.display = "none";
+      await window.loadPurchaseCampaigns?.();
+    } catch(e) { errEl.textContent = "儲存失敗：" + e.message; }
+  };
+
+  // ── 刪除採購記錄 ──────────────────────────────────────────────
+  window.deletePurchaseRecord = async function(id) {
+    if (!confirm("確定刪除此採購記錄？")) return;
+    try {
+      await deleteDoc(doc(db, "purchases", id));
+      document.getElementById(`pur-${id}`)?.remove();
+    } catch(e) { alert("刪除失敗：" + e.message); }
+  };
+
+  // ── 編輯採購記錄（待實作）──────────────────────────────────────
+  window.editPurchaseRecord = async function(id) {
+    // TODO: 載入資料回填 modal
+    alert("編輯功能開發中");
+  };
 </script>
