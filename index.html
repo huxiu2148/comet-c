@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-43 -->
+  <!-- build:20260428-44 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3322,7 +3322,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-43 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-44 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -8791,9 +8791,27 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
             <th>訂購商品</th>
             <th>已付金額</th>
             <th>剩餘金額</th>
-            <th style="text-align:center">下單</th>
-            <th style="text-align:center">出貨</th>
-            <th style="text-align:center">取貨</th>
+            <th style="text-align:center">
+              下單<br>
+              <label style="font-size:10px;cursor:pointer;font-weight:400">
+                <input type="checkbox" id="chk-all-ordered" style="accent-color:#fff;width:12px;height:12px"
+                  onchange="checkAllShipping('ordered',this.checked)"> 全
+              </label>
+            </th>
+            <th style="text-align:center">
+              出貨<br>
+              <label style="font-size:10px;cursor:pointer;font-weight:400">
+                <input type="checkbox" id="chk-all-shipped" style="accent-color:#fff;width:12px;height:12px"
+                  onchange="checkAllShipping('shipped',this.checked)"> 全
+              </label>
+            </th>
+            <th style="text-align:center">
+              取貨<br>
+              <label style="font-size:10px;cursor:pointer;font-weight:400">
+                <input type="checkbox" id="chk-all-picked" style="accent-color:#fff;width:12px;height:12px"
+                  onchange="checkAllShipping('picked',this.checked)"> 全
+              </label>
+            </th>
             <th>備註</th>
             <th>最後更新</th>
           </tr>
@@ -8806,6 +8824,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     orders.forEach(o => {
       const row = document.createElement("tr");
       row.id = `srow-${o.id}`;
+      row.dataset.shippingId = o.id;
 
       // 金額計算（原封不動保留括號等特殊字元）
       const rawTotalStr = String(o.totalPrice || o.total || o.totalAmount || "").trim();
@@ -8842,15 +8861,15 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
             value="${esc(extraStr)}" placeholder="補款" style="margin-top:3px"
             onchange="saveExtraAmount(\'${o.id}\', this.value)" />
         </td>        <td style="text-align:center">
-          <input type="checkbox" class="st-check" ${o.ordered ? "checked" : ""}
+          <input type="checkbox" class="st-check st-check-ordered" ${o.ordered ? "checked" : ""}
             onchange="saveShippingFlag('${o.id}','ordered',this.checked)" />
         </td>
         <td style="text-align:center">
-          <input type="checkbox" class="st-check" ${o.shipped ? "checked" : ""}
+          <input type="checkbox" class="st-check st-check-shipped" ${o.shipped ? "checked" : ""}
             onchange="saveShippingFlag('${o.id}','shipped',this.checked)" />
         </td>
         <td style="text-align:center">
-          <input type="checkbox" class="st-check" ${o.picked ? "checked" : ""}
+          <input type="checkbox" class="st-check st-check-picked" ${o.picked ? "checked" : ""}
             onchange="onPickedChange('${o.id}',this.checked)" />
         </td>
         <td><input class="st-note-input" id="st-note-${o.id}" type="text"
@@ -8860,6 +8879,22 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       tbody.appendChild(row);
     });
   }
+
+  // ── 一鍵全選 ──────────────────────────────────────────────────
+  window.checkAllShipping = async function(field, checked) {
+    const rows = document.querySelectorAll(`[data-shipping-id]`);
+    for (const row of rows) {
+      const orderId = row.dataset.shippingId;
+      const cb = row.querySelector(`.st-check-${field}`);
+      if (!cb || cb.checked === checked) continue;
+      cb.checked = checked;
+      if (field === 'picked') {
+        await onPickedChange(orderId, checked);
+      } else {
+        await saveShippingFlag(orderId, field, checked);
+      }
+    }
+  };
 
   // ── 勾選下單/出貨 ────────────────────────────────────────────
   window.saveShippingFlag = async function(orderId, field, value) {
@@ -8968,52 +9003,93 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       if (!rows.length) { alert("檔案內沒有有效資料"); return; }
 
       const STATUS_MAP = {"已核對":"paid","已付款":"paid","未核對":"pending","待確認":"pending","paid":"paid","pending":"pending"};
-      let ok = 0, fail = 0;
-      const BATCH = 20;
 
-      for (let i = 0; i < rows.length; i += BATCH) {
-        await Promise.all(rows.slice(i, i+BATCH).map(async row => {
-          try {
-            const campaignId   = String(row[0]||"").trim();
-            const nickname     = String(row[1]||"").trim();
-            const contact      = String(row[2]||"").trim();
-            const email        = String(row[3]||"").trim();
-            const itemsText    = String(row[4]||"").trim();
-            const amountRaw    = String(row[5]||"").trim();
-            const statusRaw    = String(row[6]||"").trim();
-            const returnInfo   = String(row[7]||"").trim();
-            // 依付款狀態判斷金額歸屬
-            const STATUS_NORM  = {"已核對":"paid","已付款":"paid","未核對":"pending","待確認":"pending","paid":"paid","pending":"pending"};
-            const status       = STATUS_NORM[statusRaw] || "pending";
-            const paidAmount   = status === "paid"    ? amountRaw : "";
-            const remainAmount = status === "pending" ? amountRaw : "";
-            const ordered      = String(row[8]||"").toLowerCase() === "true";
-            const shipped      = String(row[9]||"").toLowerCase() === "true";
-            const picked       = String(row[10]||"").toLowerCase() === "true";
-            const extraAmount  = parseFloat(row[11])||0;
-            const shippingNote = String(row[12]||"").trim();
+      // 預先載入所有 campaigns 取得名稱對照
+      const campaignNames = {};
+      try {
+        const cSnap = await getDocs(collection(db, "campaigns"));
+        cSnap.forEach(d => { campaignNames[d.id] = d.data().name || d.id; });
+      } catch(e) {}
 
-            if (!campaignId || !itemsText) { fail++; return; }
+      // 預先讀取現有訂單（同一 campaignId + nickname 的）
+      const existingMap = {}; // key: "campaignId|nickname" → doc id
+      try {
+        const oSnap = await getDocs(collection(db, "orders"));
+        oSnap.forEach(d => {
+          const o = d.data();
+          if (o.campaignId && (o.nickname || o.buyerName)) {
+            const key = `${o.campaignId}|${o.nickname || o.buyerName}`;
+            existingMap[key] = d.id;
+          }
+        });
+      } catch(e) {}
 
-            await addDoc(collection(db,"orders"), {
-              campaignId, nickname, contact, email, itemsText,
-              totalPrice: amountRaw, paidAmount, remainAmount, status,
-              returnInfo, ordered, shipped, picked,
-              extraAmount: String(row[11]||"").trim(),
-              shippingNote: String(row[12]||"").trim(),
-              userId: "imported", source: "shipping_import",
-              createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
-            });
+      let ok = 0, skip = 0, replace = 0, fail = 0;
+
+      for (const row of rows) {
+        try {
+          const campaignId   = String(row[0]||"").trim();
+          const nickname     = String(row[1]||"").trim();
+          const contact      = String(row[2]||"").trim();
+          const email        = String(row[3]||"").trim();
+          const itemsText    = String(row[4]||"").trim();
+          const amountRaw    = String(row[5]||"").trim();
+          const statusRaw    = String(row[6]||"").trim();
+          const returnInfo   = String(row[7]||"").trim();
+          const ordered      = String(row[8]||"").toLowerCase() === "true";
+          const shipped      = String(row[9]||"").toLowerCase() === "true";
+          const picked       = String(row[10]||"").toLowerCase() === "true";
+          const extraAmount  = String(row[11]||"").trim();
+          const shippingNote = String(row[12]||"").trim();
+
+          if (!campaignId || !itemsText) { skip++; continue; }
+
+          const status       = STATUS_MAP[statusRaw] || "pending";
+          const paidAmount   = status === "paid"    ? amountRaw : "";
+          const remainAmount = status === "pending" ? amountRaw : "";
+          const campaignName = campaignNames[campaignId] || campaignId;
+
+          const docData = {
+            campaignId, campaignName, nickname, contact, email, itemsText,
+            totalPrice: amountRaw, paidAmount, remainAmount, status,
+            returnInfo, ordered, shipped, picked, extraAmount, shippingNote,
+            userId: "imported", source: "shipping_import",
+            updatedAt: serverTimestamp(),
+          };
+
+          // 重複檢查
+          const dupKey = `${campaignId}|${nickname}`;
+          const existingId = existingMap[dupKey];
+
+          if (existingId) {
+            const choice = confirm(
+              `⚠️ 發現重複資料\n\n` +
+              `團務：${campaignName}\n` +
+              `暱稱：${nickname}\n` +
+              `商品：${itemsText.slice(0,40)}${itemsText.length>40?"…":""}\n\n` +
+              `確定「取代」請按確定，按取消則「略過」`
+            );
+            if (choice) {
+              await updateDoc(doc(db, "orders", existingId), docData);
+              replace++;
+            } else {
+              skip++;
+            }
+          } else {
+            docData.createdAt = serverTimestamp();
+            const newDoc = await addDoc(collection(db, "orders"), docData);
+            existingMap[dupKey] = newDoc.id; // 避免同批次重複
             ok++;
-          } catch(e) { fail++; console.error(e); }
-        }));
-        if (i + BATCH < rows.length) await new Promise(r => setTimeout(r, 300));
+          }
+        } catch(e) { fail++; console.error(e); }
       }
 
-      alert(`✅ 匯入完成！成功 ${ok} 筆${fail?`，失敗 ${fail} 筆`:""}`);
+      const msg = `✅ 匯入完成！新增 ${ok} 筆${replace?`，取代 ${replace} 筆`:""}${skip?`，略過 ${skip} 筆`:""}${fail?`，失敗 ${fail} 筆`:""}`;
+      alert(msg);
       window.loadShippingCampaigns?.();
     } catch(e) { alert("解析失敗：" + e.message); }
   };
+
 
   async function parseShippingFile(file) {
     const ext = file.name.split(".").pop().toLowerCase();
