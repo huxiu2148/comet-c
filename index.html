@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-45 -->
+  <!-- build:20260428-46 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2495,6 +2495,7 @@
             <button class="btn btn-ghost btn-sm" onclick="document.getElementById('order-import-file').click()">📤 批次匯入</button>
             <input type="file" id="order-import-file" accept=".xlsx,.csv" style="display:none" onchange="importOrders(this)" />
             <button class="btn btn-primary btn-sm" onclick="exportOrders()">匯出 CSV</button>
+            <button class="btn btn-ghost btn-sm" onclick="syncOrdersToMembers()">👤 同步到會員</button>
             <button class="btn btn-ghost btn-sm" id="btn-order-select-toggle" onclick="toggleOrderSelectMode(true)">☐ 選取刪除</button>
           </div>
         </div>
@@ -3175,7 +3176,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-45 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-46 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -6813,6 +6814,85 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   window.closeOrderEdit = function(e) {
     if (e && e.target !== document.getElementById("modal-order-edit")) return;
     document.getElementById("modal-order-edit").style.display = "none";
+  };
+
+  // ── 同步訂單到會員管理 ──────────────────────────────────────
+  window.syncOrdersToMembers = async function() {
+    const btn = event.target;
+    btn.disabled = true;
+    btn.textContent = "同步中...";
+    try {
+      // 讀取現有會員 email 集合
+      const userSnap = await getDocs(collection(db, "users"));
+      const existingEmails = new Set();
+      const existingContacts = new Set();
+      userSnap.forEach(d => {
+        const u = d.data();
+        if (u.email)   existingEmails.add(u.email.toLowerCase().trim());
+        if (u.contact) existingContacts.add(u.contact.toLowerCase().trim());
+      });
+
+      // 讀取所有訂單
+      const orderSnap = await getDocs(collection(db, "orders"));
+      const newMembers = {}; // email 或 contact → data
+
+      orderSnap.forEach(d => {
+        const o = d.data();
+        const email   = String(o.email   || "").trim();
+        const contact = String(o.contact || o.lineId || "").trim();
+        const nickname= String(o.nickname || o.buyerName || "").trim();
+
+        // 用 email 或 contact 判斷是否已建檔
+        const emailKey   = email.toLowerCase();
+        const contactKey = contact.toLowerCase();
+
+        if (email && !existingEmails.has(emailKey)) {
+          if (!newMembers[emailKey]) {
+            newMembers[emailKey] = { email, contact, nickname, source: "order_sync" };
+          }
+        } else if (!email && contact && !existingContacts.has(contactKey)) {
+          if (!newMembers[contactKey]) {
+            newMembers[contactKey] = { email: "", contact, nickname, source: "order_sync" };
+          }
+        }
+      });
+
+      const toAdd = Object.values(newMembers);
+      if (!toAdd.length) {
+        alert("✅ 所有訂單成員都已在會員清單中，無需新增");
+        return;
+      }
+
+      const confirmed = confirm(
+        `發現 ${toAdd.length} 位訂單中的人尚未建檔：\n\n` +
+        toAdd.slice(0, 10).map(m => `• ${m.nickname || m.contact || m.email}`).join("\n") +
+        (toAdd.length > 10 ? `\n... 還有 ${toAdd.length - 10} 位` : "") +
+        "\n\n確定要全部加入會員管理？"
+      );
+      if (!confirmed) return;
+
+      let ok = 0, fail = 0;
+      for (const m of toAdd) {
+        try {
+          await addDoc(collection(db, "users"), {
+            email:     m.email,
+            contact:   m.contact,
+            nickname:  m.nickname,
+            source:    "order_sync",
+            createdAt: serverTimestamp(),
+          });
+          ok++;
+        } catch(e) { fail++; }
+      }
+
+      alert(`✅ 同步完成！新增 ${ok} 位會員${fail ? `，失敗 ${fail} 位` : ""}`);
+      window.loadMembers?.();
+    } catch(e) {
+      alert("同步失敗：" + e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "👤 同步到會員";
+    }
   };
 
   window.exportOrders = async function() {
