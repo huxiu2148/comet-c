@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-43 -->
+  <!-- build:20260428-44 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3109,7 +3109,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-43 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-44 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -4342,10 +4342,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       groupKeywords = [];
       snap.forEach(d => {
         const data = d.data();
-        // 建立關鍵字清單：團體名 + 團體別名 + 所有成員顯示名 + 所有成員別名
+        // 建立關鍵字清單：團體名 + 團體別名 + 小分隊名 + 所有成員顯示名 + 所有成員別名
         const keys = [
           data.name,
           ...(data.aliases || []),
+          ...((data.subgroups || []).map(sg => sg.name).filter(Boolean)),
           ...((data.members || []).flatMap(m =>
             typeof m === "string"
               ? [m]
