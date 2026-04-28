@@ -590,8 +590,10 @@
       position: fixed; inset: 0;
       background: rgba(255,100,180,0.10);
       backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 200; padding: 16px;
+      display: flex; align-items: flex-start; justify-content: center;
+      z-index: 200; padding: 20px 16px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
     }
 
     .modal {
@@ -6890,6 +6892,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const listEl = document.getElementById("merge-list");
     listEl.innerHTML = '<div class="loading-row">分析中...</div>';
     modal.style.display = "flex";
+    document.body.style.overflow = "hidden";
 
     try {
       const snap = await getDocs(query(collection(db,"orders"), orderBy("createdAt","asc")));
@@ -6955,6 +6958,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   window.closeMergeModal = function(e) {
     if (e && e.target !== document.getElementById("modal-merge-orders")) return;
     document.getElementById("modal-merge-orders").style.display = "none";
+    document.body.style.overflow = "";
   };
 
   window.confirmMergeSelected = async function() {
@@ -7023,6 +7027,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
     alert(`✅ 合併完成：${ok} 個群組${fail?`，失敗 ${fail} 個`:""}`);
     document.getElementById("modal-merge-orders").style.display = "none";
+    document.body.style.overflow = "";
     window.loadAdminOrders?.();
   };
 
