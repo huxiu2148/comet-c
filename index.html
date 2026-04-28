@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-49 -->
+  <!-- build:20260428-50 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3173,7 +3173,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-49 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-50 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -5886,7 +5886,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 <script type="module">
   import { db } from "./auth.js";
   import {
-    collection, doc, setDoc, getDocs, updateDoc,
+    collection, doc, setDoc, getDocs, updateDoc, deleteDoc,
     query, orderBy, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -6639,6 +6639,22 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       if (delBtn) delBtn.style.display = "none";
       document.querySelectorAll(".order-checkbox").forEach(cb => cb.checked = false);
     }
+  };
+
+  window.deleteSelectedOrders = async function() {
+    const checked = Array.from(document.querySelectorAll(".order-checkbox:checked"));
+    if (!checked.length) { alert("沒有選取任何訂單"); return; }
+    if (!confirm(`確定刪除選取的 ${checked.length} 筆訂單？此操作無法復原。`)) return;
+    let ok = 0, fail = 0;
+    for (const cb of checked) {
+      try {
+        await deleteDoc(doc(db, "orders", cb.dataset.oid));
+        document.getElementById(`oadmin-${cb.dataset.oid}`)?.remove();
+        ok++;
+      } catch(e) { fail++; }
+    }
+    alert(`✅ 刪除完成：${ok} 筆${fail ? `，失敗 ${fail} 筆` : ""}`);
+    toggleOrderSelectMode();
   };
 
   window.onOrderCheckChange = function() {
