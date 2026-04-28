@@ -7259,8 +7259,21 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         const tb = b.data().createdAt?.toMillis?.() ?? 0;
         return tb - ta;
       });
+      const now = new Date();
+      const autoCloseIds = [];
+
       docs.forEach(d => {
         const data = d.data();
+
+        // 收單時間已過且狀態還是 ongoing → 自動改成 closed
+        if (data.progress === "ongoing" && data.deadline) {
+          const dl = new Date(data.deadline);
+          if (!isNaN(dl) && dl < now) {
+            autoCloseIds.push(d.id);
+            data.progress = "closed";
+          }
+        }
+
         const row = document.createElement("div");
         row.className = "campaign-admin-row";
         row.id = `campaign-row-${d.id}`;
@@ -7313,6 +7326,12 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         });
         list.appendChild(row);
       });
+      // 批次更新已過收單時間的團務
+      if (autoCloseIds.length) {
+        autoCloseIds.forEach(id => {
+          updateDoc(doc(db, "campaigns", id), { progress: "closed" }).catch(() => {});
+        });
+      }
     } catch(e) { list.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`; }
   };
 
@@ -8626,11 +8645,12 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       const row = document.createElement("tr");
       row.id = `srow-${o.id}`;
 
-      // 金額計算
-      const rawTotal = parseFloat(String(o.totalPrice || o.total || o.totalAmount || "0").replace(/[^\d.]/g, "")) || 0;
-      const extraAmount = parseFloat(o.extraAmount || 0);
-      const paid   = o.status === "paid" ? rawTotal : 0;
-      const remain = (o.status !== "paid" ? rawTotal : 0) + extraAmount;
+      // 金額計算（原封不動保留括號等特殊字元）
+      const rawTotalStr = String(o.totalPrice || o.total || o.totalAmount || "").trim();
+      const extraStr    = String(o.extraAmount || "").trim();
+      // 已付：status=paid 顯示原始金額字串；取貨後顯示 paidAmount（手動存的）
+      const paidStr   = o.paidAmount   || (o.status === "paid" ? rawTotalStr : "") || "";
+      const remainStr = o.remainAmount || (o.status !== "paid" ? rawTotalStr : "") || "";
 
       // 商品摘要
       const itemsSummary = o.itemsText || (o.items||[]).map(i=>`${i.name}×${i.qty}`).join("、") || "—";
@@ -8660,7 +8680,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         </td>
         <td style="text-align:center">
           <input type="checkbox" class="st-check" ${o.picked ? "checked" : ""}
-            onchange="onPickedChange('${o.id}',this.checked,${rawTotal},${extraAmount})" />
+            onchange="onPickedChange('${o.id}',this.checked)" />
         </td>
         <td><input class="st-note-input" id="st-note-${o.id}" type="text"
           value="${esc(o.shippingNote||'')}" placeholder="備注"
@@ -8680,41 +8700,71 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   };
 
   // ── 取貨勾選：剩餘金額移入已付 ─────────────────────────────
-  window.onPickedChange = async function(orderId, picked, rawTotal, extraAmount) {
+  window.onPickedChange = async function(orderId, picked) {
+    const paidEl   = document.getElementById(`st-paid-${orderId}`);
+    const remainEl = document.getElementById(`st-remain-${orderId}`);
+    const extraEl  = document.getElementById(`st-extra-${orderId}`);
     try {
       const updates = { picked, updatedAt: serverTimestamp() };
       if (picked) {
-        // 剩餘清零，補款清零（視同已付）
-        updates.extraAmount = 0;
+        // 取貨：剩餘 + 補款 → 合併進已付
+        const remainVal = remainEl?.value?.trim() || "";
+        const extraVal  = extraEl?.value?.trim()  || "";
+        // 字串合併：「320(250)」+ 「20」→ 「340(270)」（嘗試數字加法，失敗則拼接）
+        const newPaid = addAmountStr(paidEl?.value?.trim() || "", remainVal, extraVal);
+        updates.paidAmount   = newPaid;
+        updates.remainAmount = "";
+        updates.extraAmount  = "";
+        if (paidEl)   paidEl.value   = newPaid;
+        if (remainEl) remainEl.value = "";
+        if (extraEl)  extraEl.value  = "";
       }
       await updateDoc(doc(db,"orders",orderId), updates);
-
-      // 更新 UI
-      const paidEl   = document.getElementById(`st-paid-${orderId}`);
-      const remainEl = document.getElementById(`st-remain-${orderId}`);
-      const extraEl  = document.getElementById(`st-extra-${orderId}`);
-      if (picked) {
-        const totalPaid = rawTotal + extraAmount;
-        if (paidEl)   paidEl.textContent   = totalPaid > 0 ? `NT$${totalPaid.toLocaleString()}` : "—";
-        if (remainEl) remainEl.textContent  = "—";
-        if (extraEl)  extraEl.value         = "";
-      } else {
-        const remain = (rawTotal > 0 && !picked ? rawTotal : 0) + extraAmount;
-        if (paidEl)   paidEl.textContent   = rawTotal > 0 && picked ? `NT$${rawTotal.toLocaleString()}` : "—";
-        if (remainEl) remainEl.textContent  = remain > 0 ? `NT$${remain.toLocaleString()}` : "—";
-      }
     } catch(e) { alert(`儲存失敗：${e.message}`); }
   };
 
+  // 字串金額加法：支援「320(250)」格式，有括號就括號內外分別加
+  function addAmountStr(...strs) {
+    // 先試試所有值是否都是純數字（含括號的忽略括號外加）
+    const vals = strs.filter(s => s);
+    if (!vals.length) return "";
+
+    // 嘗試解析：支援 「320(250)」格式 → 主金額:320, 括號金額:250
+    const parse = s => {
+      const m = String(s).match(/^([\d.]+)\(([\d.]+)\)$/);
+      if (m) return { main: parseFloat(m[1]), sub: parseFloat(m[2]) };
+      const n = parseFloat(String(s).replace(/[^\d.]/g,""));
+      return isNaN(n) ? null : { main: n, sub: null };
+    };
+
+    const parsed = vals.map(parse);
+    if (parsed.some(p => !p)) return vals.join("+"); // 無法解析就拼接
+
+    const totalMain = parsed.reduce((s,p) => s + p.main, 0);
+    const hasSub = parsed.some(p => p.sub !== null);
+    if (hasSub) {
+      const totalSub = parsed.reduce((s,p) => s + (p.sub ?? p.main), 0);
+      return `${totalMain}(${totalSub})`;
+    }
+    return String(totalMain);
+  }
+
   // ── 補款金額 ─────────────────────────────────────────────────
   window.saveExtraAmount = async function(orderId, value) {
-    const extra = parseFloat(value) || 0;
     try {
       await updateDoc(doc(db,"orders",orderId), {
-        extraAmount: extra, updatedAt: serverTimestamp()
+        extraAmount: String(value||"").trim(), updatedAt: serverTimestamp()
       });
-      const remainEl = document.getElementById(`st-remain-${orderId}`);
-      if (remainEl) remainEl.textContent = extra > 0 ? `NT$${extra.toLocaleString()}` : "—";
+    } catch(e) { alert(`儲存失敗：${e.message}`); }
+  };
+
+  // 手動修改已付/剩餘金額
+  window.saveShippingAmount = async function(orderId, field, value) {
+    const key = field === 'paid' ? 'paidAmount' : 'remainAmount';
+    try {
+      await updateDoc(doc(db,"orders",orderId), {
+        [key]: String(value||"").trim(), updatedAt: serverTimestamp()
+      });
     } catch(e) { alert(`儲存失敗：${e.message}`); }
   };
 
