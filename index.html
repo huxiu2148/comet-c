@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-44 -->
+  <!-- build:20260428-45 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -269,6 +269,49 @@
     .fin-badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
     .fin-badge.income  { background:#e8f8e8; color:#2e7d32; }
     .fin-badge.expense { background:#fff0f0; color:#c62828; }
+
+
+    /* ── 出貨追蹤 ── */
+    .shipping-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 13px; background: var(--surface);
+    }
+    .shipping-table th {
+      padding: 10px 12px; background: var(--grad);
+      color: #fff; font-size: 12px; font-weight: 600;
+      text-align: left; white-space: nowrap;
+    }
+    .shipping-table td {
+      padding: 9px 12px; border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .shipping-table th, .shipping-table td { white-space: nowrap; }
+    .shipping-table tr:last-child td { border-bottom: none; }
+    .shipping-table tr:hover td { background: #fff8fb; }
+    .st-name  { font-weight: 700; min-width: 80px; }
+    .st-items { color: var(--text-muted); min-width: 160px; white-space: normal !important; line-height: 1.6; }
+    .st-paid  { color: #4caf50; font-weight: 700; }
+    .st-remain { display: flex; flex-direction: column; gap: 3px; }
+    .st-amount-input {
+      width: 90px; padding: 4px 6px; font-size: 12px;
+      border: 1.5px solid var(--border); border-radius: 6px;
+      background: #fff;
+    }
+    .st-amount-input:focus { border-color: var(--pink); outline: none; }
+    .st-note-input {
+      width: 120px; padding: 4px 6px; font-size: 12px;
+      border: 1.5px solid var(--border); border-radius: 6px;
+      background: #fff;
+    }
+    .st-check { width:16px; height:16px; accent-color:var(--pink); cursor:pointer; }
+    .st-updated { font-size: 11px; color: var(--text-muted); }
+    .campaign-admin-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; background: var(--surface);
+      border: 1.5px solid var(--border); border-radius: var(--radius);
+      margin-bottom: 8px;
+    }
+    .campaign-admin-row:hover { border-color: var(--pink); }
 
     /* ── 主內容 ── */
     main { max-width: 980px; margin: 0 auto; padding: 32px 20px; }
@@ -2152,7 +2195,8 @@
         <button class="subnav-btn"         data-section="campaigns" onclick="switchAdminSection('campaigns')">📦 開團系統</button>
         <button class="subnav-btn"         data-section="campaign-mgmt" onclick="switchAdminSection('campaign-mgmt')">📋 團務管理</button>
         <button class="subnav-btn"         data-section="orders"    onclick="switchAdminSection('orders')">🧾 訂單管理</button>
-        <button class="subnav-btn"         data-section="purchase"  onclick="switchAdminSection('purchase')">🛒 下單管理</button>
+        <button class="subnav-btn"         data-section="purchase"  onclick="switchAdminSection('purchase')">🛒 採購記錄</button>
+        <button class="subnav-btn"         data-section="shipping"  onclick="switchAdminSection('shipping')">📦 出貨追蹤</button>
         <button class="subnav-btn"         data-section="finance"   onclick="switchAdminSection('finance')">💰 記帳</button>
         <button class="subnav-btn"         data-section="members"   onclick="switchAdminSection('members')">👤 會員管理</button>
       </div>
@@ -2644,7 +2688,7 @@
 <!-- 下單管理 -->
       <div class="admin-section" id="section-purchase">
         <div class="section-header">
-          <h2 class="section-title">🛒 下單管理</h2>
+          <h2 class="section-title">🛒 採購記錄</h2>
           <button class="btn btn-primary btn-sm" onclick="openPurchaseModal()">＋ 新增下單記錄</button>
         </div>
 
@@ -2794,6 +2838,28 @@
 
 
 
+
+      <!-- 出貨追蹤 -->
+      <div class="admin-section" id="section-shipping">
+        <div class="section-header">
+          <h2 class="section-title">📦 出貨追蹤</h2>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="downloadShippingTemplate()">⬇ 下載範本</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('shipping-import-file').click()">📤 批次匯入</button>
+            <input type="file" id="shipping-import-file" accept=".xlsx,.csv" style="display:none" onchange="importShipping(this)" />
+            <button class="btn btn-ghost btn-sm" onclick="loadShippingCampaigns()">↻ 重新整理</button>
+          </div>
+        </div>
+        <div id="shipping-campaign-list"></div>
+        <div id="shipping-order-list" style="display:none">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <button class="btn btn-ghost btn-sm" onclick="backToShippingCampaigns()">← 返回</button>
+            <h3 id="shipping-campaign-title" style="font-size:15px;font-weight:700;margin:0"></h3>
+            <span id="shipping-campaign-stats" style="font-size:12px;color:var(--text-muted)"></span>
+          </div>
+          <div id="shipping-orders-table"></div>
+        </div>
+      </div>
 
 <!-- 下單管理 Modal -->
 <div class="modal-backdrop" id="modal-purchase" style="display:none" onclick="closePurchaseModal(event)">
@@ -3109,7 +3175,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-44 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-45 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -3225,6 +3291,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       "finance":       () => window.initFinanceV2?.(),
       "members":       () => window.loadMembers?.(),
       "purchase":      () => window.loadPurchaseCampaigns?.(),
+      "shipping":      () => window.loadShippingCampaigns?.(),
     };
     const readyMap = {
       "campaigns":     () => !!window.loadGroupsSelect && !!window.loadGroupKeywords,
@@ -3233,6 +3300,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       "finance":       () => !!window.initFinanceV2,
       "members":       () => !!window.loadMembers,
       "purchase":      () => !!window.loadPurchaseCampaigns,
+      "shipping":      () => !!window.loadShippingCampaigns,
     };
     const fn    = fnMap[section];
     const ready = readyMap[section];
@@ -6045,19 +6113,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   };
   // ── 會員 xlsx 範本下載 ────────────────────────────────────────
   window.downloadMemberTemplate = function() {
-    const BOM = "\uFEFF";
-    const rows = [
-      ["Email*","社群暱稱","聯絡帳號（LINE ID等）","備註"],
-      ["說明：為唯一識別碼，必填","LINE或其他社群暱稱","LINE ID、FB帳號等","其他備註"],
-      ["example@gmail.com","小花","line_id_here",""],
-    ];
-    const csv = BOM + rows.map(r =>
-      r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")
-    ).join("\n");
-    const a = Object.assign(document.createElement("a"), {
-      href: URL.createObjectURL(new Blob([csv], {type:"text/csv;charset=utf-8"})),
-      download: "member_template.csv"
-    });
+    const a = document.createElement("a");
+    a.href = "https://huxiu2148.github.io/comet-c/member_template.xlsx";
+    a.download = "member_template.xlsx";
     a.click();
   };
 
