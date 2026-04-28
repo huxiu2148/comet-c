@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-51 -->
+  <!-- build:20260428-52 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2682,162 +2682,22 @@
   </div>
 </div>
 
-<!-- 下單管理 -->
+<!-- 採購記錄 -->
       <div class="admin-section" id="section-purchase">
         <div class="section-header">
           <h2 class="section-title">🛒 採購記錄</h2>
-          <button class="btn btn-primary btn-sm" onclick="openPurchaseModal()">＋ 新增下單記錄</button>
-        </div>
-
-        <!-- 篩選列 -->
-        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-          <select class="form-input" id="purchase-filter-campaign" style="font-size:13px;width:200px" onchange="loadPurchases()">
-            <option value="">全部團務</option>
-          </select>
-          <select class="form-input" id="purchase-filter-status" style="font-size:13px;width:130px" onchange="loadPurchases()">
-            <option value="">全部狀態</option>
-            <option value="ordered">已下單</option>
-            <option value="shipped">已出貨</option>
-            <option value="arrived">到集運</option>
-            <option value="returning">運回中</option>
-            <option value="done">已完成</option>
-          </select>
-        </div>
-
-        <!-- 統計列 -->
-        <div class="purchase-stats" id="purchase-stats" style="display:none">
-          <div class="pstat"><div class="pstat-label">總筆數</div><div class="pstat-val" id="ps-count">0</div></div>
-          <div class="pstat"><div class="pstat-label">總金額</div><div class="pstat-val" id="ps-total">NT$0</div></div>
-          <div class="pstat"><div class="pstat-label">總重量</div><div class="pstat-val" id="ps-weight">0 kg</div></div>
-          <div class="pstat"><div class="pstat-label">運費合計</div><div class="pstat-val" id="ps-shipping">NT$0</div></div>
-        </div>
-
-        <!-- 列表 -->
-        <div id="purchase-list"></div>
-      </div>
-
-      <!-- 記帳 -->
-      <div       <!-- 記帳 (v2) -->
-      <div class="admin-section" id="section-finance">
-        <div class="section-header">
-          <h2 class="section-title">💰 記帳</h2>
-          <button class="btn btn-ghost btn-sm" onclick="initFinanceV2()">↻ 重新整理</button>
-        </div>
-        <div id="finance-v2-content">
-          <div class="loading-row">載入中...</div>
-        </div>
-      </div>
-
-<div class="admin-section" id="section-members">
-        <div class="section-header">
-          <h2 class="section-title">👤 會員管理</h2>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-ghost btn-sm" onclick="downloadMemberTemplate()">⬇ 下載範本</button>
-            <button class="btn btn-ghost btn-sm" onclick="openBatchMemberModal()">📋 批次匯入（文字）</button>
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('member-xlsx-file').click()">📤 xlsx 匯入</button>
-            <input type="file" id="member-xlsx-file" accept=".xlsx,.csv" style="display:none" onchange="importMembersXlsx(this)" />
-            <button class="btn btn-ghost btn-sm" id="btn-member-select" onclick="toggleMemberSelectMode()">☐ 全選</button>
-            <button class="btn btn-danger btn-sm" id="btn-member-delete" style="display:none" onclick="deleteSelectedMembers()">🗑 刪除所選</button>
-            <button class="btn btn-primary btn-sm" onclick="openMemberModal()">＋ 手動新增會員</button>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;white-space:nowrap">
+              <input type="checkbox" id="pu-show-done" onchange="loadPurchaseCampaigns()" style="accent-color:var(--pink)">
+              顯示已結束
+            </label>
+            <button class="btn btn-ghost btn-sm" onclick="openPlatformManager()">⚙ 管理平台</button>
           </div>
         </div>
-        <div id="members-list" class="members-list">
+        <div id="purchase-campaign-list">
           <div class="loading-row">載入中...</div>
         </div>
       </div>
-
-    </div>
-  </div>
-
-</main>
-
-<!-- 新增/編輯團體 Modal -->
-<div class="modal-backdrop" id="modal-group" style="display:none" onclick="closeGroupModal(event)">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-header">
-      <h3 class="modal-title" id="modal-group-title">新增團體</h3>
-      <button class="modal-close" onclick="closeGroupModal()">✕</button>
-    </div>
-    <div class="modal-body">
-
-      <!-- 團體名稱 -->
-      <div class="form-group">
-        <label class="form-label">團體名稱 <span class="required">*</span></label>
-        <input class="form-input" id="input-group-name" type="text" placeholder="例：SHINee、RIIZE" maxlength="30" />
-      </div>
-
-      <!-- 縮寫 -->
-      <div class="form-group">
-        <label class="form-label">團務 ID 縮寫</label>
-        <input class="form-input" id="input-group-abbr" type="text"
-               placeholder="留空自動產生（例：RZ、SHINee）" maxlength="10" style="font-family:monospace" />
-        <span class="fee-hint">英文數字，用於團務 ID 前綴（例：RZ-260423-01）</span>
-      </div>
-
-      <!-- 多色漸層 -->
-      <div class="form-group">
-        <label class="form-label">代表顏色 <span class="required">*</span>
-          <span class="fee-hint" style="font-weight:400;margin-left:6px">可新增多色做漸層</span>
-        </label>
-        <div id="color-list" class="color-list"></div>
-        <button class="btn btn-ghost btn-sm" type="button" onclick="addColorSlot()"
-                style="align-self:flex-start;margin-top:6px">＋ 新增顏色</button>
-        <div class="color-preview-box">
-          <span class="color-preview-label">預覽：</span>
-          <span class="color-preview" id="color-preview"></span>
-        </div>
-      </div>
-
-      <!-- 成員清單 -->
-      <div class="form-group">
-        <label class="form-label">成員清單</label>
-        <div id="members-input-list" class="spec-options"></div>
-        <button class="btn-add-spec-option" type="button" onclick="addMemberInput()"
-                style="margin-top:4px">＋ 新增成員</button>
-        <span class="fee-hint">開團時規格輸入「分成員」會自動帶入此清單</span>
-      </div>
-
-      <p class="form-error" id="group-form-error"></p>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost btn-sm" onclick="closeGroupModal()">取消</button>
-      <button class="btn btn-primary btn-sm" id="btn-save-group" onclick="saveGroup()">儲存</button>
-    </div>
-  </div>
-</div>
-
-<!-- 匯款帳號管理 Modal -->
-<div class="modal-backdrop" id="modal-bank" style="display:none" onclick="closeBankManager(event)">
-  <div class="modal" style="max-width:520px">
-    <div class="modal-header">
-      <h3 class="modal-title">🏦 匯款帳號管理</h3>
-      <button class="modal-close" onclick="closeBankManager()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div id="bank-list-admin" class="bank-list-admin">
-        <div class="bank-loading">載入中...</div>
-      </div>
-
-      <div class="bank-add-form">
-        <div class="form-card-title grad-text" style="font-size:13px;padding-bottom:6px;border:none">新增帳號</div>
-        <div class="bank-add-grid">
-          <input class="form-input" id="bank-add-name" type="text" placeholder="銀行（例：國泰013）" />
-          <input class="form-input" id="bank-add-account" type="text" placeholder="帳號" />
-          <button class="btn btn-primary btn-sm" onclick="addBankAccount()">新增</button>
-        </div>
-        <p class="form-error" id="bank-add-error"></p>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-primary btn-sm" onclick="closeBankManager()">完成</button>
-    </div>
-  </div>
-</div>
-
-
-
-
-
       <!-- 出貨追蹤 -->
       <div class="admin-section" id="section-shipping">
         <div class="section-header">
@@ -3174,7 +3034,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-51 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-52 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
