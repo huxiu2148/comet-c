@@ -283,7 +283,7 @@
     .shipping-table tr:last-child td { border-bottom: none; }
     .shipping-table tr:hover td { background: #fff8fb; }
     .st-name  { font-weight: 700; white-space: nowrap; min-width: 80px; }
-    .st-items { color: var(--text-muted); max-width: 200px; }
+    .st-items { color: var(--text-muted); max-width: 220px; line-height: 1.6; }
     .st-paid  { color: #4caf50; font-weight: 700; white-space: nowrap; }
     .st-remain { display: flex; align-items: center; gap: 6px; }
     .st-remain-val { font-weight: 700; color: var(--pink); white-space: nowrap; }
@@ -2602,7 +2602,7 @@
           <input class="form-input" id="oc-return" type="text" />
         </div>
         <div class="form-group">
-          <label class="form-label">備注</label>
+          <label class="form-label">備註</label>
           <input class="form-input" id="oc-note" type="text" />
         </div>
       </div>
@@ -2658,7 +2658,7 @@
           <input class="form-input" id="oe-return" type="text" />
         </div>
         <div class="form-group">
-          <label class="form-label">備注</label>
+          <label class="form-label">備註</label>
           <input class="form-input" id="oe-note" type="text" />
         </div>
         <div class="form-group">
@@ -2939,7 +2939,7 @@
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">備注</label>
+        <label class="form-label">備註</label>
         <input class="form-input" id="np-note" type="text" />
       </div>
       <p class="form-error" id="np-error"></p>
@@ -3024,8 +3024,8 @@
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">備注</label>
-        <input class="form-input" id="pu-note" type="text" placeholder="其他備注" />
+        <label class="form-label">備註</label>
+        <input class="form-input" id="pu-note" type="text" placeholder="其他備註" />
       </div>
 
       <label class="bank-check-item" style="margin-top:4px">
@@ -8733,7 +8733,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
             <th style="text-align:center">下單</th>
             <th style="text-align:center">出貨</th>
             <th style="text-align:center">取貨</th>
-            <th>備注</th>
+            <th>備註</th>
             <th>最後更新</th>
           </tr>
         </thead>
@@ -8753,15 +8753,24 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       const paidStr   = o.paidAmount   || (o.status === "paid" ? rawTotalStr : "") || "";
       const remainStr = o.remainAmount || (o.status !== "paid" ? rawTotalStr : "") || "";
 
-      // 商品摘要
-      const itemsSummary = o.itemsText || (o.items||[]).map(i=>`${i.name}×${i.qty}`).join("、") || "—";
+      // 商品明細（完整展示）
+      const itemsDetail = (() => {
+        if (o.items && o.items.length) {
+          return o.items.map(it => {
+            const spec = it.specStr || Object.entries(it.specs||{}).filter(([,v])=>v).map(([k,v])=>`${k}:${v}`).join(" ");
+            return `${it.name}${spec?` (${spec})`:""}×${it.qty||1}`;
+          }).join("<br>");
+        }
+        if (o.itemsText) return String(o.itemsText).replace(/\n/g,"<br>");
+        return "—";
+      })();
 
       // 更新時間
       const updatedAt = o.updatedAt?.toDate ? window.fmtDateTime(o.updatedAt.toDate()) : "—";
 
       row.innerHTML = `
         <td class="st-name">${esc(o.nickname || o.buyerName || o.email || "—")}</td>
-        <td class="st-items" title="${esc(itemsSummary)}">${esc(itemsSummary.length > 30 ? itemsSummary.slice(0,30)+"…" : itemsSummary)}</td>
+        <td class="st-items">${itemsDetail}</td>
         <td class="st-paid">
           <input class="st-amount-input" id="st-paid-${o.id}" type="text"
             value="${esc(paidStr)}" placeholder="已付金額"
@@ -8787,7 +8796,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
             onchange="onPickedChange('${o.id}',this.checked)" />
         </td>
         <td><input class="st-note-input" id="st-note-${o.id}" type="text"
-          value="${esc(o.shippingNote||'')}" placeholder="備注"
+          value="${esc(o.shippingNote||'')}" placeholder="備註"
           onchange="saveShippingNote('${o.id}',this.value)" /></td>
         <td class="st-updated">${updatedAt}</td>`;
       tbody.appendChild(row);
@@ -8872,7 +8881,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     } catch(e) { alert(`儲存失敗：${e.message}`); }
   };
 
-  // ── 備注 ─────────────────────────────────────────────────────
+  // ── 備註 ─────────────────────────────────────────────────────
   window.saveShippingNote = async function(orderId, value) {
     try {
       await updateDoc(doc(db,"orders",orderId), {
@@ -8883,19 +8892,10 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   // ── 下載範本 CSV ─────────────────────────────────────────────
   window.downloadShippingTemplate = function() {
-    const BOM = "\uFEFF";
-    const rows = [
-      ["團務ID*","社群暱稱*","聯絡方式","Email","訂購商品*","總金額","付款狀態(paid/pending)","回傳資訊","下單(true/false)","出貨(true/false)","取貨(true/false)","補款金額","備注"],
-      ["說明：需與系統一致","LINE或社群暱稱","LINE ID等","Email","商品描述","原封不動填入","paid=已付款","末五碼等","true=已下單","true=已出貨","true=已取貨","數字","其他備注"],
-      ["NCT-260414-01","Audrey","audrey_dream_land","tsen@gmail.com","娃娃頭套×1","425","paid","國泰-97427","true","false","false","",""],
-    ];
-    const csv = BOM + rows.map(r =>
-      r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")
-    ).join("\n");
-    const a = Object.assign(document.createElement("a"), {
-      href: URL.createObjectURL(new Blob([csv], {type:"text/csv;charset=utf-8"})),
-      download: "shipping_template.csv"
-    });
+    // 直接連結到 GitHub repo 的 xlsx 範本
+    const a = document.createElement("a");
+    a.href = "https://huxiu2148.github.io/comet-c/shipping_template.xlsx";
+    a.download = "shipping_template.xlsx";
     a.click();
   };
 
