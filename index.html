@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-50 -->
+  <!-- build:20260428-51 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1167,6 +1167,7 @@
       padding: 2px 8px; border-radius: 20px;
     }
 
+    .order-checkbox-wrap { display:none; }
     /* ══ 訂單管理 ══ */
     .order-admin-card {
       background: var(--surface);
@@ -3173,7 +3174,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-50 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-51 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -6516,6 +6517,8 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const card = document.createElement("div");
     card.className = "order-admin-card";
     card.id = `oadmin-${o.id}`;
+    card.style.display = "flex";
+    card.style.alignItems = "flex-start";
     const date = o.createdAt?.toDate
       ? window.fmtDateTime(o.createdAt.toDate())
       : "—";
@@ -6533,7 +6536,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       : "";
 
     card.innerHTML = `
-      <div class="oa-checkbox-wrap">
+      <div class="order-checkbox-wrap" style="display:none;align-items:center;padding:0 8px 0 4px;flex-shrink:0">
         <input type="checkbox" class="order-checkbox" data-oid="${o.id}"
                style="width:16px;height:16px;accent-color:var(--pink);cursor:pointer"
                onchange="onOrderCheckChange()" />
@@ -8655,12 +8658,8 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   // ══════════════════════════════════════════════════════════════
 
   // 在 loadShippingOrders 裡呼叫（hook 到已有函式後）
-  const _origLoadShippingCampaigns = window.loadShippingCampaigns;
-  window.loadShippingCampaigns = async function() {
-    await _origLoadShippingCampaigns?.();
-    // 自動處理 done 狀態團務的訂單
-    autoFinalizeDoneCampaigns();
-  };
+  // autoFinalize handled by block 13
+
 
   async function autoFinalizeDoneCampaigns() {
     try {
@@ -9057,19 +9056,25 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const itemsEl = document.getElementById(`pu-items-${campaignId}`);
     if (!itemsEl) return;
 
-    // 找是否已有同款
+    // 找是否已有同款（同 key）
     const existing = itemsEl.querySelector(`[data-key="${CSS.escape(key)}"]`);
     if (existing) {
-      // 累計數量
-      const qtyEl = existing.querySelector(".pu-item-qty");
-      if (qtyEl) {
-        qtyEl.value = parseInt(qtyEl.value||1) + 1;
-        updatePuSubtotal(existing);
+      // 名稱和單價都一樣 → 累計數量
+      const nameEl  = existing.querySelector(".pu-item-name");
+      const priceEl = existing.querySelector(".pu-item-price");
+      const displayName = v.specStr ? `${v.name} ${v.specStr}` : v.name;
+      const samePrice = !v.unitPrice || parseFloat(priceEl?.value||0) === v.unitPrice;
+      if (nameEl?.value === displayName && samePrice) {
+        const qtyEl = existing.querySelector(".pu-item-qty");
+        if (qtyEl) {
+          qtyEl.value = parseInt(qtyEl.value||1) + 1;
+          updatePuSubtotal(existing);
+        }
       }
-      return;
+      return; // 同款只累計，不重複加
     }
     addPuItemRow(campaignId, key, v.name, v.specStr, 1, v.unitPrice||0);
-  };
+  };;
 
   window.manualAddPuItem = function(campaignId) {
     addPuItemRow(campaignId, `manual-${Date.now()}`, "", "", 1, 0);
@@ -9082,12 +9087,20 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     row.className = "pu-item-row";
     row.dataset.key = key;
     const displayName = specStr ? `${name} ${specStr}` : name;
+    // 取得客人訂購數和剩餘數顯示
+    const summary = _inlineOrderSummary[campaignId]||{};
+    const sv = summary[key];
+    const orderHint = sv ? `<span style="font-size:10px;color:var(--text-muted);margin-left:4px">(訂${sv.total}件${sv.remaining<sv.total?`/剩${sv.remaining}`:""})</span>` : "";
+
     row.innerHTML = `
-      <input class="form-input pu-item-name" style="flex:2;font-size:12px" value="${esc(displayName)}" placeholder="商品名稱" />
+      <div style="display:flex;align-items:center;flex:2;gap:4px;min-width:0">
+        <input class="form-input pu-item-name" style="flex:1;font-size:12px" value="${esc(displayName)}" placeholder="商品名稱" />
+        ${orderHint}
+      </div>
       <input class="form-input pu-item-qty"  style="width:55px;font-size:12px;text-align:center" type="number" min="1" value="${qty}" oninput="updatePuSubtotal(this.closest('.pu-item-row'))" />
-      <input class="form-input pu-item-price" style="width:80px;font-size:12px" type="number" min="0" value="${price||""}" placeholder="單價" oninput="updatePuSubtotal(this.closest('.pu-item-row'))" />
+      <input class="form-input pu-item-price" style="width:80px;font-size:12px" type="number" min="0" value="${price||""}" placeholder="台幣單價" oninput="updatePuSubtotal(this.closest('.pu-item-row'))" />
       <input class="form-input pu-item-sub"  style="width:80px;font-size:12px" type="number" min="0" placeholder="小計" />
-      <button class="btn btn-danger btn-sm" style="padding:3px 7px" onclick="this.closest('.pu-item-row').remove();updatePuTotal('${campaignId}')">✕</button>`;
+      <button class="btn btn-danger btn-sm" style="padding:3px 7px;flex-shrink:0" onclick="this.closest('.pu-item-row').remove();updatePuTotal('${campaignId}')">✕</button>`;
     itemsEl.appendChild(row);
     updatePuSubtotal(row, campaignId);
   }
