@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-47 -->
+  <!-- build:20260428-48 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -2465,13 +2465,7 @@
       <div class="admin-section" id="section-orders">
         <div class="section-header">
           <h2 class="section-title">📋 訂單管理</h2>
-            <div id="order-select-bar" style="display:none;gap:8px;align-items:center;background:var(--grad);color:#fff;padding:8px 16px;border-radius:8px;margin:8px 0;flex-wrap:wrap">
-              <span id="order-select-count" style="font-size:12px;flex:1">已選 0 筆</span>
-              <button class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:#fff;border:none" onclick="selectAllOrders(true)">全選</button>
-              <button class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:#fff;border:none" onclick="selectAllOrders(false)">取消全選</button>
-              <button class="btn btn-sm" style="background:rgba(255,50,50,0.8);color:#fff;border:none" onclick="deleteSelectedOrders()">🗑 刪除所選</button>
-              <button class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:#fff;border:none" onclick="toggleOrderSelectMode(false)">✕ 離開選取</button>
-            </div>
+  
           <div style="display:flex;gap:8px;align-items:center">
             <select class="form-input" id="orders-filter-campaign" style="font-size:13px;width:200px" onchange="loadAdminOrders()">
               <option value="">全部團務</option>
@@ -2496,7 +2490,8 @@
             <input type="file" id="order-import-file" accept=".xlsx,.csv" style="display:none" onchange="importOrders(this)" />
             <button class="btn btn-primary btn-sm" onclick="exportOrders()">匯出 CSV</button>
             <button class="btn btn-ghost btn-sm" onclick="syncOrdersToMembers()">👤 同步到會員</button>
-            <button class="btn btn-ghost btn-sm" id="btn-order-select-toggle" onclick="toggleOrderSelectMode(true)">☐ 選取刪除</button>
+            <button class="btn btn-ghost btn-sm" id="btn-order-select-toggle" onclick="toggleOrderSelectMode()">☐ 全選</button>
+            <button class="btn btn-danger btn-sm" id="btn-order-delete-selected" style="display:none" onclick="deleteSelectedOrders()">🗑 刪除所選</button>
           </div>
         </div>
         <div id="admin-orders-list"></div>
@@ -2740,6 +2735,8 @@
             <button class="btn btn-ghost btn-sm" onclick="openBatchMemberModal()">📋 批次匯入（文字）</button>
             <button class="btn btn-ghost btn-sm" onclick="document.getElementById('member-xlsx-file').click()">📤 xlsx 匯入</button>
             <input type="file" id="member-xlsx-file" accept=".xlsx,.csv" style="display:none" onchange="importMembersXlsx(this)" />
+            <button class="btn btn-ghost btn-sm" id="btn-member-select" onclick="toggleMemberSelectMode()">☐ 全選</button>
+            <button class="btn btn-danger btn-sm" id="btn-member-delete" style="display:none" onclick="deleteSelectedMembers()">🗑 刪除所選</button>
             <button class="btn btn-primary btn-sm" onclick="openMemberModal()">＋ 手動新增會員</button>
           </div>
         </div>
@@ -3176,7 +3173,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-47 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260428-48 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -5897,6 +5894,42 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   // ── 切換到 members 時載入列表 ──────────────────────────────
 
   // ── 會員列表 ──────────────────────────────────────────────
+  // ── 會員全選刪除 ──────────────────────────────────────────────
+  let _memberSelectMode = false;
+
+  window.toggleMemberSelectMode = function() {
+    _memberSelectMode = !_memberSelectMode;
+    const btn    = document.getElementById("btn-member-select");
+    const delBtn = document.getElementById("btn-member-delete");
+    const boxes  = document.querySelectorAll(".member-checkbox-wrap");
+    boxes.forEach(b => b.style.display = _memberSelectMode ? "flex" : "none");
+    if (_memberSelectMode) {
+      if (btn)    btn.textContent     = "✕ 取消選取";
+      if (delBtn) delBtn.style.display = "inline-flex";
+      document.querySelectorAll(".member-checkbox").forEach(cb => cb.checked = true);
+    } else {
+      if (btn)    btn.textContent     = "☐ 全選";
+      if (delBtn) delBtn.style.display = "none";
+      document.querySelectorAll(".member-checkbox").forEach(cb => cb.checked = false);
+    }
+  };
+
+  window.deleteSelectedMembers = async function() {
+    const checked = Array.from(document.querySelectorAll(".member-checkbox:checked"));
+    if (!checked.length) { alert("沒有選取任何會員"); return; }
+    if (!confirm(`確定刪除選取的 ${checked.length} 位會員？此操作無法復原。`)) return;
+    let ok = 0, fail = 0;
+    for (const cb of checked) {
+      try {
+        await deleteDoc(doc(db,"users",cb.dataset.uid));
+        document.getElementById(`member-card-${cb.dataset.uid}`)?.remove();
+        ok++;
+      } catch(e) { fail++; }
+    }
+    alert(`✅ 刪除完成：${ok} 位${fail?`，失敗 ${fail} 位`:""}`);
+    toggleMemberSelectMode();
+  };
+
   window.loadMembers = async function() {
     console.log('[members] loadMembers called');
     const list = document.getElementById("members-list");
@@ -5908,6 +5941,27 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       const snap = await getDocs(query(collection(db, "users"), orderBy("createdAt", "asc")));
       console.log('[members] 查詢完成，筆數:', snap.size);
       if (snap.empty) { list.innerHTML = '<div class="empty-row">尚無會員</div>'; return; }
+      // 重複檢查
+      const emailCount = {}, nickCount = {};
+      snap.forEach(d => {
+        const u = d.data();
+        const email = String(u.email || u.profile?.email || "").trim().toLowerCase();
+        const nick  = String(u.displayName || u.profile?.nickname || u.nickname || "").trim();
+        if (email) emailCount[email] = (emailCount[email]||0) + 1;
+        if (nick)  nickCount[nick]   = (nickCount[nick]||0)   + 1;
+      });
+      const dupE = Object.entries(emailCount).filter(([,n])=>n>1).map(([e])=>e);
+      const dupN = Object.entries(nickCount).filter(([,n])=>n>1).map(([n])=>n);
+      const noticeEl = document.getElementById("member-dup-notice");
+      if (dupE.length || dupN.length) {
+        let msg = "⚠️ 發現重複資料：";
+        if (dupE.length) msg += ` Email：${dupE.slice(0,3).join("、")}`;
+        if (dupN.length) msg += ` 暱稱：${dupN.slice(0,3).join("、")}`;
+        if (noticeEl) { noticeEl.textContent = msg; noticeEl.style.display = "block"; }
+      } else {
+        if (noticeEl) noticeEl.style.display = "none";
+      }
+
       list.innerHTML = "";
       snap.forEach(d => list.appendChild(renderMemberRow(d.id, d.data())));
       console.log('[members] 渲染完成');
@@ -5925,10 +5979,22 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const card = document.createElement("div");
     card.className = "member-card";
     card.id = `member-card-${uid}`;
+    card.dataset.memberId = uid;
+    card.style.display = "flex";
+    card.style.alignItems = "flex-start";
     const profile = data.profile || {};
     const nickname = profile.nickname || data.displayName || "";
     const contact  = profile.contact  || "";
-    card.innerHTML = `
+    const cbWrap = document.createElement("div");
+    cbWrap.className = "member-checkbox-wrap";
+    cbWrap.style.cssText = "display:none;align-items:center;padding:4px 10px 0 4px;flex-shrink:0";
+    cbWrap.innerHTML = `<input type="checkbox" class="member-checkbox" data-uid="${uid}"
+      style="width:16px;height:16px;accent-color:var(--pink);cursor:pointer">`;
+    card.appendChild(cbWrap);
+
+    const innerDiv = document.createElement("div");
+    innerDiv.style.flex = "1";
+    innerDiv.innerHTML = `
       <div class="member-card-header">
         <div>
           <div class="member-name">${esc(data.displayName || nickname || "—")}</div>
@@ -5955,6 +6021,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         <button class="btn btn-primary btn-sm" onclick="saveMemberProfile('${uid}')"
                 style="align-self:flex-end">儲存</button>
       </div>`;
+    card.appendChild(innerDiv);
     return card;
   }
 
@@ -6555,53 +6622,31 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   // ── 全選刪除模式 ─────────────────────────────────────────────
   let _orderSelectMode = false;
 
-  window.selectAllOrders = function(checked) {
-    document.querySelectorAll('.order-checkbox').forEach(cb => {
-      cb.checked = checked;
-    });
-    onOrderCheckChange();
-  };
-
-  window.toggleOrderSelectMode = function(on) {
-    _orderSelectMode = on;
-    const bar    = document.getElementById('order-select-bar');
-    const toggle = document.getElementById('btn-order-select-toggle');
-    const boxes  = document.querySelectorAll('.oa-checkbox-wrap');
-    bar.style.display    = on ? 'flex' : 'none';
-    toggle.style.display = on ? 'none' : '';
-    boxes.forEach(b => b.style.display = on ? 'flex' : 'none');
-    if (!on) {
-      document.querySelectorAll('.order-checkbox').forEach(c => c.checked = false);
-      document.getElementById('order-select-count').textContent = '已選 0 筆';
-    } else {
-      // 預設全選
-      document.querySelectorAll('.order-checkbox').forEach(c => c.checked = true);
+  // ── 訂單全選刪除（仿團務管理）────────────────────────────────
+  window.toggleOrderSelectMode = function() {
+    _orderSelectMode = !_orderSelectMode;
+    const btn    = document.getElementById("btn-order-select-toggle");
+    const delBtn = document.getElementById("btn-order-delete-selected");
+    const boxes  = document.querySelectorAll(".order-checkbox-wrap");
+    boxes.forEach(b => b.style.display = _orderSelectMode ? "flex" : "none");
+    if (_orderSelectMode) {
+      btn.textContent = "✕ 取消選取";
+      if (delBtn) delBtn.style.display = "inline-flex";
+      document.querySelectorAll(".order-checkbox").forEach(cb => cb.checked = true);
       onOrderCheckChange();
+    } else {
+      btn.textContent = "☐ 全選";
+      if (delBtn) delBtn.style.display = "none";
+      document.querySelectorAll(".order-checkbox").forEach(cb => cb.checked = false);
     }
   };
 
   window.onOrderCheckChange = function() {
-    const checked = document.querySelectorAll('.order-checkbox:checked').length;
-    document.getElementById('order-select-count').textContent = `已選 ${checked} 筆`;
+    const checked = document.querySelectorAll(".order-checkbox:checked").length;
+    // 更新計數（可選）
   };
 
-  window.deleteSelectedOrders = async function() {
-    const checked = Array.from(document.querySelectorAll('.order-checkbox:checked'));
-    if (!checked.length) { alert('沒有選取任何訂單'); return; }
-    if (!confirm(`確定刪除選取的 ${checked.length} 筆訂單？此操作無法復原。`)) return;
-    let ok = 0, fail = 0;
-    for (const cb of checked) {
-      try {
-        await deleteDoc(doc(db, 'orders', cb.dataset.oid));
-        document.getElementById(`oadmin-${cb.dataset.oid}`)?.remove();
-        ok++;
-      } catch(e) { fail++; }
-    }
-    alert(`✅ 刪除完成：成功 ${ok} 筆${fail ? `，失敗 ${fail} 筆` : ''}`);
-    toggleOrderSelectMode(false);
-  };
-
-  window.deleteOrder = async function(orderId) {
+    window.deleteOrder = async function(orderId) {
     if (!confirm("確定刪除此訂單？此操作無法復原。")) return;
     try {
       await deleteDoc(doc(db, "orders", orderId));
@@ -6818,81 +6863,85 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   // ── 同步訂單到會員管理 ──────────────────────────────────────
   window.syncOrdersToMembers = async function() {
-    const btn = event.target;
-    btn.disabled = true;
-    btn.textContent = "同步中...";
+    const btn = event?.target;
+    if (btn) { btn.disabled = true; btn.textContent = "同步中..."; }
     try {
-      // 讀取現有會員 email 集合
-      const userSnap = await getDocs(collection(db, "users"));
-      const existingEmails = new Set();
-      const existingContacts = new Set();
+      // 讀取現有會員
+      const userSnap = await getDocs(collection(db,"users"));
+      const existingEmails    = new Map(); // email → docId
+      const existingNicknames = new Map(); // nickname → docId
       userSnap.forEach(d => {
         const u = d.data();
-        if (u.email)   existingEmails.add(u.email.toLowerCase().trim());
-        if (u.contact) existingContacts.add(u.contact.toLowerCase().trim());
+        if (u.email)    existingEmails.set(u.email.toLowerCase().trim(), d.id);
+        if (u.nickname) existingNicknames.set(u.nickname.trim(), d.id);
       });
 
-      // 讀取所有訂單
-      const orderSnap = await getDocs(collection(db, "orders"));
-      const newMembers = {}; // email 或 contact → data
+      // 讀取所有訂單，去重後建立候選清單
+      const orderSnap = await getDocs(collection(db,"orders"));
+      const candidates = {}; // key → data
 
       orderSnap.forEach(d => {
         const o = d.data();
-        const email   = String(o.email   || "").trim();
-        const contact = String(o.contact || o.lineId || "").trim();
-        const nickname= String(o.nickname || o.buyerName || "").trim();
-
-        // 用 email 或 contact 判斷是否已建檔
-        const emailKey   = email.toLowerCase();
-        const contactKey = contact.toLowerCase();
-
-        if (email && !existingEmails.has(emailKey)) {
-          if (!newMembers[emailKey]) {
-            newMembers[emailKey] = { email, contact, nickname, source: "order_sync" };
-          }
-        } else if (!email && contact && !existingContacts.has(contactKey)) {
-          if (!newMembers[contactKey]) {
-            newMembers[contactKey] = { email: "", contact, nickname, source: "order_sync" };
-          }
+        const email    = String(o.email    || "").trim();
+        const nickname = String(o.nickname || o.buyerName || "").trim();
+        const contact  = String(o.contact  || o.lineId   || "").trim();
+        const key = email ? email.toLowerCase() : (nickname || contact);
+        if (!key) return;
+        if (!candidates[key]) candidates[key] = { email, nickname, contact };
+        else {
+          // 補齊缺少的欄位
+          if (!candidates[key].email    && email)    candidates[key].email    = email;
+          if (!candidates[key].nickname && nickname) candidates[key].nickname = nickname;
+          if (!candidates[key].contact  && contact)  candidates[key].contact  = contact;
         }
       });
 
-      const toAdd = Object.values(newMembers);
+      // 分類：新增 / 重複（email重複 或 暱稱重複）
+      const toAdd = [], dupEmail = [], dupNickname = [];
+      for (const [, m] of Object.entries(candidates)) {
+        const emailDup    = m.email    && existingEmails.has(m.email.toLowerCase());
+        const nicknameDup = m.nickname && existingNicknames.has(m.nickname);
+        if (emailDup)    { dupEmail.push(m); continue; }
+        if (nicknameDup) { dupNickname.push(m); continue; }
+        toAdd.push(m);
+      }
+
+      // 通知重複
+      let dupMsg = "";
+      if (dupEmail.length)    dupMsg += `\n\n📧 Email 重複（${dupEmail.length} 筆，略過）：\n${dupEmail.slice(0,5).map(m=>`• ${m.email} (${m.nickname})`).join("\n")}`;
+      if (dupNickname.length) dupMsg += `\n\n👤 暱稱重複（${dupNickname.length} 筆，略過）：\n${dupNickname.slice(0,5).map(m=>`• ${m.nickname}`).join("\n")}`;
+
       if (!toAdd.length) {
-        alert("✅ 所有訂單成員都已在會員清單中，無需新增");
+        alert("✅ 所有訂單成員都已在會員清單中" + dupMsg);
         return;
       }
 
       const confirmed = confirm(
-        `發現 ${toAdd.length} 位訂單中的人尚未建檔：\n\n` +
-        toAdd.slice(0, 10).map(m => `• ${m.nickname || m.contact || m.email}`).join("\n") +
-        (toAdd.length > 10 ? `\n... 還有 ${toAdd.length - 10} 位` : "") +
-        "\n\n確定要全部加入會員管理？"
+        `發現 ${toAdd.length} 位尚未建檔的訂單成員：\n\n` +
+        toAdd.slice(0,10).map(m=>`• ${m.nickname||m.email||m.contact}`).join("\n") +
+        (toAdd.length > 10 ? `\n... 還有 ${toAdd.length-10} 位` : "") +
+        dupMsg +
+        "\n\n確定新增？"
       );
       if (!confirmed) return;
 
       let ok = 0, fail = 0;
       for (const m of toAdd) {
         try {
-          await addDoc(collection(db, "users"), {
+          await addDoc(collection(db,"users"), {
             email:     m.email,
-            contact:   m.contact,
             nickname:  m.nickname,
+            contact:   m.contact,
             source:    "order_sync",
             createdAt: serverTimestamp(),
           });
           ok++;
         } catch(e) { fail++; }
       }
-
-      alert(`✅ 同步完成！新增 ${ok} 位會員${fail ? `，失敗 ${fail} 位` : ""}`);
+      alert(`✅ 同步完成！新增 ${ok} 位${fail?`，失敗 ${fail} 位`:""}${dupMsg}`);
       window.loadMembers?.();
-    } catch(e) {
-      alert("同步失敗：" + e.message);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "👤 同步到會員";
-    }
+    } catch(e) { alert("同步失敗：" + e.message); }
+    finally { if(btn){ btn.disabled=false; btn.textContent="👤 同步到會員"; } }
   };
 
   window.exportOrders = async function() {
