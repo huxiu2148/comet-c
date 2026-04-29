@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260429-87 -->
+  <!-- build:20260429-88 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3149,7 +3149,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260429-87 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260429-88 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -6908,7 +6908,10 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         const unpaid  = orders.filter(o => (o.paymentStatus||o.status||"pending") !== "paid").length;
         const paid    = total - unpaid;
         const totalAmt = orders.reduce((s, o) => {
-          const v = parseFloat(String(o.totalPrice||o.total||0).replace(/[^\d.]/g,""))||0;
+          const raw = String(o.totalPrice||o.total||o.paidAmount||"");
+          // 取括號外的數字（例：250(300) → 250）
+          const outer = raw.match(/^([\d.]+)/);
+          const v = outer ? parseFloat(outer[1]) : 0;
           return s + v;
         }, 0);
         bar.style.display = "flex";
@@ -9695,9 +9698,17 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
             <input class="form-input" id="pu-il-shipping-fee-${campaignId}" type="number" min="0" placeholder="0" style="font-size:13px"
               oninput="calcShippingRate('${campaignId}')" />
           </div>
+          <div class="form-group">
+            <label class="form-label" style="font-size:12px">集運總公斤
+              <span class="fee-hint">（此批所有團務合計）</span>
+            </label>
+            <input class="form-input" id="pu-il-total-weight-${campaignId}" type="number" min="0" step="0.01" placeholder="0.00" style="font-size:13px"
+              oninput="calcShippingRate('${campaignId}')" />
+          </div>
         </div>
         <div id="pu-il-rate-${campaignId}" style="font-size:12px;color:var(--pink);font-weight:600;margin-top:-6px;margin-bottom:4px;display:none">
           📦 每公斤集運費：NT$<span id="pu-il-rate-val-${campaignId}">—</span>
+          ・ 此筆應分攤：<span id="pu-il-alloc-val-${campaignId}">—</span> 元
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div class="form-group">
@@ -9969,11 +9980,15 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div class="form-group">
               <label class="form-label" style="font-size:12px">購買平台</label>
-              <input class="form-input" id="epu-platform" value="${esc(r.platform||'')}" style="font-size:13px" />
+              <select class="form-input" id="epu-platform" style="font-size:13px">
+                <option value="">— 選擇 —</option>
+              </select>
             </div>
             <div class="form-group">
               <label class="form-label" style="font-size:12px">集運倉</label>
-              <input class="form-input" id="epu-warehouse" value="${esc(r.warehouse||'')}" style="font-size:13px" />
+              <select class="form-input" id="epu-warehouse" style="font-size:13px">
+                <option value="">— 選擇 —</option>
+              </select>
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -10049,6 +10064,41 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     overlay.addEventListener("click", e => {
       if (e.target === overlay) { overlay.remove(); document.body.style.overflow = ""; }
     });
+
+    // 載入購買平台和集運倉下拉選單
+    const platSel = document.getElementById("epu-platform");
+    const wSel    = document.getElementById("epu-warehouse");
+    try {
+      const pSnap = await getDocs(collection(db,"purchasePlatforms"));
+      pSnap.forEach(d => {
+        const opt = document.createElement("option");
+        opt.value = opt.textContent = d.data().name;
+        if (d.data().name === r.platform) opt.selected = true;
+        platSel.appendChild(opt);
+      });
+    } catch(e2) {}
+    // 若現有值不在清單中，補加一個選項
+    if (r.platform && !Array.from(platSel.options).some(o => o.value === r.platform)) {
+      const opt = document.createElement("option");
+      opt.value = opt.textContent = r.platform;
+      opt.selected = true;
+      platSel.appendChild(opt);
+    }
+    try {
+      const wSnap = await getDocs(collection(db,"warehouses"));
+      wSnap.forEach(d => {
+        const opt = document.createElement("option");
+        opt.value = opt.textContent = d.data().name || d.id;
+        if ((d.data().name||d.id) === r.warehouse) opt.selected = true;
+        wSel.appendChild(opt);
+      });
+    } catch(e2) {}
+    if (r.warehouse && !Array.from(wSel.options).some(o => o.value === r.warehouse)) {
+      const opt = document.createElement("option");
+      opt.value = opt.textContent = r.warehouse;
+      opt.selected = true;
+      wSel.appendChild(opt);
+    }
   };
 
   window.addEditPuItem = function() {
@@ -10088,8 +10138,8 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       const shippingFee  = parseFloat(document.getElementById("epu-shipping-fee")?.value) || 0;
       const shippingRate = weight > 0 && shippingFee > 0 ? Math.round(shippingFee / weight * 10) / 10 : 0;
       const updates = {
-        platform:      g("epu-platform"),
-        warehouse:     g("epu-warehouse"),
+        platform:      document.getElementById("epu-platform")?.value || "",
+        warehouse:     document.getElementById("epu-warehouse")?.value || "",
         tracking:      g("epu-tracking"),
         note:          g("epu-note"),
         currency:      g("epu-currency").toUpperCase() || "KRW",
