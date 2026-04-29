@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260429-92 -->
+  <!-- build:20260429-93 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3149,7 +3149,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260429-92 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260429-93 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -9954,6 +9954,20 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           purchaseId: newPurchaseRef.id
         });
       }
+      // 同步集運分攤費用到記帳
+      if (allocatedFee > 0) {
+        await addDoc(collection(db,"ledger"), {
+          type: "expense",
+          category: "集運費",
+          campaignId, campaignName,
+          amount: allocatedFee,
+          note: `集運分攤（${shippingRate}元/kg × ${weight}kg）`,
+          date: returnAt ? returnAt : serverTimestamp(),
+          createdAt: serverTimestamp(),
+          source: "shipping_auto",
+          purchaseId: newPurchaseRef.id
+        });
+      }
 
       closeInlinePurchase(campaignId);
       window.loadPurchaseCampaigns?.();
@@ -10170,12 +10184,50 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       });
 
       // 同步記帳
-      if (total > 0) {
-        try {
-          const lSnap = await getDocs(query(collection(db,"ledger"), where("purchaseId","==",id)));
-          lSnap.forEach(async d => updateDoc(doc(db,"ledger",d.id), { amount: total, updatedAt: serverTimestamp() }));
-        } catch(e2) {}
-      }
+      try {
+        const lSnap = await getDocs(query(collection(db,"ledger"), where("purchaseId","==",id)));
+        const existingTypes = {};
+        lSnap.forEach(d => { existingTypes[d.data().source] = d.id; });
+
+        // 更新或新增採購成本
+        if (total > 0) {
+          if (existingTypes["purchase_auto"]) {
+            await updateDoc(doc(db,"ledger",existingTypes["purchase_auto"]),
+              { amount: total, date: orderedAt||serverTimestamp(), updatedAt: serverTimestamp() });
+          } else {
+            await addDoc(collection(db,"ledger"), {
+              type:"expense", category:"採購成本",
+              campaignId: id, amount: total,
+              note: g("note")||campaignName||"",
+              date: orderedAt ? orderedAt : serverTimestamp(),
+              createdAt: serverTimestamp(),
+              source: "purchase_auto", purchaseId: id
+            });
+          }
+        }
+
+        // 更新或新增集運分攤
+        if (allocatedFee > 0) {
+          const shippingNote = "集運分攤（"+shippingRate+"元/kg × "+weight+"kg）";
+          if (existingTypes["shipping_auto"]) {
+            await updateDoc(doc(db,"ledger",existingTypes["shipping_auto"]),
+              { amount: allocatedFee, note: shippingNote,
+                date: returnAt||serverTimestamp(), updatedAt: serverTimestamp() });
+          } else {
+            await addDoc(collection(db,"ledger"), {
+              type:"expense", category:"集運費",
+              campaignId: id, amount: allocatedFee,
+              note: shippingNote,
+              date: returnAt ? returnAt : serverTimestamp(),
+              createdAt: serverTimestamp(),
+              source: "shipping_auto", purchaseId: id
+            });
+          }
+        } else if (existingTypes["shipping_auto"]) {
+          // 如果分攤費為 0，刪除原有記錄
+          await deleteDoc(doc(db,"ledger",existingTypes["shipping_auto"]));
+        }
+      } catch(e2) { console.warn("記帳同步失敗", e2); }
 
       document.getElementById("pu-edit-"+id)?.remove();
       window.loadPurchaseCampaigns?.();
