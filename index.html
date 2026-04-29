@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260429-82 -->
+  <!-- build:20260429-83 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3145,7 +3145,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260429-82 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260429-83 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -4446,6 +4446,12 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       alert(`✨ 團務「${name}」已儲存！\n\n團務 ID：${campaignId}\n\n表單連結：\n${formUrl || "（模式 4 直接使用賣貨便連結）"}`);
       // 更新所有團務列表（使用者端）
       window.renderCampaignList?.();
+      // 自動跳到「團務管理」分頁
+      setTimeout(() => {
+        window.switchAdminSection?.('campaign-mgmt');
+        const btn = document.querySelector('[data-section="campaign-mgmt"]');
+        btn?.click();
+      }, 300);
     } catch (e) {
       alert("儲存失敗：" + e.message);
     }
@@ -6833,8 +6839,22 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const list = document.getElementById("admin-orders-list");
     if (!list) return;
     list.innerHTML = '<div class="loading-row">載入中...</div>';
-    const campaignId = document.getElementById("orders-filter-campaign")?.value;
-    const status     = document.getElementById("orders-filter-status")?.value;
+    // 記憶篩選條件
+    const campaignEl = document.getElementById("orders-filter-campaign");
+    const statusEl   = document.getElementById("orders-filter-status");
+    const showDoneEl = document.getElementById("orders-show-done");
+    if (campaignEl && !campaignEl.dataset.restored) {
+      campaignEl.value = sessionStorage.getItem("orders_filter_campaign") || "";
+      if (statusEl) statusEl.value = sessionStorage.getItem("orders_filter_status") || "";
+      if (showDoneEl) showDoneEl.checked = sessionStorage.getItem("orders_show_done") === "true";
+      campaignEl.dataset.restored = "1";
+    }
+    if (campaignEl) sessionStorage.setItem("orders_filter_campaign", campaignEl.value);
+    if (statusEl)   sessionStorage.setItem("orders_filter_status",   statusEl.value);
+    if (showDoneEl) sessionStorage.setItem("orders_show_done",       showDoneEl.checked);
+
+    const campaignId = campaignEl?.value;
+    const status     = statusEl?.value;
     try {
       let q = query(collection(db, "orders"), orderBy("createdAt","desc"));
       const snap = await getDocs(q);
