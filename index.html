@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260429-72 -->
+  <!-- build:20260429-73 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3135,7 +3135,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260429-72 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260429-73 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -9338,11 +9338,52 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           });
         } else if (o.itemsText) {
           String(o.itemsText).split(/\n/).forEach(line => {
-            const m = line.trim().match(/^(.+?)\s*[xX×]\s*(\d+)\s*$/);
-            if (m) {
-              const k = itemKey(m[1].trim(), "");
-              if (!summary[k]) summary[k] = { name: m[1].trim(), specs:{}, specStr:"", total:0, unitPrice:0 };
-              summary[k].total += parseInt(m[2]);
+            line = line.trim();
+            if (!line) return;
+
+            // 格式一：「商品名 [成員1, 成員2] x總數」→ 拆成各成員獨立項目
+            // 例：娃娃頭套 [Yushi, Ryo] x2 → Yushi x1, Ryo x1（平均分）
+            // 例：星願娃娃 [Yushi x2, Ryo x3] x5 → Yushi x2, Ryo x3
+            const bracketMatch = line.match(/^(.+?)\s*\[([^\]]+)\]\s*[xX×]?(\d+)?\s*$/);
+            if (bracketMatch) {
+              const baseName = bracketMatch[1].trim();
+              const inside   = bracketMatch[2];
+              const totalQty = parseInt(bracketMatch[3]||"1");
+
+              // 解析括號內：可能是 "Yushi x2, Ryo x3" 或 "Yushi, Ryo"
+              const members = inside.split(/,/).map(s => s.trim()).filter(Boolean);
+              const hasIndividualQty = members.some(s => /[xX×]\s*\d+/.test(s));
+
+              if (hasIndividualQty) {
+                // 各成員有各自數量：Yushi x2, Ryo x3
+                members.forEach(seg => {
+                  const mm = seg.match(/^(.+?)\s*[xX×]\s*(\d+)\s*$/);
+                  if (mm) {
+                    const specStr = mm[1].trim();
+                    const qty = parseInt(mm[2]);
+                    const k = itemKey(baseName, specStr);
+                    if (!summary[k]) summary[k] = { name: baseName, specs:{}, specStr, total:0, unitPrice:0 };
+                    summary[k].total += qty;
+                  }
+                });
+              } else {
+                // 平均分配：Yushi, Ryo 各佔 totalQty / members.length
+                const perMember = Math.max(1, Math.round(totalQty / members.length));
+                members.forEach(specStr => {
+                  const k = itemKey(baseName, specStr);
+                  if (!summary[k]) summary[k] = { name: baseName, specs:{}, specStr, total:0, unitPrice:0 };
+                  summary[k].total += perMember;
+                });
+              }
+              return;
+            }
+
+            // 格式二：一般「商品名 x數量」
+            const plain = line.match(/^(.+?)\s*[xX×]\s*(\d+)\s*$/);
+            if (plain) {
+              const k = itemKey(plain[1].trim(), "");
+              if (!summary[k]) summary[k] = { name: plain[1].trim(), specs:{}, specStr:"", total:0, unitPrice:0 };
+              summary[k].total += parseInt(plain[2]);
             }
           });
         }
