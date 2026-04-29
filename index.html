@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260429-79 -->
+  <!-- build:20260429-80 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3145,7 +3145,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260429-79 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260429-80 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -3888,7 +3888,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
               <label class="member-check-item" style="${sel.has(m) ? 'background:#fff0f7;border-color:var(--pink)' : ''}">
                 <input type="checkbox" value="${esc(m)}"
                        ${sel.has(m) ? 'checked' : ''}
-                       onchange="onMemberSpecToggle(${productId}, '${esc(m)}', this.checked)"
+                       onchange="window.onMemberSpecToggle(${productId}, '${esc(m)}', this.checked)"
                        style="accent-color:var(--pink)" />
                 <span style="font-size:12px">${esc(m)}</span>
               </label>`).join("")}
@@ -3927,7 +3927,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     stored[productId] = new Set();
     window._productMemberSel = stored;
     window.updateSpecPreview(productId);
-  };
+  };;
   window.selectAllMembersSpec = function(productId) {
     const groupId = document.getElementById("c-group")?.value;
     const group = (window.groupsCache||[]).find(g => g.id === groupId);
@@ -3936,7 +3936,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     stored[productId] = new Set(all);
     window._productMemberSel = stored;
     window.updateSpecPreview(productId);
-  };
+  };;
   window.selectSubgroupByIndex = function(productId, si) {
     const subs = window._currentSubgroups?.[productId] || [];
     const sg = subs[parseInt(si)];
