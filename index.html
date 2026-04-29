@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260429-66 -->
+  <!-- build:20260429-67 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3109,7 +3109,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260429-66 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260429-67 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -6205,7 +6205,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           let uid = null;
           q.forEach(d => { if (d.data().email?.toLowerCase() === email.toLowerCase()) uid = d.id; });
 
-          const data = { email, nickname, contact, note, updatedAt: serverTimestamp() };
+          const data = {
+            email, displayName: nickname, nickname, contact, note,
+            profile: { nickname, contact, email },
+            updatedAt: serverTimestamp()
+          };
           if (uid) {
             await setDoc(doc(db,"users",uid), data, {merge:true});
           } else {
@@ -7208,9 +7212,15 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       for (const m of toAdd) {
         try {
           await addDoc(collection(db,"users"), {
-            email:     m.email,
-            nickname:  m.nickname,
-            contact:   m.contact,
+            email:       m.email,
+            displayName: m.nickname,
+            nickname:    m.nickname,
+            contact:     m.contact,
+            profile: {
+              nickname: m.nickname,
+              contact:  m.contact,
+              email:    m.email,
+            },
             source:    "order_sync",
             createdAt: serverTimestamp(),
           });
