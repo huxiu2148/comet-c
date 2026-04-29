@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260428-64 -->
+  <!-- build:20260429-65 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -271,6 +271,16 @@
     .fin-badge.expense { background:#fff0f0; color:#c62828; }
 
 
+    /* 合併訂單 modal 專用 */
+    #modal-merge-orders .modal {
+      max-width: 640px !important;
+      max-height: 80vh;
+    }
+    #modal-merge-orders .modal-body {
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+    }
     /* ── 出貨追蹤 ── */
     .shipping-table {
       width: 100%; border-collapse: collapse;
@@ -2072,6 +2082,8 @@
     .calc-profit{ color: #4caf50; font-weight: 600; }
 
 
+    .copy-panel { display: none; }
+    .copy-panel.active { display: block; }
     /* 文案生成 */
     .copy-tabs { display:flex; gap:6px; margin-bottom:10px; }
     .copy-tab {
@@ -2083,6 +2095,8 @@
     .copy-tab.active { background:var(--grad); color:#fff; border-color:transparent; -webkit-text-fill-color:#fff; }
     .copy-textarea { font-family:monospace; font-size:12px; line-height:1.7; resize:vertical; }
     .copy-btn { margin-top:6px; }
+    .copy-panel { display: none; }
+    .copy-panel.active { display: block; }
     /* 文案生成 */
     .copy-tabs { display: flex; gap: 6px; }
 
@@ -3088,7 +3102,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260428-64 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260429-65 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -4127,8 +4141,14 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   // ── 文案生成 ─────────────────────────────────────────────────
   window.switchCopyTab = function(ct) {
-    document.querySelectorAll(".copy-tab").forEach(t => t.classList.toggle("active", t.dataset.ct === ct));
-    document.querySelectorAll(".copy-panel").forEach(p => p.classList.toggle("active", p.id === `ct-${ct}`));
+    document.querySelectorAll(".copy-tab").forEach(t => {
+      const tabCt = t.getAttribute("onclick")?.match(/'([^']+)'/)?.[1];
+      t.classList.toggle("active", tabCt === ct);
+    });
+    document.querySelectorAll(".copy-panel").forEach(p => {
+      p.classList.toggle("active", p.id === `copy-panel-${ct}`);
+      p.style.display = p.id === `copy-panel-${ct}` ? "block" : "none";
+    });
   };
 
   function fmtDeadline(dtStr) {
@@ -4284,6 +4304,8 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
       document.getElementById("copywriter-card")?.scrollIntoView({ behavior: "smooth" });
       alert(`✨ 團務「${name}」已儲存！\n\n團務 ID：${campaignId}\n\n表單連結：\n${formUrl || "（模式 4 直接使用賣貨便連結）"}`);
+      // 更新所有團務列表（使用者端）
+      window.renderCampaignList?.();
     } catch (e) {
       alert("儲存失敗：" + e.message);
     }
@@ -6359,7 +6381,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
 <!-- 合併訂單 Modal -->
 <div class="modal-backdrop" id="modal-merge-orders" style="display:none" onclick="closeMergeModal(event)">
-  <div class="modal" style="max-width:640px;max-height:85vh;display:flex;flex-direction:column">
+  <div class="modal" style="max-width:640px">
     <div class="modal-header">
       <h3 class="modal-title">🔀 合併重複訂單</h3>
       <button class="modal-close" onclick="closeMergeModal()">✕</button>
@@ -6421,6 +6443,91 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     </div>
   </div>
 </div>
+
+<div class="modal-backdrop" id="modal-group" style="display:none" onclick="closeGroupModal(event)">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modal-group-title">新增團體</h3>
+      <button class="modal-close" onclick="closeGroupModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- 團體名稱 -->
+      <div class="form-group">
+        <label class="form-label">團體名稱 <span class="required">*</span></label>
+        <input class="form-input" id="input-group-name" type="text" placeholder="例：SHINee、RIIZE" maxlength="30" />
+      </div>
+
+      <!-- 縮寫 -->
+      <div class="form-group">
+        <label class="form-label">團務 ID 縮寫</label>
+        <input class="form-input" id="input-group-abbr" type="text"
+               placeholder="留空自動產生（例：RZ、SHINee）" maxlength="10" style="font-family:monospace" />
+        <span class="fee-hint">英文數字，用於團務 ID 前綴（例：RZ-260423-01）</span>
+      </div>
+
+      <!-- 多色漸層 -->
+      <div class="form-group">
+        <label class="form-label">代表顏色 <span class="required">*</span>
+          <span class="fee-hint" style="font-weight:400;margin-left:6px">可新增多色做漸層</span>
+        </label>
+        <div id="color-list" class="color-list"></div>
+        <button class="btn btn-ghost btn-sm" type="button" onclick="addColorSlot()"
+                style="align-self:flex-start;margin-top:6px">＋ 新增顏色</button>
+        <div class="color-preview-box">
+          <span class="color-preview-label">預覽：</span>
+          <span class="color-preview" id="color-preview"></span>
+        </div>
+      </div>
+
+      <!-- 成員清單 -->
+      <div class="form-group">
+        <label class="form-label">成員清單</label>
+        <div id="members-input-list" class="spec-options"></div>
+        <button class="btn-add-spec-option" type="button" onclick="addMemberInput()"
+                style="margin-top:4px">＋ 新增成員</button>
+        <span class="fee-hint">開團時規格輸入「分成員」會自動帶入此清單</span>
+      </div>
+
+      <p class="form-error" id="group-form-error"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeGroupModal()">取消</button>
+      <button class="btn btn-primary btn-sm" id="btn-save-group" onclick="saveGroup()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modal-bank" style="display:none" onclick="closeBankManager(event)">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <h3 class="modal-title">🏦 匯款帳號管理</h3>
+      <button class="modal-close" onclick="closeBankManager()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="bank-list-admin" class="bank-list-admin">
+        <div class="bank-loading">載入中...</div>
+      </div>
+
+      <div class="bank-add-form">
+        <div class="form-card-title grad-text" style="font-size:13px;padding-bottom:6px;border:none">新增帳號</div>
+        <div class="bank-add-grid">
+          <input class="form-input" id="bank-add-name" type="text" placeholder="銀行（例：國泰013）" />
+          <input class="form-input" id="bank-add-account" type="text" placeholder="帳號" />
+          <button class="btn btn-primary btn-sm" onclick="addBankAccount()">新增</button>
+        </div>
+        <p class="form-error" id="bank-add-error"></p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-sm" onclick="closeBankManager()">完成</button>
+    </div>
+  </div>
+</div>
+
+
+
+
 
 </body>
 </html>
