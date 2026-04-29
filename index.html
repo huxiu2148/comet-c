@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260429-73 -->
+  <!-- build:20260429-74 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3135,7 +3135,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260429-73 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260429-74 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -4997,7 +4997,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
             const si = sel.id.split('-').pop();
             specVals[specs[si]?.label || si] = sel.value;
           });
-          const specStr = Object.entries(specVals).filter(([,v])=>v).map(([k,v])=>k+':'+v).join(' ');
+          const specStr = Object.entries(specVals).filter(([,v])=>v).map(([,v])=>v).join(', ');
           items.push({ name: getDisplayName(p), price: p.price, qty: 1,
             subtotal: p.price, specs: specVals, specStr });
         });
@@ -6035,13 +6035,15 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         <div>
           <div class="member-name">${esc(data.displayName || nickname || "—")}</div>
           <div class="member-email">${esc(data.email || "—")}</div>
-          ${(()=>{const e=(data.email||"").toLowerCase().trim();const n=(data.displayName||data.nickname||"").trim();const c=orderCountMap[e]||orderCountMap["nick:"+n]||0;return c?'<div style="font-size:11px;color:var(--pink);margin-top:2px">🛍 下單 '+c+' 次</div>':''})()}
         </div>
-        <div style="display:flex;gap:6px;align-items:center">
-          <span class="role-badge ${data.role || 'user'}" style="display:inline-block">
-            ${data.role === "admin" ? "✦ 管理者" : "會員"}
-          </span>
-          <button class="btn btn-danger btn-sm" onclick="deleteMember('${uid}','${esc(data.displayName || data.email || "")}')">刪除</button>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <div style="display:flex;gap:6px;align-items:center">
+            <span class="role-badge ${data.role || 'user'}" style="display:inline-block">
+              ${data.role === "admin" ? "✦ 管理者" : "會員"}
+            </span>
+            <button class="btn btn-danger btn-sm" onclick="deleteMember('${uid}','${esc(data.displayName || data.email || "")}')">刪除</button>
+          </div>
+          ${(()=>{const e=(data.email||"").toLowerCase().trim();const n=(data.displayName||data.nickname||"").trim();const c=orderCountMap[e]||orderCountMap["nick:"+n]||0;return c?'<div style="font-size:11px;color:var(--pink)">🛍 下單 '+c+' 次</div>':''})()}
         </div>
       </div>
       <div class="member-card-edit">
@@ -8332,7 +8334,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       const dateStr = o.orderDate ? window.fmtDateTime(o.orderDate).slice(5,16) : "—";
       const itemsDisplay = o.items.length
         ? o.items.map(it => `${esc(it.name)}${it.specStr?` [${esc(it.specStr)}]`:""} ×${it.qty}`).join("<br>")
-        : esc(o.itemsText || "—");
+        : formatItemsDisplay(o.itemsText || "—");
       tr.innerHTML = `
         <td style="white-space:nowrap">
           <input type="checkbox" ${o._selected?"checked":""}
@@ -9373,6 +9375,8 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
                   const k = itemKey(baseName, specStr);
                   if (!summary[k]) summary[k] = { name: baseName, specs:{}, specStr, total:0, unitPrice:0 };
                   summary[k].total += perMember;
+                  // 記錄個別數量供按鈕顯示
+                  summary[k].perQty = perMember;
                 });
               }
               return;
