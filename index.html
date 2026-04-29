@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260429-69 -->
+  <!-- build:20260429-70 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -232,6 +232,30 @@
     .opi-note { font-size:11px; color:var(--text-muted); margin-top:2px; }
 
 
+
+    /* ── 採購記錄卡片 ── */
+    .pu-campaign-card { border:1.5px solid var(--border); border-radius:12px; margin-bottom:10px; overflow:hidden; }
+    .pu-campaign-header { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; cursor:pointer; background:var(--surface); }
+    .pu-campaign-header:hover { background:#fff8fb; }
+    .pu-records-list { padding:8px 12px; background:#fafafa; border-top:1px solid var(--border); }
+    .pu-record-row { background:#fff; border:1.5px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:8px; }
+    .pu-record-top { display:flex; justify-content:space-between; gap:12px; }
+    .pu-record-left { flex:1; min-width:0; }
+    .pu-record-right { display:flex; gap:10px; flex-shrink:0; }
+    .pu-record-footer { display:flex; justify-content:flex-end; margin-top:8px; }
+    .pu-tag-row { display:flex; flex-wrap:wrap; gap:4px; }
+    .pu-tag { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; background:#f0f0f0; color:#555; }
+    .pu-tag.blue { background:#e3f0ff; color:#2d7cf6; }
+    .pu-tag.green { background:#e8f8e8; color:#2e7d32; }
+    .pu-tag.gray { background:#f5f5f5; color:#777; }
+    .pu-amt-block { text-align:center; }
+    .pu-amt-label { font-size:10px; color:var(--text-muted); margin-bottom:2px; }
+    .pu-amt-val { font-size:14px; font-weight:800; color:var(--pink); }
+    .pu-items-list { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; padding-top:8px; border-top:1px dashed var(--border); }
+    .pu-item-chip { display:flex; align-items:center; gap:4px; background:#fff0f7; border-radius:8px; padding:4px 10px; font-size:12px; }
+    .pu-item-qty { color:var(--text-muted); }
+    .pu-item-price { color:var(--pink); font-weight:600; margin-left:4px; }
+    .pu-note { font-size:11px; color:var(--text-muted); margin-top:4px; }
     /* ── 採購記錄（新版）── */
     .pu-inline-form {
       border: 2px solid var(--pink);
@@ -3111,7 +3135,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260429-69 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260429-70 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -9102,38 +9126,54 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   }
 
   function renderPuRecordHTML(r) {
-    const chips = [];
-    if (r.platform)     chips.push(`<span class="pu-chip">${esc(r.platform)}</span>`);
-    if (r.warehouse)    chips.push(`<span class="pu-chip blue">🏭 ${esc(r.warehouse)}</span>`);
-    if (r.foreignAmount && r.currency) chips.push(`<span class="pu-chip orange">${Number(r.foreignAmount).toLocaleString()} ${esc(r.currency)}</span>`);
-    if (r.orderedAt)    chips.push(`<span class="pu-chip">下單：${fmtDate(r.orderedAt)}</span>`);
-    if (r.returnAt)     chips.push(`<span class="pu-chip green">運回：${fmtDate(r.returnAt)}</span>`);
-    if (r.weight)       chips.push(`<span class="pu-chip green">${r.weight} kg</span>`);
-    if (r.tracking)     chips.push(`<span class="pu-chip blue">單號：${esc(r.tracking)}</span>`);
+    const fmtD = v => { if (!v) return null; const d = v?.toDate?v.toDate():new Date(v); if(isNaN(d))return null; return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`; };
 
-    const itemsHTML = (r.items||[]).map(it =>
-      `<tr><td>${esc(it.name)}</td><td style="text-align:center">${it.qty||1}</td>
-       <td style="text-align:right">${it.unitPrice?`NT$${Number(it.unitPrice).toLocaleString()}`:"—"}</td>
-       <td style="text-align:right;font-weight:700">${it.subtotal?`NT$${Number(it.subtotal).toLocaleString()}`:"—"}</td></tr>`
-    ).join("");
+    const meta = [
+      r.platform     && `<span class="pu-tag">${esc(r.platform)}</span>`,
+      r.warehouse    && `<span class="pu-tag blue">🏭 ${esc(r.warehouse)}</span>`,
+    ].filter(Boolean).join('');
+
+    const dates = [
+      fmtD(r.orderedAt) && `<span class="pu-tag gray">下單 ${fmtD(r.orderedAt)}</span>`,
+      fmtD(r.returnAt)  && `<span class="pu-tag green">運回 ${fmtD(r.returnAt)}</span>`,
+      r.tracking        && `<span class="pu-tag blue">📦 ${esc(r.tracking)}</span>`,
+    ].filter(Boolean).join('');
+
+    const amounts = [
+      r.total         && `<div class="pu-amt-block"><div class="pu-amt-label">台幣</div><div class="pu-amt-val">NT$${Number(r.total).toLocaleString()}</div></div>`,
+      r.foreignAmount && r.currency && `<div class="pu-amt-block"><div class="pu-amt-label">${esc(r.currency)}</div><div class="pu-amt-val">${Number(r.foreignAmount).toLocaleString()}</div></div>`,
+      r.weight        && `<div class="pu-amt-block"><div class="pu-amt-label">重量</div><div class="pu-amt-val">${r.weight} kg</div></div>`,
+    ].filter(Boolean).join('');
+
+    const itemsHTML = (r.items||[]).length
+      ? `<div class="pu-items-list">${(r.items||[]).map(it => {
+          const spec = it.specStr || (it.specs ? Object.values(it.specs).filter(Boolean).join(', ') : '');
+          return `<div class="pu-item-chip">
+            <span>${esc(it.name)}${spec?` <span style="opacity:.6">[${esc(spec)}]</span>`:''}</span>
+            <span class="pu-item-qty">×${it.qty||1}</span>
+            ${it.subtotal?`<span class="pu-item-price">NT$${Number(it.subtotal).toLocaleString()}</span>`:''}
+          </div>`;
+        }).join('')}</div>`
+      : '';
 
     return `<div class="pu-record-row" id="pur-${r.id}">
-      <div class="pu-record-header">
-        <div>
-          <span class="pu-record-batch">${esc(r.orderedAt ? fmtDate(r.orderedAt) : "採購記錄")}</span>
+      <div class="pu-record-top">
+        <div class="pu-record-left">
+          ${meta ? `<div class="pu-tag-row">${meta}</div>` : ''}
+          ${dates ? `<div class="pu-tag-row" style="margin-top:4px">${dates}</div>` : ''}
+          ${r.note ? `<div class="pu-note">${esc(r.note)}</div>` : ''}
         </div>
-        <div style="display:flex;gap:6px;align-items:center">
-          ${r.total?`<span style="font-weight:700;color:var(--pink)">NT$${Number(r.total).toLocaleString()}</span>`:""}
-          <button class="btn btn-danger btn-sm" onclick="deletePuRecord('${r.id}')">刪除</button>
+        <div class="pu-record-right">
+          ${amounts}
         </div>
       </div>
-      ${chips.length?`<div class="pu-meta">${chips.join("")}</div>`:""}
-      ${itemsHTML?`<table class="pu-items-table">
-        <thead><tr><th>商品</th><th>數量</th><th>單價</th><th>小計</th></tr></thead>
-        <tbody>${itemsHTML}</tbody></table>`:""}
-      ${r.note?`<div style="font-size:12px;color:var(--text-muted);margin-top:4px">${esc(r.note)}</div>`:""}
+      ${itemsHTML}
+      <div class="pu-record-footer">
+        <button class="btn btn-danger btn-sm" style="font-size:11px;padding:3px 10px" onclick="deletePuRecord('${r.id}')">刪除</button>
+      </div>
     </div>`;
   }
+
 
   function fmtDate(v) {
     if (!v) return "—";
@@ -9477,15 +9517,21 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     try {
       await addDoc(collection(db,"purchases"), data);
 
-      // 同步到記帳（收支 ledger）
-      if (total > 0) {
+      // 同步到記帳
+      const syncAmt = total || 0;
+      if (syncAmt > 0) {
+        const ledgerNote = [
+          `採購：${campaignName}`,
+          foreignAmt ? `(${foreignAmt} ${currency})` : '',
+          weight ? `${weight}kg` : '',
+        ].filter(Boolean).join(' ');
         await addDoc(collection(db,"ledger"), {
           type: "expense",
           category: "採購成本",
           campaignId, campaignName,
-          amount: total,
-          note: `採購：${campaignName}`,
-          date: serverTimestamp(),
+          amount: syncAmt,
+          note: ledgerNote,
+          date: orderedAt ? orderedAt : serverTimestamp(),
           createdAt: serverTimestamp(),
           source: "purchase_auto"
         });
