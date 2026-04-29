@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260429-83 -->
+  <!-- build:20260429-84 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3145,7 +3145,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260429-83 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260429-84 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -9814,7 +9814,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     };
 
     try {
-      await addDoc(collection(db,"purchases"), data);
+      const newPurchaseRef = await addDoc(collection(db,"purchases"), data);
 
       // 同步到記帳
       const syncAmt = total || 0;
@@ -9833,7 +9833,8 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           note: ledgerNote,
           date: orderedAt ? orderedAt : serverTimestamp(),
           createdAt: serverTimestamp(),
-          source: "purchase_auto"
+          source: "purchase_auto",
+          purchaseId: newPurchaseRef.id
         });
       }
 
@@ -9843,12 +9844,23 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   };
 
   window.deletePuRecord = async function(id) {
-    if (!confirm("確定刪除此採購記錄？")) return;
+    if (!confirm("確定刪除此採購記錄？\n同步的記帳記錄也會一併刪除。")) return;
     try {
       await deleteDoc(doc(db,"purchases",id));
+      // 同步刪除對應的記帳記錄（source=purchase_auto + 相同 purchaseId 或備接近時間）
+      try {
+        const ledgerSnap = await getDocs(
+          query(collection(db,"ledger"), where("source","==","purchase_auto"))
+        );
+        const toDelete = [];
+        ledgerSnap.forEach(d => {
+          if (d.data().purchaseId === id) toDelete.push(d.id);
+        });
+        for (const lid of toDelete) await deleteDoc(doc(db,"ledger",lid));
+      } catch(e2) { console.warn("記帳刪除失敗",e2); }
       document.getElementById(`pur-${id}`)?.remove();
     } catch(e) { alert("刪除失敗：" + e.message); }
-  };
+  };;
 
   // ══════════════════════════════════════════════════════════════
   // 記帳（全新設計）
@@ -10375,17 +10387,40 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     try {
       const updates = { picked, updatedAt: serverTimestamp() };
       if (picked) {
-        const newPaid = addAmountStr(paidEl?.value?.trim()||"", remainEl?.value?.trim()||"", extraEl?.value?.trim()||"");
-        updates.paidAmount   = newPaid;
-        updates.remainAmount = "";
-        updates.extraAmount  = "";
+        // 取貨：剩餘+補款合併到已付，儲存原始值供還原
+        const origPaid   = paidEl?.value?.trim()  || "";
+        const origRemain = remainEl?.value?.trim() || "";
+        const origExtra  = extraEl?.value?.trim()  || "";
+        const newPaid = addAmountStr(origPaid, origRemain, origExtra);
+        updates.paidAmount    = newPaid;
+        updates.remainAmount  = "";
+        updates.extraAmount   = "";
+        updates._origPaid     = origPaid;
+        updates._origRemain   = origRemain;
+        updates._origExtra    = origExtra;
         if (paidEl)   paidEl.value   = newPaid;
         if (remainEl) remainEl.value = "";
         if (extraEl)  extraEl.value  = "";
+      } else {
+        // 取消取貨：嘗試還原原始金額
+        const snap = await getDoc(doc(db,"orders",orderId));
+        const orig = snap.data();
+        const restorePaid   = orig._origPaid   ?? orig.paidAmount   ?? "";
+        const restoreRemain = orig._origRemain ?? orig.remainAmount ?? "";
+        const restoreExtra  = orig._origExtra  ?? orig.extraAmount  ?? "";
+        updates.paidAmount   = restorePaid;
+        updates.remainAmount = restoreRemain;
+        updates.extraAmount  = restoreExtra;
+        updates._origPaid    = null;
+        updates._origRemain  = null;
+        updates._origExtra   = null;
+        if (paidEl)   paidEl.value   = restorePaid;
+        if (remainEl) remainEl.value = restoreRemain;
+        if (extraEl)  extraEl.value  = restoreExtra;
       }
       await updateDoc(doc(db,"orders",orderId), updates);
     } catch(e) { alert(`儲存失敗：${e.message}`); }
-  };
+  };;
 
   function addAmountStr(...strs) {
     const vals = strs.map(s=>String(s||"").trim()).filter(Boolean);
