@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260429-77 -->
+  <!-- build:20260429-78 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3145,7 +3145,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260429-77 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260429-78 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -6066,7 +6066,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
             </span>
             <button class="btn btn-danger btn-sm" onclick="deleteMember('${uid}','${esc(data.displayName || data.email || "")}')">刪除</button>
           </div>
-          ${(()=>{const e=(data.email||"").toLowerCase().trim();const n=(data.displayName||data.nickname||"").trim();const c=orderCountMap[e]||orderCountMap["nick:"+n]||0;return c?'<div style="font-size:11px;color:var(--pink)">🛍 下單 '+c+' 次</div>':''})()}
+          ${(()=>{const e=(data.email||"").toLowerCase().trim();const n=(data.displayName||data.nickname||"").trim();const c=data.orderCount!=null?data.orderCount:(orderCountMap[e]||orderCountMap["nick:"+n]||0);return c?'<div style="font-size:11px;color:var(--pink)">🛍 下單 '+c+' 次</div>':''})()}
         </div>
       </div>
       <div class="member-card-edit">
@@ -6093,7 +6093,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         <div class="form-group" style="width:75px">
           <label class="form-label" style="font-size:11px">下單次數</label>
           <input class="form-input" id="m-ordercount-${uid}" type="number" min="0"
-            value="${(()=>{const e=(data.email||'').toLowerCase().trim();const n=(data.displayName||data.nickname||'').trim();return orderCountMap[e]||orderCountMap['nick:'+n]||data.orderCount||0;})()} "
+            value="${(()=>{const e=(data.email||'').toLowerCase().trim();const n=(data.displayName||data.nickname||'').trim();return data.orderCount!=null?data.orderCount:(orderCountMap[e]||orderCountMap['nick:'+n]||0);})()} "
             style="font-size:12px;text-align:center" />
         </div>
       </div>
