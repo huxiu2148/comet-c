@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260429-78 -->
+  <!-- build:20260429-79 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3145,7 +3145,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260429-78 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260429-79 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -3876,6 +3876,8 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       if (!stored[productId]) stored[productId] = new Set(memberDisplays); // 預設全選
       window._productMemberSel = stored;
       const sel = stored[productId];
+      window._currentSubgroups = window._currentSubgroups || {};
+      window._currentSubgroups[productId] = group?.subgroups || [];
       preview.innerHTML = `
         <div style="width:100%">
           <div style="font-size:12px;font-weight:700;color:var(--pink);margin-bottom:6px">
@@ -3897,13 +3899,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           ${(group?.subgroups||[]).length ? `<div style="margin-top:8px">
             <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">小分隊快選：</div>
             <div style="display:flex;flex-wrap:wrap;gap:4px">
-              ${(group.subgroups||[]).map(sg => `<button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 8px"
-                onclick="selectSubgroupSpec(${productId},'${productId}',${JSON.stringify(sg.memberNames||[]).replace(/'/g,'&#39;')})">
-                ${esc(sg.name)}</button>`).join('')}
-              <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 8px"
-                onclick="selectAllMembersSpec(${productId})">全選</button>
-              <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:2px 8px"
-                onclick="clearAllMembersSpec(${productId})">清除</button>
+              ${(group.subgroups||[]).filter(sg=>sg.name).map((sg,si) => {
+                return '<button class="btn btn-ghost btn-sm pu-sg-btn" style="font-size:11px;padding:2px 8px" data-pid="'+productId+'" data-si="'+si+'">'+esc(sg.name)+'</button>';
+              }).join('')}
+              <button class="btn btn-ghost btn-sm pu-sg-all" style="font-size:11px;padding:2px 8px" data-pid="${productId}">全選</button>
+              <button class="btn btn-ghost btn-sm pu-sg-clear" style="font-size:11px;padding:2px 8px" data-pid="${productId}">清除</button>
             </div>
           </div>` : ''}
         </div>`;
@@ -3920,6 +3920,42 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         </div>`).join("");
     }
   };
+
+  // ── 小分隊快選 ──────────────────────────────────────────────
+  window.clearAllMembersSpec = function(productId) {
+    const stored = window._productMemberSel || {};
+    stored[productId] = new Set();
+    window._productMemberSel = stored;
+    window.updateSpecPreview(productId);
+  };
+  window.selectAllMembersSpec = function(productId) {
+    const groupId = document.getElementById("c-group")?.value;
+    const group = (window.groupsCache||[]).find(g => g.id === groupId);
+    const all = (group?.members||[]).map(m => typeof m==="string"?m:m.display).filter(Boolean);
+    const stored = window._productMemberSel || {};
+    stored[productId] = new Set(all);
+    window._productMemberSel = stored;
+    window.updateSpecPreview(productId);
+  };
+  window.selectSubgroupByIndex = function(productId, si) {
+    const subs = window._currentSubgroups?.[productId] || [];
+    const sg = subs[parseInt(si)];
+    if (!sg) return;
+    const stored = window._productMemberSel || {};
+    stored[productId] = new Set(sg.memberNames || []);
+    window._productMemberSel = stored;
+    window.updateSpecPreview(productId);
+  };
+
+  // 事件委派：小分隊快選按鈕
+  document.addEventListener("click", function(e) {
+    const sgBtn = e.target.closest(".pu-sg-btn");
+    if (sgBtn) { window.selectSubgroupByIndex(sgBtn.dataset.pid, sgBtn.dataset.si); return; }
+    const allBtn = e.target.closest(".pu-sg-all");
+    if (allBtn) { window.selectAllMembersSpec(allBtn.dataset.pid); return; }
+    const clearBtn = e.target.closest(".pu-sg-clear");
+    if (clearBtn) { window.clearAllMembersSpec(clearBtn.dataset.pid); return; }
+  });
 
   // 成員勾選 toggle
   window.onMemberSpecToggle = function(productId, member, checked) {
