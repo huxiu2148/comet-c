@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260429-70 -->
+  <!-- build:20260429-71 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3135,7 +3135,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260429-70 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260429-71 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -3307,7 +3307,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       </div>
 
       <div class="group-card-actions">
-        <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${id}" data-name="${esc(data.name)}" data-colors="${colorsJson}" data-abbr="${esc(data.abbr || '')}" data-members="${JSON.stringify(data.members || []).replace(/"/g,'&quot;')}" data-aliases="${JSON.stringify(data.aliases || []).replace(/"/g,'&quot;')}">編輯</button>
+        <button class="btn btn-ghost btn-sm" data-action="edit" data-id="${id}" data-name="${esc(data.name)}" data-colors="${colorsJson}" data-abbr="${esc(data.abbr || '')}" data-members="${JSON.stringify(data.members || []).replace(/"/g,'&quot;')}" data-aliases="${JSON.stringify(data.aliases || []).replace(/"/g,'&quot;')}" data-subgroups="${JSON.stringify(data.subgroups || []).replace(/"/g,'&quot;')}">編輯</button>
         <button class="btn btn-danger btn-sm" onclick="deleteGroup('${id}','${esc(data.name)}')">刪除</button>
       </div>`;
     // 綁定編輯按鈕（避免 onclick 字串中帶陣列出錯）
@@ -3317,7 +3317,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       let members = [], aliases = [];
       try { members = JSON.parse(btn.dataset.members.replace(/&quot;/g, '"')); } catch {}
       try { aliases = JSON.parse(btn.dataset.aliases.replace(/&quot;/g, '"')); } catch {}
-      openGroupModal(btn.dataset.id, btn.dataset.name, colors, btn.dataset.abbr || "", members, aliases);
+      let subgroups = [];
+      try { subgroups = JSON.parse((btn.dataset.subgroups||"[]").replace(/&quot;/g,'"')); } catch(e){}
+      openGroupModal(btn.dataset.id, btn.dataset.name, colors, btn.dataset.abbr||"", members, aliases, subgroups);
     });
     return card;
   }
@@ -3401,6 +3403,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     window._openGroupMembers = Array.isArray(members)
       ? members.map(m => typeof m === "string" ? { display: m, aliases: [] } : m)
       : [];
+    // 載入小分隊
+    window._openGroupSubgroups = Array.isArray(subgroups) ? JSON.parse(JSON.stringify(subgroups)) : [];
+    renderSubgroupList();
     // 顯示 Modal
     document.getElementById("modal-group-title").textContent = id ? "編輯團體" : "新增團體";
     (function(){const _el=document.getElementById("modal-group");if(_el)_el.style.display="flex";})();
@@ -3438,6 +3443,58 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   };
   const genAbbr = window.genAbbr; // 區塊內也可直接用
 
+  // ── 小分隊管理 ──────────────────────────────────────────────
+  function renderSubgroupList() {
+    const container = document.getElementById("subgroup-container");
+    if (!container) return;
+    container.innerHTML = "";
+    (window._openGroupSubgroups || []).forEach((sg, idx) => {
+      const div = document.createElement("div");
+      div.style.cssText = "border:1.5px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;background:#fff8fb";
+      div.innerHTML = `
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+          <input class="form-input" style="flex:1;font-size:13px" placeholder="小分隊名稱（如 WayV）"
+            value="${esc(sg.name||'')}" oninput="updateSubgroupName(${idx},this.value)" />
+          <button class="btn btn-danger btn-sm" onclick="removeSubgroup(${idx})">✕</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">小分隊成員（從團體成員選取）：</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${(window._openGroupMembers||[]).map((m,mi) => {
+            const name = typeof m === 'string' ? m : (m.display||'');
+            const inSg = (sg.memberNames||[]).includes(name);
+            return `<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer">
+              <input type="checkbox" ${inSg?'checked':''} onchange="toggleSubgroupMember(${idx},'${esc(name)}',this.checked)"
+                style="accent-color:var(--pink)"> ${esc(name)}
+            </label>`;
+          }).join('')}
+        </div>`;
+      container.appendChild(div);
+    });
+  }
+
+  window.addSubgroupInput = function() {
+    if (!window._openGroupSubgroups) window._openGroupSubgroups = [];
+    window._openGroupSubgroups.push({ name: "", memberNames: [] });
+    renderSubgroupList();
+  };
+
+  window.removeSubgroup = function(idx) {
+    window._openGroupSubgroups.splice(idx, 1);
+    renderSubgroupList();
+  };
+
+  window.updateSubgroupName = function(idx, val) {
+    if (window._openGroupSubgroups?.[idx]) window._openGroupSubgroups[idx].name = val;
+  };
+
+  window.toggleSubgroupMember = function(sgIdx, memberName, checked) {
+    const sg = window._openGroupSubgroups?.[sgIdx];
+    if (!sg) return;
+    if (!sg.memberNames) sg.memberNames = [];
+    if (checked) { if (!sg.memberNames.includes(memberName)) sg.memberNames.push(memberName); }
+    else { sg.memberNames = sg.memberNames.filter(n => n !== memberName); }
+  };
+
   window.saveGroup = async function() {
     const name = document.getElementById("input-group-name").value.trim();
     const abbrInput = document.getElementById("input-group-abbr")?.value.trim().replace(/\s+/g,"") || "";
@@ -3456,9 +3513,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     btn.disabled = true; btn.textContent = "儲存中..."; errEl.textContent = "";
     try {
       if (editingGroupId) {
-        await updateDoc(doc(db, "groups", editingGroupId), { name, abbr, aliases, colors, color, members });
+        await updateDoc(doc(db, "groups", editingGroupId), { name, abbr, aliases, colors, color, members, subgroups });
       } else {
-        await addDoc(collection(db, "groups"), { name, abbr, aliases, colors, color, members, createdAt: serverTimestamp() });
+        await addDoc(collection(db, "groups"), { name, abbr, aliases, colors, color, members, subgroups, createdAt: serverTimestamp() });
       }
       (function(){const _el=document.getElementById("modal-group");if(_el)_el.style.display="none";})();
       editingGroupId = null;
@@ -5933,7 +5990,16 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       }
 
       list.innerHTML = "";
-      snap.forEach(d => list.appendChild(renderMemberRow(d.id, d.data())));
+      // 計算各會員的下單次數
+      const orderSnap = await getDocs(collection(db,"orders"));
+      const orderCountMap = {};
+      orderSnap.forEach(d => {
+        const email = String(d.data().email||"").toLowerCase().trim();
+        const nick  = String(d.data().nickname||d.data().buyerName||"").trim();
+        if (email) orderCountMap[email] = (orderCountMap[email]||0) + 1;
+        if (nick && !email) orderCountMap[`nick:${nick}`] = (orderCountMap[`nick:${nick}`]||0) + 1;
+      });
+      snap.forEach(d => list.appendChild(renderMemberRow(d.id, d.data(), orderCountMap)));
       console.log('[members] 渲染完成');
       const sec = document.getElementById('section-members');
       console.log('[members] section active:', sec?.classList.contains('active'), 'display:', window.getComputedStyle(sec).display);
@@ -5945,7 +6011,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     }
   }
 
-  function renderMemberRow(uid, data) {
+  function renderMemberRow(uid, data, orderCountMap={}) {
     const card = document.createElement("div");
     card.className = "member-card";
     card.id = `member-card-${uid}`;
@@ -5969,6 +6035,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         <div>
           <div class="member-name">${esc(data.displayName || nickname || "—")}</div>
           <div class="member-email">${esc(data.email || "—")}</div>
+          ${(()=>{const e=(data.email||"").toLowerCase().trim();const n=(data.displayName||data.nickname||"").trim();const c=orderCountMap[e]||orderCountMap["nick:"+n]||0;return c?'<div style="font-size:11px;color:var(--pink);margin-top:2px">🛍 下單 '+c+' 次</div>':''})()}
         </div>
         <div style="display:flex;gap:6px;align-items:center">
           <span class="role-badge ${data.role || 'user'}" style="display:inline-block">
@@ -6524,6 +6591,15 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         <button class="btn-add-spec-option" type="button" onclick="addMemberInput()"
                 style="margin-top:4px">＋ 新增成員</button>
         <span class="fee-hint">開團時規格輸入「分成員」會自動帶入此清單</span>
+      </div>
+
+      <!-- 小分隊 -->
+      <div class="form-group">
+        <label class="form-label">小分隊
+          <span class="fee-hint">（如 WayV、SuperM 等子團）</span>
+        </label>
+        <div id="subgroup-container"></div>
+        <button class="btn-add-spec-option" type="button" onclick="addSubgroupInput()" style="margin-top:4px">＋ 新增小分隊</button>
       </div>
 
       <p class="form-error" id="group-form-error"></p>
@@ -9520,11 +9596,12 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       // 同步到記帳
       const syncAmt = total || 0;
       if (syncAmt > 0) {
+        const noteVal = g("note") || "";
         const ledgerNote = [
-          `採購：${campaignName}`,
+          noteVal,
           foreignAmt ? `(${foreignAmt} ${currency})` : '',
           weight ? `${weight}kg` : '',
-        ].filter(Boolean).join(' ');
+        ].filter(Boolean).join(' ') || campaignName;
         await addDoc(collection(db,"ledger"), {
           type: "expense",
           category: "採購成本",
@@ -9697,7 +9774,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           </select>
         </div>
         <table class="fin-table">
-          <thead><tr><th>日期</th><th>類型</th><th>分類</th><th>關聯團務</th><th>金額</th><th>備註</th><th></th></tr></thead>
+          <thead><tr><th>日期</th><th>類型</th><th>關聯團務</th><th>金額</th><th>備註</th><th></th></tr></thead>
           <tbody>
             ${_ledgerData.slice(0,50).filter(l => {
               const ft = document.getElementById("fin-filter-type")?.value;
@@ -9708,12 +9785,13 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
               return `<tr>
                 <td style="white-space:nowrap">${ds}</td>
                 <td><span class="fin-badge ${l.type}">${l.type==="income"?"收入":"支出"}</span></td>
-                <td>${esc(l.category||"—")}</td>
                 <td style="font-size:11px;color:var(--text-muted)">${esc(_ledgerCampaigns[l.campaignId]||l.campaignId||"—")}</td>
                 <td style="font-weight:700;color:${l.type==="income"?"#4caf50":"var(--danger)"}">
-                  ${l.type==="expense"?"-":""}NT$${(l.amount||0).toLocaleString()}
+                  <input type="number" value="${l.amount||0}" style="width:90px;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:2px 6px;text-align:right"
+                    onchange="updateLedgerAmount('${l.id}',this.value)">
                 </td>
-                <td style="font-size:12px;color:var(--text-muted)">${esc(l.note||"")}</td>
+                <td><input type="text" value="${esc(l.note||'')}" style="width:100%;min-width:80px;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:2px 6px"
+                    onchange="updateLedgerNote('${l.id}',this.value)"></td>
                 <td><button class="btn btn-ghost btn-sm" style="padding:2px 6px;font-size:11px"
                   onclick="deleteLedgerEntry('${l.id}')">✕</button></td>
               </tr>`;
@@ -9744,6 +9822,16 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     } catch(e) { alert("記帳失敗：" + e.message); }
   };
 
+  window.updateLedgerNote = async function(id, val) {
+    try { await updateDoc(doc(db,"ledger",id), { note: val }); }
+    catch(e) { console.error(e); }
+  };
+  window.updateLedgerAmount = async function(id, val) {
+    const n = parseFloat(val);
+    if (isNaN(n)) return;
+    try { await updateDoc(doc(db,"ledger",id), { amount: n }); }
+    catch(e) { console.error(e); }
+  };
   window.deleteLedgerEntry = async function(id) {
     if (!confirm("確定刪除此記帳記錄？")) return;
     try {
