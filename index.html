@@ -3506,7 +3506,8 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const abbr       = abbrInput || genAbbr(name);
     const colors     = [...groupColors];
     const color = colors[0];
-    const errEl = document.getElementById("group-form-error");
+    const errEl     = document.getElementById("group-form-error");
+    const subgroups = (window._openGroupSubgroups || []).filter(sg => sg.name && sg.name.trim());
     const btn   = document.getElementById("btn-save-group");
     if (!name) { errEl.textContent = "請填寫團體名稱"; return; }
     if (!colors.length) { errEl.textContent = "請至少設一個顏色"; return; }
