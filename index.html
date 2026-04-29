@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260429-84 -->
+  <!-- build:20260429-85 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -376,6 +376,9 @@
     }
     .misc-row:hover { border-color: var(--pink); }
 
+    .ord-stat { display:flex; flex-direction:column; align-items:center; min-width:60px; }
+    .ord-stat-num { font-size:18px; font-weight:800; line-height:1.2; }
+    .ord-stat-label { font-size:11px; color:var(--text-muted); margin-top:2px; }
     /* ── 主內容 ── */
     main { max-width: 980px; margin: 0 auto; padding: 32px 20px; }
 
@@ -2564,6 +2567,7 @@
             <button class="btn btn-danger btn-sm" id="btn-order-delete-selected" style="display:none" onclick="deleteSelectedOrders()">🗑 刪除所選</button>
           </div>
         </div>
+        <div id="orders-summary-bar" style="display:none;background:#fff8fb;border:1.5px solid var(--border);border-radius:10px;padding:10px 16px;margin-bottom:12px;display:flex;gap:20px;flex-wrap:wrap"></div>
         <div id="admin-orders-list"></div>
       </div>
 
@@ -3145,7 +3149,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260429-84 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260429-85 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -6049,13 +6053,23 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       // 計算各會員的下單次數
       const orderSnap = await getDocs(collection(db,"orders"));
       const orderCountMap = {};
+      const orderLastMap = {};
       orderSnap.forEach(d => {
-        const email = String(d.data().email||"").toLowerCase().trim();
-        const nick  = String(d.data().nickname||d.data().buyerName||"").trim();
-        if (email) orderCountMap[email] = (orderCountMap[email]||0) + 1;
-        if (nick && !email) orderCountMap[`nick:${nick}`] = (orderCountMap[`nick:${nick}`]||0) + 1;
+        const o = d.data();
+        const email = String(o.email||"").toLowerCase().trim();
+        const nick  = String(o.nickname||o.buyerName||"").trim();
+        const t = o.createdAt?.toMillis?.() || 0;
+        if (email) {
+          orderCountMap[email] = (orderCountMap[email]||0) + 1;
+          if (t > (orderLastMap[email]||0)) orderLastMap[email] = t;
+        }
+        if (nick && !email) {
+          const k = "nick:" + nick;
+          orderCountMap[k] = (orderCountMap[k]||0) + 1;
+          if (t > (orderLastMap[k]||0)) orderLastMap[k] = t;
+        }
       });
-      snap.forEach(d => list.appendChild(renderMemberRow(d.id, d.data(), orderCountMap)));
+      snap.forEach(d => list.appendChild(renderMemberRow(d.id, d.data(), orderCountMap, orderLastMap)));
       console.log('[members] 渲染完成');
       const sec = document.getElementById('section-members');
       console.log('[members] section active:', sec?.classList.contains('active'), 'display:', window.getComputedStyle(sec).display);
@@ -6067,7 +6081,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     }
   }
 
-  function renderMemberRow(uid, data, orderCountMap={}) {
+  function renderMemberRow(uid, data, orderCountMap={}, orderLastMap={}) {
     const card = document.createElement("div");
     card.className = "member-card";
     card.id = `member-card-${uid}`;
@@ -6089,7 +6103,19 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     innerDiv.innerHTML = `
       <div class="member-card-header">
         <div>
+          <div style="display:flex;align-items:center;gap:6px">
           <div class="member-name">${esc(data.displayName || nickname || "—")}</div>
+          ${(() => {
+            const e = (data.email||'').toLowerCase().trim();
+            const n = (data.displayName||data.nickname||'').trim();
+            const lastT = orderLastMap[e] || orderLastMap['nick:'+n] || 0;
+            if (!lastT) return '';
+            const daysSince = Math.floor((Date.now() - lastT) / 86400000);
+            if (daysSince > 180) return '<span style="font-size:10px;background:#fff3cd;color:#856404;padding:1px 6px;border-radius:8px">😴 '+daysSince+'天未下單</span>';
+            if (daysSince > 90)  return '<span style="font-size:10px;background:#fff8e1;color:#f57f17;padding:1px 6px;border-radius:8px">💤 '+daysSince+'天</span>';
+            return '';
+          })()}
+        </div>
           <div class="member-email">${esc(data.email || "—")}</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
@@ -6874,6 +6900,25 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       if (status)     orders = orders.filter(o => (o.paymentStatus || o.status || "pending") === status);
       if (!orders.length) { list.innerHTML = '<div class="empty-row">沒有符合的訂單</div>'; return; }
       list.innerHTML = "";
+
+      // ── 統計摘要 ──────────────────────────────────────────────
+      const bar = document.getElementById("orders-summary-bar");
+      if (bar) {
+        const total   = orders.length;
+        const unpaid  = orders.filter(o => (o.paymentStatus||o.status||"pending") !== "paid").length;
+        const paid    = total - unpaid;
+        const totalAmt = orders.reduce((s, o) => {
+          const v = parseFloat(String(o.totalPrice||o.total||0).replace(/[^\d.]/g,""))||0;
+          return s + v;
+        }, 0);
+        bar.style.display = "flex";
+        bar.innerHTML = [
+          `<div class="ord-stat"><span class="ord-stat-num">${total}</span><span class="ord-stat-label">總筆數</span></div>`,
+          `<div class="ord-stat" style="color:var(--danger)"><span class="ord-stat-num">${unpaid}</span><span class="ord-stat-label">⚠️ 未對帳</span></div>`,
+          `<div class="ord-stat" style="color:#4caf50"><span class="ord-stat-num">${paid}</span><span class="ord-stat-label">✅ 已對帳</span></div>`,
+          totalAmt > 0 ? `<div class="ord-stat"><span class="ord-stat-num">NT$${totalAmt.toLocaleString()}</span><span class="ord-stat-label">總金額</span></div>` : "",
+        ].join("");
+      }
       const sortMode = document.getElementById('orders-sort-mode')?.value || 'time';
       if (sortMode === 'campaign') {
         const groups = {};
@@ -9366,7 +9411,13 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       <div class="pu-campaign-header" onclick="togglePuCampaign('${esc(g.campaignId)}')">
         <div>
           <div style="font-weight:700;font-size:14px">${esc(g.campaignName)}</div>
-          <div style="font-size:11px;color:var(--text-muted)">${esc(g.campaignId)} ・ ${g.records.length} 筆採購</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">
+            ${esc(g.campaignId)} ・ ${g.records.length} 筆採購
+            ${g.records.length ? (() => {
+              const cost = g.records.reduce((s,r)=>s+(r.total||0),0);
+              return cost ? ' ・ <span style="color:var(--danger)">💸 NT$' + cost.toLocaleString() + '</span>' : '';
+            })() : ''}
+          </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <button class="btn btn-ghost btn-sm" style="font-size:11px"
