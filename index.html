@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260429-88 -->
+  <!-- build:20260429-91 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3149,7 +3149,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260429-88 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260429-91 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -9453,6 +9453,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       r.total         && `<div class="pu-amt-block"><div class="pu-amt-label">台幣</div><div class="pu-amt-val">NT$${Number(r.total).toLocaleString()}</div></div>`,
       r.foreignAmount && r.currency && `<div class="pu-amt-block"><div class="pu-amt-label">${esc(r.currency)}</div><div class="pu-amt-val">${Number(r.foreignAmount).toLocaleString()}</div></div>`,
       r.weight        && `<div class="pu-amt-block"><div class="pu-amt-label">重量</div><div class="pu-amt-val">${r.weight} kg</div></div>`,
+      r.shippingRate  && `<div class="pu-amt-block"><div class="pu-amt-label">集運/kg</div><div class="pu-amt-val" style="font-size:13px">NT$${r.shippingRate}</div>${r.allocatedFee?`<div style="font-size:10px;color:var(--text-muted)">此筆 NT$${Number(r.allocatedFee).toLocaleString()}</div>`:""}</div>`,
     ].filter(Boolean).join('');
 
     const itemsHTML = (r.items||[]).length
@@ -9761,29 +9762,37 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   // ── 集運費率計算 ────────────────────────────────────────────
   window.calcShippingRate = function(campaignId) {
-    const weight = parseFloat(document.getElementById(`pu-il-weight-${campaignId}`)?.value) || 0;
-    const fee    = parseFloat(document.getElementById(`pu-il-shipping-fee-${campaignId}`)?.value) || 0;
-    const rateEl = document.getElementById(`pu-il-rate-${campaignId}`);
-    const valEl  = document.getElementById(`pu-il-rate-val-${campaignId}`);
-    if (!rateEl || !valEl) return;
-    if (weight > 0 && fee > 0) {
-      const rate = (fee / weight).toFixed(1);
-      valEl.textContent = rate;
+    const thisWeight  = parseFloat(document.getElementById("pu-il-weight-"+campaignId)?.value) || 0;
+    const totalWeight = parseFloat(document.getElementById("pu-il-total-weight-"+campaignId)?.value) || 0;
+    const fee         = parseFloat(document.getElementById("pu-il-shipping-fee-"+campaignId)?.value) || 0;
+    const rateEl = document.getElementById("pu-il-rate-"+campaignId);
+    if (!rateEl) return;
+    if (fee > 0 && totalWeight > 0) {
+      const rate = (fee / totalWeight).toFixed(1);
+      // 直接更新 rateEl 的文字內容（不依賴子元素 id）
+      if (thisWeight > 0) {
+        const alloc = Math.round(fee / totalWeight * thisWeight);
+        rateEl.textContent = "📦 每公斤集運費：NT$" + rate + "　此筆分攤：NT$" + alloc.toLocaleString();
+      } else {
+        rateEl.textContent = "📦 每公斤集運費：NT$" + rate + "　（請填此筆公斤數）";
+      }
       rateEl.style.display = "block";
     } else {
+      rateEl.textContent = "";
       rateEl.style.display = "none";
     }
   };
 
   window.calcEditShippingRate = function() {
-    const weight = parseFloat(document.getElementById("epu-weight")?.value) || 0;
-    const fee    = parseFloat(document.getElementById("epu-shipping-fee")?.value) || 0;
-    const rateEl = document.getElementById("epu-rate-display");
-    const valEl  = document.getElementById("epu-rate-val");
-    if (!rateEl || !valEl) return;
-    if (weight > 0 && fee > 0) {
-      const rate = (fee / weight).toFixed(1);
-      valEl.textContent = rate;
+    const thisWeight  = parseFloat(document.getElementById("epu-weight")?.value) || 0;
+    const totalWeight = parseFloat(document.getElementById("epu-total-weight")?.value) || 0;
+    const fee         = parseFloat(document.getElementById("epu-shipping-fee")?.value) || 0;
+    const rateEl  = document.getElementById("epu-rate-display");
+    const rateVal = document.getElementById("epu-rate-val");
+    if (!rateEl) return;
+    if (fee > 0 && totalWeight > 0) {
+      const rate = (fee / totalWeight).toFixed(1);
+      if (rateVal) rateVal.textContent = rate + (thisWeight > 0 ? ` ・ 此筆分攤 NT$${Math.round(fee/totalWeight*thisWeight).toLocaleString()}` : " (請填此筆公斤數)");
       rateEl.style.display = "block";
     } else {
       rateEl.style.display = "none";
@@ -9900,8 +9909,10 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const foreignAmt  = parseFloat(g("foreign"))      || 0;
     const currency    = g("currency").toUpperCase()    || "KRW";
     const weight      = parseFloat(g("weight"))        || 0;
-    const shippingFee = parseFloat(g("shipping-fee")) || 0;
-    const shippingRate = weight > 0 && shippingFee > 0 ? Math.round(shippingFee / weight * 10) / 10 : 0;
+    const shippingFee   = parseFloat(g("shipping-fee"))   || 0;
+    const totalWeight   = parseFloat(g("total-weight"))   || 0;
+    const shippingRate  = totalWeight > 0 && shippingFee > 0 ? Math.round(shippingFee / totalWeight * 10) / 10 : 0;
+    const allocatedFee  = weight > 0 && shippingRate > 0 ? Math.round(shippingRate * weight) : 0;
     const orderedAt  = gd("ordered-at");
     const returnAt   = gd("return-at");
 
@@ -9909,7 +9920,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       campaignId, campaignName,
       items, total,
       foreignAmount: foreignAmt, currency, weight,
-      shippingFee, shippingRate,
+      shippingFee, shippingRate, totalWeight, allocatedFee,
       orderedAt, returnAt,
       platform:  g("platform"),
       warehouse: g("warehouse"),
@@ -10024,6 +10035,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
               <input class="form-input" id="epu-shipping-fee" type="number" min="0" value="${r.shippingFee||''}" placeholder="0" style="font-size:13px"
                 oninput="window.calcEditShippingRate()" />
             </div>
+            <div class="form-group">
+              <label class="form-label" style="font-size:12px">集運總公斤</label>
+              <input class="form-input" id="epu-total-weight" type="number" min="0" step="0.01" value="${r.totalWeight||''}" placeholder="0.00" style="font-size:13px"
+                oninput="window.calcEditShippingRate()" />
+            </div>
           </div>
           <div id="epu-rate-display" style="font-size:12px;color:var(--pink);font-weight:600;margin-top:-8px;display:none">
             📦 每公斤集運費：NT$<span id="epu-rate-val">—</span>
@@ -10135,8 +10151,10 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     });
 
     try {
-      const shippingFee  = parseFloat(document.getElementById("epu-shipping-fee")?.value) || 0;
-      const shippingRate = weight > 0 && shippingFee > 0 ? Math.round(shippingFee / weight * 10) / 10 : 0;
+      const shippingFee   = parseFloat(document.getElementById("epu-shipping-fee")?.value)   || 0;
+      const totalWeight   = parseFloat(document.getElementById("epu-total-weight")?.value)   || 0;
+      const shippingRate  = totalWeight > 0 && shippingFee > 0 ? Math.round(shippingFee / totalWeight * 10) / 10 : 0;
+      const allocatedFee  = weight > 0 && shippingRate > 0 ? Math.round(shippingRate * weight) : 0;
       const updates = {
         platform:      document.getElementById("epu-platform")?.value || "",
         warehouse:     document.getElementById("epu-warehouse")?.value || "",
@@ -10144,7 +10162,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         note:          g("epu-note"),
         currency:      g("epu-currency").toUpperCase() || "KRW",
         total, foreignAmount: foreignAmt, weight,
-        shippingFee, shippingRate,
+        shippingFee, shippingRate, totalWeight, allocatedFee,
         orderedAt, returnAt, items,
         updatedAt: serverTimestamp(),
       };
