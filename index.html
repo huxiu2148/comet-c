@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260429-67 -->
+  <!-- build:20260429-68 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3109,7 +3109,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260429-67 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260429-68 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -3649,7 +3649,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         const lower = code.toLowerCase();
         if (twdRates[lower]) {
           rates[code] = 1 / twdRates[lower]; // 1 外幣 = X TWD
-          el.textContent = `${LABELS[code]} ${rates[code].toFixed(4)}`;
+          el.textContent = `${LABELS[code]} ${rates[code].toFixed(5)}`;
           el.className = "rate-item loaded";
         } else {
           el.textContent = `${LABELS[code]} 無資料`;
@@ -3667,7 +3667,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           const el = document.getElementById(`rate-${code}`);
           if (data.rates[code]) {
             rates[code] = 1 / data.rates[code];
-            el.textContent = `${LABELS[code]} ${rates[code].toFixed(4)}`;
+            el.textContent = `${LABELS[code]} ${rates[code].toFixed(5)}`;
             el.className = "rate-item loaded";
           } else {
             el.textContent = `${LABELS[code]} 無資料`;
@@ -6456,7 +6456,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 </div>
 
 <div class="modal-backdrop" id="modal-group" style="display:none" onclick="closeGroupModal(event)">
-  <div class="modal" style="max-width:520px">
+  <div class="modal" style="max-width:520px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
     <div class="modal-header">
       <h3 class="modal-title" id="modal-group-title">新增團體</h3>
       <button class="modal-close" onclick="closeGroupModal()">✕</button>
@@ -9480,9 +9480,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         await addDoc(collection(db,"ledger"), {
           type: "expense",
           category: "採購成本",
-          campaignId, campaignName, batchName,
+          campaignId, campaignName,
           amount: total,
-          note: `採購：${batchName}`,
+          note: `採購：${campaignName}`,
           date: serverTimestamp(),
           createdAt: serverTimestamp(),
           source: "purchase_auto"
