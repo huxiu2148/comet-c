@@ -3393,7 +3393,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     updateColorPreview();
   };
 
-  window.openGroupModal = function(id=null, name="", colors=null, abbr="", members=[], aliases=[]) {
+  window.openGroupModal = function(id=null, name="", colors=null, abbr="", members=[], aliases=[], subgroups=[]) {
     editingGroupId = id;
     // 先設資料
     if (typeof colors === "string" && colors) groupColors = [colors];
