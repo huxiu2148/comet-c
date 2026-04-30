@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260429-93 -->
+  <!-- build:20260429-95 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3149,7 +3149,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260429-93 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260429-95 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -7022,11 +7022,41 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
   window.updateOrderStatus = async function(orderId, status) {
     try {
-      await updateDoc(doc(db, "orders", orderId), { paymentStatus: status });
+      await updateDoc(doc(db, "orders", orderId), { paymentStatus: status, updatedAt: serverTimestamp() });
       const badge = document.querySelector(`#oadmin-${orderId} .order-status-badge`);
       if (badge) {
         badge.textContent = ORDER_STATUS[status] || status;
         badge.className = `order-status-badge status-${status}`;
+      }
+      // 對帳成功 → 同步到記帳收入
+      if (status === "paid") {
+        try {
+          const oSnap = await getDoc(doc(db, "orders", orderId));
+          if (oSnap.exists()) {
+            const o = oSnap.data();
+            const raw = String(o.paidAmount||o.totalPrice||o.total||"");
+            const amount = parseFloat(raw.match(/^[\d.]+/)?.[0]||"0") || 0;
+            if (amount > 0) {
+              // 先確認是否已有記帳（避免重複）
+              const lSnap = await getDocs(query(collection(db,"ledger"),
+                where("orderId","==",orderId), where("source","==","order_paid")));
+              if (lSnap.empty) {
+                await addDoc(collection(db,"ledger"), {
+                  type: "income",
+                  category: "訂單金額",
+                  campaignId:   o.campaignId   || "",
+                  campaignName: o.campaignName || "",
+                  orderId,
+                  amount,
+                  note: (o.nickname||o.buyerName||"") + (o.campaignName ? " ・ "+o.campaignName : ""),
+                  date: serverTimestamp(),
+                  createdAt: serverTimestamp(),
+                  source: "order_paid"
+                });
+              }
+            }
+          }
+        } catch(e2) { console.warn("記帳同步失敗", e2); }
       }
     } catch(e) { alert("更新失敗：" + e.message); }
   };
@@ -9961,7 +9991,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           category: "集運費",
           campaignId, campaignName,
           amount: allocatedFee,
-          note: `集運分攤（${shippingRate}元/kg × ${weight}kg）`,
+          note: `國際運費（${shippingRate}元/kg × ${weight}kg）`,
           date: returnAt ? returnAt : serverTimestamp(),
           createdAt: serverTimestamp(),
           source: "shipping_auto",
@@ -10208,15 +10238,19 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
         // 更新或新增集運分攤
         if (allocatedFee > 0) {
-          const shippingNote = "集運分攤（"+shippingRate+"元/kg × "+weight+"kg）";
+          const shippingNote = "國際運費（"+shippingRate+"元/kg × "+weight+"kg）";
           if (existingTypes["shipping_auto"]) {
             await updateDoc(doc(db,"ledger",existingTypes["shipping_auto"]),
               { amount: allocatedFee, note: shippingNote,
                 date: returnAt||serverTimestamp(), updatedAt: serverTimestamp() });
           } else {
+            // 從 purchases 取得 campaignName
+            let shipCampaignName = id;
+            try { const ps = await getDoc(doc(db,"purchases",id)); shipCampaignName = ps.data()?.campaignName || id; } catch(e3){}
             await addDoc(collection(db,"ledger"), {
               type:"expense", category:"集運費",
-              campaignId: id, amount: allocatedFee,
+              campaignId: shipCampaignName, campaignName: shipCampaignName,
+              amount: allocatedFee,
               note: shippingNote,
               date: returnAt ? returnAt : serverTimestamp(),
               createdAt: serverTimestamp(),
@@ -10413,7 +10447,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
               return `<tr>
                 <td style="white-space:nowrap">${ds}</td>
                 <td><span class="fin-badge ${l.type}">${l.type==="income"?"收入":"支出"}</span></td>
-                <td style="font-size:11px;color:var(--text-muted)">${esc(_ledgerCampaigns[l.campaignId]||l.campaignId||"—")}</td>
+                <td style="font-size:11px;color:var(--text-muted)">${esc(l.campaignName||_ledgerCampaigns[l.campaignId]||l.campaignId||"—")}</td>
                 <td style="font-weight:700;color:${l.type==="income"?"#4caf50":"var(--danger)"}">
                   <input type="number" value="${l.amount||0}" style="width:90px;font-size:12px;border:1px solid var(--border);border-radius:6px;padding:2px 6px;text-align:right"
                     onchange="updateLedgerAmount('${l.id}',this.value)">
@@ -10450,6 +10484,15 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     } catch(e) { alert("記帳失敗：" + e.message); }
   };
 
+  window.deleteLedgerEntry = async function(id) {
+    if (!confirm("確定刪除此記帳記錄？")) return;
+    try {
+      await deleteDoc(doc(db,"ledger",id));
+      _ledgerData = _ledgerData.filter(l => l.id !== id);
+      renderFinanceDashboard();
+    } catch(e) { alert("刪除失敗：" + e.message); }
+  };
+
   window.updateLedgerNote = async function(id, val) {
     try { await updateDoc(doc(db,"ledger",id), { note: val }); }
     catch(e) { console.error(e); }
@@ -10459,14 +10502,6 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     if (isNaN(n)) return;
     try { await updateDoc(doc(db,"ledger",id), { amount: n }); }
     catch(e) { console.error(e); }
-  };
-  window.deleteLedgerEntry = async function(id) {
-    if (!confirm("確定刪除此記帳記錄？")) return;
-    try {
-      await deleteDoc(doc(db,"ledger",id));
-      _ledgerData = _ledgerData.filter(l => l.id !== id);
-      renderFinanceDashboard();
-    } catch(e) { alert("刪除失敗：" + e.message); }
   };
 </script>
 
@@ -10794,6 +10829,34 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         if (paidEl)   paidEl.value   = newPaid;
         if (remainEl) remainEl.value = "";
         if (extraEl)  extraEl.value  = "";
+
+        // 補款金額同步到記帳收入（剩餘 + 補款的總和）
+        const extraNum  = parseFloat(String(origExtra).replace(/[^\d.]/g,""))  || 0;
+        const remainNum = parseFloat(String(origRemain).match(/^[\d.]+/)?.[0]||"0") || 0;
+        const syncIncome = extraNum + remainNum;
+        if (syncIncome > 0) {
+          try {
+            const oSnap = await getDoc(doc(db,"orders",orderId));
+            const o = oSnap.data() || {};
+            // 避免重複（同一筆訂單同一次取貨）
+            const lSnap = await getDocs(query(collection(db,"ledger"),
+              where("orderId","==",orderId), where("source","==","pickup_sync")));
+            if (lSnap.empty) {
+              await addDoc(collection(db,"ledger"), {
+                type: "income",
+                category: "補款收入",
+                campaignId:   o.campaignId   || "",
+                campaignName: o.campaignName || "",
+                orderId,
+                amount: syncIncome,
+                note: (o.nickname||o.buyerName||"") + " 取貨補款" + (o.campaignName ? " ・ "+o.campaignName : ""),
+                date: serverTimestamp(),
+                createdAt: serverTimestamp(),
+                source: "pickup_sync"
+              });
+            }
+          } catch(e2) { console.warn("補款記帳失敗", e2); }
+        }
       } else {
         // 取消取貨：嘗試還原原始金額
         const snap = await getDoc(doc(db,"orders",orderId));
