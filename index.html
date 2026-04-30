@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260430-108 -->
+  <!-- build:20260430-109 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3284,7 +3284,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260430-108 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260430-109 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -8219,13 +8219,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const isMember = specVal.includes("成員") || specVal.toLowerCase().includes("member");
     if (!isMember) { wrap.style.display = "none"; return; }
 
-    // 取得目前編輯的團務對應的團體成員
-    const campaignId = document.getElementById("ce-id")?.textContent;
-    // 從 groupsCache 找對應團體
-    const groupSel = document.getElementById("ce-group-display")?.textContent ||
-                     document.getElementById("c-group")?.selectedOptions?.[0]?.text || "";
-    const group = (window.groupsCache||[]).find(g => g.name === groupSel || g.abbr === groupSel);
-    const members = (group?.members||[]).map(m => typeof m==="string"?m:m.display).filter(Boolean);
+    // 從 _ceGroupId 找對應團體成員
+    const group = (window.groupsCache||[]).find(g => g.id === window._ceGroupId);
+    const members = (group?.members||[]).map(mn => typeof mn==="string"?mn:mn.display).filter(Boolean);
 
     if (!members.length) {
       wrap.style.display = "flex";
@@ -8373,6 +8369,8 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
       // 記下這個團務的幣別與利潤率，給代購價自動換算用
       window.__ceCurrency = d.currency || "KRW";
+      // 記下 groupId，供成員勾選器使用
+      window._ceGroupId = d.groupId || "";
       window.__ceMarkup   = (typeof d.markup === "number") ? d.markup : 18;
       // 若匯率還沒載入過就先抓一次，避免外幣輸入後算不出代購價
       if (window.__rates && window.__rates[window.__ceCurrency] == null && typeof window.fetchRates === "function") {
