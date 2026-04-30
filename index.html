@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260430-98 -->
+  <!-- build:20260430-99 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3203,7 +3203,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260430-98 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260430-99 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -4704,6 +4704,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   };
 
   // ── 我的訂單 ──────────────────────────────────────────────────
+  function esc(s) {
+    return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
   async function renderMyOrders() {
     const el = document.getElementById("myorder-content");
     if (!el) return;
@@ -4727,20 +4730,9 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         return;
       }
 
-      const snaps = await Promise.allSettled([
-        getDocs(query(collection(db,"orders"), where("email","==",email))),
-        getDocs(query(collection(db,"orders"), where("userId","==",u.uid))),
-      ]);
-
-      const seen = new Set();
+      const oSnap = await getDocs(query(collection(db,"orders"), where("email","==",email)));
       const orders = [];
-      snaps.forEach(r => {
-        if (r.status === "fulfilled") {
-          r.value.forEach(d => {
-            if (!seen.has(d.id)) { seen.add(d.id); orders.push({ id: d.id, ...d.data() }); }
-          });
-        }
-      });
+      oSnap.forEach(d => orders.push({ id: d.id, ...d.data() }));
 
       orders.sort((a,b) => (b.createdAt?.toMillis?.()??0) - (a.createdAt?.toMillis?.()??0));
 
