@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260430-100 -->
+  <!-- build:20260430-102 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -297,19 +297,22 @@
 
     /* 合併訂單 modal 專用 */
     #modal-merge-orders .modal {
-      max-width: 640px !important;
-      max-height: 80vh;
+      background: var(--surface);
+      border-radius: 20px;
+      width: 100%; max-width: 440px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 12px 40px rgba(255,132,195,0.18);
+      border: 1.5px solid var(--border);
+      overflow: hidden;
     }
     #modal-merge-orders .modal-body {
       overflow-y: auto;
       flex: 1;
       min-height: 0;
     }
-    #modal-group .modal {
-      max-height: 85vh;
-      display: flex;
-      flex-direction: column;
-    }
+    #modal-group /* .modal 已合併 */
     #modal-group .modal-body {
       overflow-y: auto;
       flex: 1;
@@ -655,13 +658,7 @@
       overscroll-behavior: contain;
     }
 
-    .modal {
-      background: var(--surface);
-      border-radius: 20px;
-      width: 100%; max-width: 440px;
-      box-shadow: 0 12px 40px rgba(255,132,195,0.18);
-      border: 1.5px solid var(--border);
-    }
+    /* .modal 已合併 */
 
     .modal-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -3221,7 +3218,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260430-100 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260430-102 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -4895,10 +4892,10 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
         cards.push(`
           <div class="campaign-card" ${cardColor ? `style="--card-color:${cardColor}"` : ""} onclick="openCampaign('${d.id}')">
-            <div class="campaign-card-name">${escH(data.name)}</div>
+            <div class="campaign-card-name">${esc(data.name)}</div>
             <div class="campaign-card-meta">
               <span>${deadlineText}</span>
-              <span>出貨：${escH(shipText)}</span>
+              <span>出貨：${esc(shipText)}</span>
             </div>
             <span class="campaign-card-mode">${modeLabel}</span>
           </div>`);
@@ -4971,7 +4968,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           <button class="back-btn" onclick="closeCampaign()">← 返回團購活動</button>
           <div class="order-form-card">
             <div class="order-header">
-              <div class="order-title">${escH(campaign.name)}</div>
+              <div class="order-title">${esc(campaign.name)}</div>
               <div class="order-info-row">
                 <span>此團務使用賣貨便下單</span>
               </div>
@@ -4979,7 +4976,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
             <div class="order-success">
               <span class="order-success-icon">🛍️</span>
               <div class="order-success-title">請點擊下方連結前往賣貨便下單</div>
-              <a class="btn btn-primary" href="${escH(campaign.buyshipUrl || "#")}" target="_blank" style="margin-top:16px;display:inline-block">
+              <a class="btn btn-primary" href="${esc(campaign.buyshipUrl || "#")}" target="_blank" style="margin-top:16px;display:inline-block">
                 前往賣貨便 →
               </a>
             </div>
@@ -5043,11 +5040,11 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
         <div class="order-form-card" style="--camp-color:${campColors[0]};--camp-gradient:${campGradient}">
           <div class="order-header" style="border-bottom-color:${campColors[0]}33">
-            <div class="order-title">${escH(campaign.name)}</div>
+            <div class="order-title">${esc(campaign.name)}</div>
             <div class="order-info-row">
               <span>付款模式：${modeNames[campaign.mode] || ""}</span>
               ${deadline ? `<span>收單：${deadline.getMonth()+1}/${deadline.getDate()} ${String(deadline.getHours()).padStart(2,"0")}:${String(deadline.getMinutes()).padStart(2,"0")}</span>` : ""}
-              <span>出貨：${escH(campaign.shipdate || "待更新")}</span>
+              <span>出貨：${esc(campaign.shipdate || "待更新")}</span>
             </div>
           </div>
 
@@ -5060,7 +5057,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
               const specs = getProductSpecs(p);
               const displayName = getDisplayName(p);
               const noteHtml = p.noteHint
-                ? '<div class="opi-note">' + escH(p.noteHint) + '</div>'
+                ? '<div class="opi-note">' + esc(p.noteHint) + '</div>'
                 : '';
 
               if (specs.length) {
@@ -5068,7 +5065,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
                 return '<div class="order-product-spec" id="opi-' + i + '" data-idx="' + i + '">' +
                   '<div class="opi-header">' +
                     '<div class="opi-header-left">' +
-                      '<div class="opi-name">' + escH(displayName) + '</div>' +
+                      '<div class="opi-name">' + esc(displayName) + '</div>' +
                       noteHtml +
                       '<div class="opi-price">NT$' + p.price.toLocaleString() + '</div>' +
                     '</div>' +
@@ -5081,7 +5078,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
                 // 無規格：數量模式
                 return '<div class="order-product-item" id="opi-' + i + '" data-idx="' + i + '">' +
                   '<div style="flex:1">' +
-                    '<div class="opi-name">' + escH(displayName) + '</div>' +
+                    '<div class="opi-name">' + esc(displayName) + '</div>' +
                     noteHtml +
                     '<div class="opi-price">NT$<strong>' + p.price.toLocaleString() + '</strong></div>' +
                   '</div>' +
@@ -5105,15 +5102,15 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           <div class="form-card-title grad-text" style="margin:24px 0 12px;border:none;padding:0">聯絡資料</div>
           <div class="form-group">
             <label class="form-label">Email <span class="required">*</span></label>
-            <input class="form-input" id="u-email" type="email" value="${escH(userProfile.email || u?.email || "")}" readonly style="background:#fff8fb" />
+            <input class="form-input" id="u-email" type="email" value="${esc(userProfile.email || u?.email || "")}" readonly style="background:#fff8fb" />
           </div>
           <div class="form-group" style="margin-top:12px">
             <label class="form-label">社群暱稱 <span class="required">*</span></label>
-            <input class="form-input" id="u-nickname" type="text" placeholder="LINE 社群顯示的名字" value="${escH(userProfile.nickname || u?.displayName || "")}" />
+            <input class="form-input" id="u-nickname" type="text" placeholder="LINE 社群顯示的名字" value="${esc(userProfile.nickname || u?.displayName || "")}" />
           </div>
           <div class="form-group" style="margin-top:12px">
             <label class="form-label">聯絡帳號 <span class="required">*</span></label>
-            <input class="form-input" id="u-contact" type="text" placeholder="例：LINE ID、IG" value="${escH(userProfile.contact || "")}" />
+            <input class="form-input" id="u-contact" type="text" placeholder="例：LINE ID、IG" value="${esc(userProfile.contact || "")}" />
           </div>
 
           <div class="form-group" style="margin-top:12px">
@@ -5154,10 +5151,10 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
     const specsHtml = specs.map((spec, si) =>
       '<div class="spec-item-sel">' +
-      '<span class="spec-item-label">' + escH(spec.label||'') + '</span>' +
+      '<span class="spec-item-label">' + esc(spec.label||'') + '</span>' +
       '<select class="form-input" id="si-' + pi + '-' + itemNum + '-' + si + '">' +
       '<option value="">— 選 —</option>' +
-      (spec.options||[]).map(o => '<option value="' + escH(o) + '">' + escH(o) + '</option>').join('') +
+      (spec.options||[]).map(o => '<option value="' + esc(o) + '">' + esc(o) + '</option>').join('') +
       '</select></div>'
     ).join('');
 
@@ -5306,8 +5303,8 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       // 匯款：顯示帳號清單 + 末五碼回傳
       const banksHtml = (campaign.bankAccounts || []).map(b => `
         <div class="bank-display">
-          <div class="bank-display-name">${escH(b.name)}</div>
-          <div class="bank-display-account">${escH(b.account)}</div>
+          <div class="bank-display-name">${esc(b.name)}</div>
+          <div class="bank-display-account">${esc(b.account)}</div>
         </div>`).join("");
 
       modeBlock = `
@@ -5319,7 +5316,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
           <div class="feedback-form-title">💳 回傳匯款資訊</div>
           <select class="form-input" id="fb-bank" style="margin-bottom:8px">
             <option value="">選擇匯款銀行</option>
-            ${(campaign.bankAccounts || []).map(b => `<option value="${escH(b.name)}">${escH(b.name)}</option>`).join("")}
+            ${(campaign.bankAccounts || []).map(b => `<option value="${esc(b.name)}">${esc(b.name)}</option>`).join("")}
           </select>
           <input class="form-input" id="fb-last5" type="text" placeholder="帳號末五碼" maxlength="5" />
           <button class="btn btn-primary btn-sm" style="margin-top:10px;width:100%" onclick="submitFeedback('${orderId}', 1)">送出</button>
@@ -5330,7 +5327,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         <div class="order-success-info">
           <div style="margin-bottom:8px">請將商品寄至集運倉地址：</div>
           <div class="bank-display">
-            <div class="bank-display-account">${escH(campaign.warehouse || "（地址待填）")}</div>
+            <div class="bank-display-account">${esc(campaign.warehouse || "（地址待填）")}</div>
           </div>
         </div>
         <div class="feedback-form">
@@ -5355,7 +5352,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         <div class="order-success">
           <span class="order-success-icon">✨</span>
           <div class="order-success-title">訂單送出成功！</div>
-          <div class="order-success-sub">團務：${escH(campaign.name)}<br>訂單編號：${orderId.slice(-8).toUpperCase()}</div>
+          <div class="order-success-sub">團務：${esc(campaign.name)}<br>訂單編號：${orderId.slice(-8).toUpperCase()}</div>
           ${modeBlock}
         </div>
       </div>`;
