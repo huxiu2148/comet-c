@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260430-104 -->
+  <!-- build:20260430-105 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -299,13 +299,15 @@
     .modal {
       background: var(--surface);
       border-radius: 20px;
-      width: 100%; max-width: 440px;
+      width: 100%; max-width: 480px;
       max-height: 85vh;
+      margin: auto;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 12px 40px rgba(255,132,195,0.18);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
       border: 1.5px solid var(--border);
       overflow: hidden;
+      position: relative;
     }
     /* 合併訂單 modal 加寬 */
     #modal-merge-orders .modal {
@@ -651,8 +653,8 @@
       position: fixed; inset: 0;
       background: rgba(0,0,0,0.4);
       backdrop-filter: blur(4px);
-      display: flex; align-items: flex-start; justify-content: center;
-      z-index: 200; padding: 20px 16px;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; padding: 20px;
       overflow-y: auto;
       overscroll-behavior: contain;
     }
@@ -3216,7 +3218,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260430-104 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260430-105 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
