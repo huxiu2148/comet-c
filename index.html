@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260430-102 -->
+  <!-- build:20260430-103 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3218,7 +3218,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260430-102 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260430-103 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -7342,6 +7342,19 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     document.body.style.overflow = "";
   };
 
+  // 金額計算（本地定義，不依賴其他 script）
+  function _addAmt(...strs) {
+    const vals = strs.map(s => String(s||"").trim()).filter(Boolean);
+    if (!vals.length) return "";
+    let mainSum = 0, subSum = 0, hasSub = false;
+    vals.forEach(v => {
+      const m = v.match(/^([\d.]+)\(([\d.]+)\)$/);
+      if (m) { mainSum += parseFloat(m[1]); subSum += parseFloat(m[2]); hasSub = true; }
+      else { const n = parseFloat(v) || 0; mainSum += n; subSum += n; }
+    });
+    return hasSub ? `${Math.round(mainSum)}(${Math.round(subSum)})` : String(Math.round(mainSum));
+  }
+
   window.confirmMergeSelected = async function() {
     const checked = Array.from(document.querySelectorAll(".merge-checkbox:checked"))
       .map(cb => _mergeGroups[parseInt(cb.dataset.gi)]).filter(Boolean);
@@ -7378,7 +7391,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
 
         // 合併金額（保留括號格式）
         const amounts = g.orders.map(o => String(o.totalPrice||o.total||o.paidAmount||"").trim()).filter(Boolean);
-        const mergedTotal = addAmountStr(...amounts);
+        const mergedTotal = _addAmt(...amounts);
 
         // 保留最早那筆，更新內容
         const sorted = [...g.orders].sort((a,b) =>
