@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260429-95 -->
+  <!-- build:20260430-97 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -983,6 +983,60 @@
       color: var(--text); margin-bottom: 8px;
     }
 
+
+    /* ── 我的訂單 ── */
+    .my-campaign-group { margin-bottom: 20px; }
+    .my-campaign-title {
+      font-size: 13px; font-weight: 700; color: var(--pink);
+      padding: 6px 0; border-bottom: 1.5px solid var(--border);
+      margin-bottom: 10px;
+    }
+    .my-order-card {
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+    }
+    .my-order-header {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; gap: 8px; margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .my-order-date   { font-size: 11px; color: var(--text-muted); margin-right: 8px; }
+    .my-order-status { font-size: 12px; font-weight: 600; }
+    .my-order-status.paid    { color: #2e7d32; }
+    .my-order-status.pending { color: #e65100; }
+    .my-order-amounts { display: flex; gap: 8px; flex-wrap: wrap; }
+    .my-amt-paid   { font-size: 12px; font-weight: 700; color: #2e7d32; }
+    .my-amt-remain { font-size: 12px; font-weight: 700; color: var(--danger); }
+    .my-amt-extra  { font-size: 12px; font-weight: 700; color: #e65100; }
+    .my-items-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .my-item-chip  {
+      background: #fff0f7; border-radius: 8px;
+      padding: 3px 10px; font-size: 12px;
+    }
+    .my-progress {
+      display: flex; align-items: center; margin-bottom: 8px;
+    }
+    .my-step { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .my-step-dot {
+      width: 24px; height: 24px; border-radius: 50%;
+      border: 2px solid var(--border); background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: var(--text-muted);
+      transition: all .2s;
+    }
+    .my-step.done .my-step-dot {
+      background: var(--pink); border-color: var(--pink);
+      color: #fff;
+    }
+    .my-step-label { font-size: 10px; color: var(--text-muted); }
+    .my-step.done .my-step-label { color: var(--pink); font-weight: 600; }
+    .my-step-line {
+      flex: 1; height: 2px; background: var(--border);
+      margin: 0 4px; margin-bottom: 14px; transition: all .2s;
+    }
+    .my-step-line.done { background: var(--pink); }
+    .my-shipping-note { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+    .my-return-info   { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
     /* 我的訂單列表 */
     .my-order-item {
       background: var(--surface);
@@ -3149,7 +3203,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260429-95 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260430-97 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -4649,6 +4703,128 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     if (sub === "myorder") renderMyOrders();
   };
 
+  // ── 我的訂單 ──────────────────────────────────────────────────
+  async function renderMyOrders() {
+    const el = document.getElementById("myorder-content");
+    if (!el) return;
+    el.innerHTML = '<div class="loading-row">載入中...</div>';
+
+    const u = auth.currentUser;
+    if (!u) {
+      el.innerHTML = '<div class="empty-row">請先登入</div>';
+      return;
+    }
+
+    try {
+      // 讀取訂單（用 userId 或 email 查詢）
+      const { getDocs, query, collection, where, orderBy } =
+        await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+
+      // 用 email 查詢（匯入/手動建立的訂單都用 email 對應）
+      const email = u.email || "";
+      if (!email) {
+        el.innerHTML = '<div class="empty-row">無法取得帳號 Email，請確認登入方式</div>';
+        return;
+      }
+
+      const snaps = await Promise.allSettled([
+        getDocs(query(collection(db,"orders"), where("email","==",email))),
+        getDocs(query(collection(db,"orders"), where("userId","==",u.uid))),
+      ]);
+
+      const seen = new Set();
+      const orders = [];
+      snaps.forEach(r => {
+        if (r.status === "fulfilled") {
+          r.value.forEach(d => {
+            if (!seen.has(d.id)) { seen.add(d.id); orders.push({ id: d.id, ...d.data() }); }
+          });
+        }
+      });
+
+      orders.sort((a,b) => (b.createdAt?.toMillis?.()??0) - (a.createdAt?.toMillis?.()??0));
+
+      if (!orders.length) {
+        el.innerHTML = '<div class="empty-row">尚無訂單記錄</div>';
+        return;
+      }
+
+      // 依團務分組
+      const groups = {};
+      orders.forEach(o => {
+        const cid = o.campaignId || "未知";
+        if (!groups[cid]) groups[cid] = { name: o.campaignName || cid, orders: [] };
+        groups[cid].orders.push(o);
+      });
+
+      el.innerHTML = Object.values(groups).map(g => `
+        <div class="my-campaign-group">
+          <div class="my-campaign-title">${esc(g.name)}</div>
+          ${g.orders.map(o => renderMyOrderCard(o)).join("")}
+        </div>`).join("");
+    } catch(e) {
+      el.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
+    }
+  }
+
+  function renderMyOrderCard(o) {
+    const statusMap = { paid:"✅ 已付款", pending:"⏳ 待確認", cancelled:"❌ 已取消" };
+    const status = statusMap[o.paymentStatus||o.status||"pending"] || "⏳ 待確認";
+    const isPaid = (o.paymentStatus||o.status) === "paid";
+
+    // 商品列表
+    const itemsHTML = o.items?.length
+      ? o.items.map(it => {
+          const spec = it.specStr ? ` [${esc(it.specStr)}]` : "";
+          return `<span class="my-item-chip">${esc(it.name)}${spec} ×${it.qty||1}</span>`;
+        }).join("")
+      : String(o.itemsText||"").split("\n").filter(Boolean)
+          .map(l => `<span class="my-item-chip">${esc(l)}</span>`).join("");
+
+    // 金額顯示
+    const paid    = o.paidAmount   || (isPaid ? o.totalPrice||"" : "");
+    const remain  = o.remainAmount || (!isPaid ? o.totalPrice||"" : "");
+    const extra   = o.extraAmount  || "";
+
+    // 出貨進度
+    const steps = [
+      { label:"下單", done: o.ordered },
+      { label:"出貨", done: o.shipped },
+      { label:"取貨", done: o.picked  },
+    ];
+    const progressHTML = `<div class="my-progress">
+      ${steps.map((s,i) => `
+        <div class="my-step ${s.done?"done":""}">
+          <div class="my-step-dot">${s.done?"✓":i+1}</div>
+          <div class="my-step-label">${s.label}</div>
+        </div>
+        ${i<2?`<div class="my-step-line ${steps[i+1]?.done?"done":""}"></div>`:""}
+      `).join("")}
+    </div>`;
+
+    const dateStr = o.createdAt?.toDate
+      ? o.createdAt.toDate().toLocaleDateString("zh-TW")
+      : "—";
+
+    return `<div class="my-order-card">
+      <div class="my-order-header">
+        <div>
+          <span class="my-order-date">${dateStr}</span>
+          <span class="my-order-status ${isPaid?"paid":"pending"}">${status}</span>
+        </div>
+        <div class="my-order-amounts">
+          ${paid   ? `<span class="my-amt-paid">已付 NT$${esc(String(paid))}</span>`   : ""}
+          ${remain ? `<span class="my-amt-remain">待付 NT$${esc(String(remain))}</span>` : ""}
+          ${extra  ? `<span class="my-amt-extra">補款 NT$${esc(String(extra))}</span>`  : ""}
+        </div>
+      </div>
+      <div class="my-items-wrap">${itemsHTML}</div>
+      ${progressHTML}
+      ${o.shippingNote ? `<div class="my-shipping-note">📦 ${esc(o.shippingNote)}</div>` : ""}
+      ${o.returnInfo   ? `<div class="my-return-info">🔖 ${esc(o.returnInfo)}</div>`   : ""}
+    </div>`;
+  }
+
   // ── 判斷是否為管理者 ─────────────────────────────────────────
   async function isAdmin() {
     const u = auth.currentUser;
@@ -5195,241 +5371,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     } catch (e) { alert("送出失敗：" + e.message); }
   };
 
-  // ── 我的訂單列表 ─────────────────────────────────────────────
-  async function renderMyOrders() {
-    const el = document.getElementById("myorder-content");
-    const u = auth.currentUser;
-    if (!u) { el.innerHTML = '<div class="placeholder-card">請先登入</div>'; return; }
 
-    el.innerHTML = '<div class="loading-row">載入中...</div>';
-    try {
-      const q = query(
-        collection(db, "orders"),
-        where("userId", "==", u.uid)
-      );
-      const snap = await getDocs(q);
-
-      if (snap.empty) {
-        el.innerHTML = '<div class="placeholder-card"><h2>尚無訂單</h2><p>去看看團購活動吧～</p></div>';
-        return;
-      }
-
-      // 依建立時間排序（由新到舊）
-      const orders = [];
-      snap.forEach(d => orders.push({ id: d.id, ...d.data() }));
-      orders.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
-      const statusMap = {
-        pending:      { label: "訂單進行中",  cls: "" },
-        collecting:   { label: "已收單",       cls: "" },
-        shipping:     { label: "官方出貨中",  cls: "" },
-        warehouse:    { label: "已到集運",    cls: "" },
-        returning:    { label: "運回中",       cls: "" },
-        arrived:      { label: "已抵台",       cls: "" },
-        done:         { label: "團務結束",    cls: "done" },
-        cancelled:    { label: "已取消",       cls: "cancel" },
-      };
-
-      el.innerHTML = orders.map(o => {
-        const st = statusMap[o.status] || { label: o.status, cls: "" };
-        const date = o.createdAt?.toDate ? o.createdAt.toDate() : new Date();
-        const dateStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`;
-        const itemsText = o.items.map(it => `${it.name} × ${it.qty}`).join("、");
-
-        return `
-          <div class="my-order-item">
-            <div class="moi-header">
-              <div>
-                <div class="moi-name">${escH(o.campaignName || "")}</div>
-                <div class="moi-date">${dateStr}</div>
-              </div>
-              <span class="moi-status ${st.cls}">${st.label}</span>
-            </div>
-            <div class="moi-items">${escH(itemsText)}</div>
-            ${o.feedback ? `<div class="moi-items" style="color:var(--pink)">已回傳：${escH(o.feedback)}</div>` : ""}
-            <div class="moi-foot">
-              <span style="font-size:12px;color:var(--text-muted)">訂單編號 ${o.id.slice(-8).toUpperCase()}</span>
-              <span class="moi-amount">NT$${o.total.toLocaleString()}</span>
-            </div>
-          </div>`;
-      }).join("");
-    } catch (e) {
-      el.innerHTML = `<div class="placeholder-card" style="color:var(--danger)">載入失敗：${e.message}</div>`;
-    }
-  }
-
-  function escH(s) {
-    return String(s ?? "").replace(/[&<>"']/g, c =>
-      ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  }
-
-  // ── 主分頁切換時觸發對應載入 ────────────────────────────────
-  const _origTab = window.switchTab;
-  window.switchTab = function(tabName) {
-    _origTab(tabName);
-    if (tabName === "orders") {
-      const activeSub = document.querySelector(".user-subnav .subnav-btn.active")?.dataset.usub || "browse";
-      if (activeSub === "browse")  renderCampaignList();
-      if (activeSub === "myorder") renderMyOrders();
-    }
-  };
-
-  // ── 首次登入後自動載入（auth 狀態變化時處理） ───────────────
-  // 用 interval 等 auth 就緒
-  const _ready = setInterval(() => {
-    if (auth.currentUser) {
-      clearInterval(_ready);
-      // 若網址有 ?c= 參數，直接進入下單頁
-      const urlId = new URLSearchParams(location.search).get("c");
-      if (urlId) renderOrderPage(urlId);
-      else renderCampaignList();
-    }
-  }, 300);
-</script>
-
-
-<!-- ── 使用者下單系統 ── -->
-<script type="module">
-  import { db, auth } from "./auth.js";
-  import {
-    collection, doc, addDoc, getDoc, getDocs, setDoc,
-    query, where, orderBy, serverTimestamp, onSnapshot
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-  const PROGRESS_LABEL = {
-    ongoing:   "🟢 團務進行中",
-    closed:    "🔴 已收單",
-    shipping:  "🔵 官方出貨中",
-    warehouse: "🔵 到集運",
-    returning: "🔵 運回中",
-    arrived:   "🟣 已抵台",
-    done:      "⚪ 團務結束",
-  };
-
-  // ══ 子分頁切換 ═══════════════════════════════════════════════
-  window.switchUserSection = function(section) {
-    // 更新按鈕狀態
-    document.querySelectorAll(".user-subnav .subnav-btn").forEach(btn => {
-      btn.classList.toggle("active", btn.dataset.usection === section);
-    });
-    // 切換區塊
-    document.querySelectorAll(".user-section").forEach(el => {
-      const shown = el.id === `user-section-${section}`;
-      el.classList.toggle("active", shown);
-      el.style.display = shown ? "block" : "none";
-    });
-
-    if (section === "campaigns") loadCampaigns();
-    if (section === "myorders")  loadMyOrders();
-  };
-
-  // ══ 進入頁面：檢查 URL 有沒有 ?c=xxxx ═══════════════════════
-  async function checkInitialRoute() {
-    const params = new URLSearchParams(location.search);
-    const campaignId = params.get("c");
-    if (campaignId) {
-      await openCampaign(campaignId);
-    } else {
-      loadCampaigns();
-    }
-  }
-
-  // 等使用者登入 + view-app 顯示後才執行
-  let initialRouteDone = false;
-  onAuthStateChanged(auth, async (user) => {
-    if (!user || initialRouteDone) return;
-    // 等 DOM 裡的 campaigns-list 真的可操作（view-app 顯示後）
-    const waitForDom = () => new Promise(resolve => {
-      const check = () => {
-        const el = document.getElementById("campaigns-list");
-        if (el && document.getElementById("view-app")?.style.display !== "none") {
-          resolve();
-        } else {
-          setTimeout(check, 50);
-        }
-      };
-      check();
-    });
-    await waitForDom();
-    initialRouteDone = true;
-    checkInitialRoute();
-  });
-
-  // ══ 載入團務列表 ═════════════════════════════════════════════
-  async function loadCampaigns() {
-    const list = document.getElementById("campaigns-list");
-    list.innerHTML = '<div class="loading-row">載入中...</div>';
-    try {
-      const snap = await getDocs(
-        query(collection(db, "campaigns"), orderBy("createdAt", "desc"))
-      );
-      if (snap.empty) {
-        list.innerHTML = '<div class="empty-row">目前沒有開放中的團務</div>';
-        return;
-      }
-      list.innerHTML = "";
-      snap.forEach(d => list.appendChild(renderCampaignCard(d.id, d.data())));
-    } catch (e) {
-      list.innerHTML = `<div class="empty-row" style="color:var(--danger)">載入失敗：${e.message}</div>`;
-    }
-  }
-
-  function renderCampaignCard(id, data) {
-    const card = document.createElement("div");
-    card.className = "campaign-card";
-
-    // 取顏色：優先用 groupColors，其次 groupColor，否則找 groupsCache
-    let colors = [];
-    if (data.groupColors && data.groupColors.length) {
-      colors = data.groupColors;
-    } else if (data.groupColor) {
-      colors = [data.groupColor];
-    } else if (data.groupId && window.groupsCache) {
-      const g = window.groupsCache.find(x => x.id === data.groupId);
-      colors = (g?.colors && g.colors.length) ? g.colors : (g?.color ? [g.color] : ["#FF84C3","#FF9E23","#E1E668"]);
-    } else {
-      colors = ["#FF84C3","#FF9E23","#E1E668"];
-    }
-    // 確保每個值是合法 hex（過濾掉 linear-gradient 等）
-    const hexColors = colors.filter(c => /^#[0-9a-fA-F]{3,6}$/.test(c));
-    if (!hexColors.length) { hexColors.push("#FF84C3"); hexColors.push("#E1E668"); hexColors.push("#FF9E23"); }
-
-    const gradient = hexColors.length > 1
-      ? `linear-gradient(135deg, ${hexColors.join(", ")})`
-      : hexColors[0];
-    card.style.setProperty("--cc-color", gradient);
-    card.style.setProperty("--cc-tag-bg", hexToRGBA(hexColors[0], 0.12));
-    card.style.setProperty("--cc-tag-color", hexColors[0]);
-
-    const progress = data.progress || "ongoing";
-    const deadline = data.deadline
-      ? window.fmtDateTime(new Date(data.deadline))
-      : "";
-
-    card.innerHTML = `
-      <span class="cc-group-tag">● ${escHtmlU(data.groupName || "—")}</span>
-      <div class="cc-name">${escHtmlU(data.name)}</div>
-      <span class="cc-progress ${progress}">${PROGRESS_LABEL[progress] || progress}</span>
-      <div class="cc-meta">
-        <span class="cc-id">${id}</span>
-        ${deadline ? `<span>收單：${deadline}</span>` : ""}
-      </div>`;
-    card.addEventListener("click", () => openCampaign(id));
-    return card;
-  }
-
-  function hexToRGBA(hex, alpha) {
-    const v = hex.replace("#","");
-    const r = parseInt(v.slice(0,2),16);
-    const g = parseInt(v.slice(2,4),16);
-    const b = parseInt(v.slice(4,6),16);
-    return `rgba(${r},${g},${b},${alpha})`;
-  }
-
-  // ══ 開啟單一團務下單頁 ═══════════════════════════════════════
-  let currentCampaign = null;
-  const cart = {}; // { productIndex: qty }
 
   async function openCampaign(campaignId) {
     switchUserSection("campaigns"); // 先顯示列表
@@ -5932,34 +5874,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     }
   }
 
-  function renderMyOrderCard(orderId, data, campaign) {
-    const card = document.createElement("div");
-    card.className = "myorder-card";
-    const progress = campaign.progress || "ongoing";
-    const itemsText = (data.items || []).map(it => `${it.name} × ${it.qty}`).join("、");
-    const createdStr = data.createdAt?.toDate
-      ? window.fmtDateTime(data.createdAt.toDate())
-      : "—";
 
-    card.innerHTML = `
-      <div class="myorder-header">
-        <div>
-          <div class="myorder-title">
-            <span style="width:8px;height:8px;border-radius:50%;background:${(campaign.groupColors && campaign.groupColors.length > 1) ? 'linear-gradient(135deg,' + campaign.groupColors.join(',') + ')' : (campaign.groupColor || '#FF84C3')};display:inline-block"></span>
-            ${escHtmlU(data.campaignName)}
-          </div>
-          <div style="font-size:11px;color:var(--text-muted);font-family:monospace;margin-top:2px">${data.campaignId}</div>
-        </div>
-        <span class="cc-progress ${progress}">${PROGRESS_LABEL[progress]}</span>
-      </div>
-      <div class="myorder-items">${escHtmlU(itemsText)}</div>
-      ${data.returnInfo ? `<div style="font-size:12px;color:#4caf50">✓ 已回傳：${escHtmlU(data.returnInfo)}</div>` : ""}
-      <div class="myorder-footer">
-        <span style="color:var(--text-muted)">${createdStr}</span>
-        <span class="myorder-amount">${esc(String(data.totalAmount||data.totalPrice||data.total||''))}</span>
-      </div>`;
-    return card;
-  }
 
   // ── 工具 ──
   function escHtmlU(s) {
