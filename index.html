@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260430-99 -->
+  <!-- build:20260430-100 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3221,7 +3221,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260430-99 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260430-100 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -10204,16 +10204,12 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     if (!confirm("確定刪除此採購記錄？\n同步的記帳記錄也會一併刪除。")) return;
     try {
       await deleteDoc(doc(db,"purchases",id));
-      // 同步刪除對應的記帳記錄（source=purchase_auto + 相同 purchaseId 或備接近時間）
+      // 同步刪除對應的記帳記錄（purchase_auto + shipping_auto）
       try {
         const ledgerSnap = await getDocs(
-          query(collection(db,"ledger"), where("source","==","purchase_auto"))
+          query(collection(db,"ledger"), where("purchaseId","==",id))
         );
-        const toDelete = [];
-        ledgerSnap.forEach(d => {
-          if (d.data().purchaseId === id) toDelete.push(d.id);
-        });
-        for (const lid of toDelete) await deleteDoc(doc(db,"ledger",lid));
+        for (const d of ledgerSnap.docs) await deleteDoc(doc(db,"ledger",d.id));
       } catch(e2) { console.warn("記帳刪除失敗",e2); }
       document.getElementById(`pur-${id}`)?.remove();
     } catch(e) { alert("刪除失敗：" + e.message); }
