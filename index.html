@@ -367,6 +367,9 @@
     .campaign-admin-row:hover { border-color: var(--pink); }
 
 
+    /* ── 採購記錄分頁 ── */
+    .pu-tab { transition: color .15s, border-color .15s; }
+    .pu-tab.active { color: var(--pink) !important; border-bottom-color: var(--pink) !important; }
     /* ── 雜項支出 ── */
     .misc-row {
       display: flex; align-items: center; gap: 12px;
@@ -2821,15 +2824,30 @@
             <button class="btn btn-ghost btn-sm" onclick="openPlatformManager()">⚙ 管理平台</button>
           </div>
         </div>
-        <div id="purchase-campaign-list">
-          <div class="loading-row">載入中...</div>
+
+        <!-- 分頁 tab -->
+        <div class="pu-tabs" style="display:flex;gap:4px;margin-bottom:16px;border-bottom:2px solid var(--border);padding-bottom:0">
+          <button class="pu-tab active" data-putab="records" onclick="switchPuTab('records')"
+            style="padding:7px 16px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--text-muted)">
+            📦 採購記錄
+          </button>
+          <button class="pu-tab" data-putab="misc" onclick="switchPuTab('misc')"
+            style="padding:7px 16px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;color:var(--text-muted)">
+            🗂 雜項支出
+          </button>
         </div>
 
-        <!-- 雜項支出 -->
-        <div style="margin-top:24px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-            <h3 style="font-size:14px;font-weight:700;margin:0">📦 雜項支出</h3>
-            <button class="btn btn-ghost btn-sm" onclick="openMiscModal()">＋ 新增</button>
+        <!-- 採購記錄分頁 -->
+        <div id="putab-records">
+          <div id="purchase-campaign-list">
+            <div class="loading-row">載入中...</div>
+          </div>
+        </div>
+
+        <!-- 雜項支出分頁 -->
+        <div id="putab-misc" style="display:none">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+            <button class="btn btn-primary btn-sm" onclick="openMiscModal()">＋ 新增</button>
           </div>
           <div id="misc-expense-list">
             <div class="loading-row">載入中...</div>
@@ -11034,6 +11052,16 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   function esc(s) { return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
   let _editingMiscId = null;
+
+  // ── 採購記錄分頁切換 ────────────────────────────────────────────
+  window.switchPuTab = function(tab) {
+    document.querySelectorAll(".pu-tab").forEach(b => {
+      b.classList.toggle("active", b.dataset.putab === tab);
+    });
+    document.getElementById("putab-records").style.display = tab === "records" ? "block" : "none";
+    document.getElementById("putab-misc").style.display    = tab === "misc"    ? "block" : "none";
+    if (tab === "misc") window.loadMiscExpenses?.();
+  };
 
   // ── 載入雜項支出 ─────────────────────────────────────────────
   window.loadMiscExpenses = async function() {
