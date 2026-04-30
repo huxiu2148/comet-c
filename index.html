@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260430-109 -->
+  <!-- build:20260430-110 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3284,7 +3284,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260430-109 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260430-110 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -4705,6 +4705,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
         const abbr = (data.abbr || window.genAbbr(data.name)).toUpperCase();
         const colors = (data.colors && data.colors.length) ? data.colors : (data.color ? [data.color] : ["#FF84C3","#FF9E23","#E1E668"]);
         groupsCache.push({ id: d.id, name: data.name, color: data.color || colors[0], colors, abbr, aliases: data.aliases || [], members: data.members || [], subgroups: data.subgroups || [] });
+        window.groupsCache = groupsCache; // 讓其他 script 區塊可存取
         const opt = document.createElement("option");
         opt.value = d.id;
         opt.textContent = `${data.name} (${abbr})`;
