@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260430-97 -->
+  <!-- build:20260430-98 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3203,7 +3203,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260430-97 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260430-98 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -9469,7 +9469,12 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const alreadyOrdered = {}; // itemKey → qty
     pSnap.forEach(d => {
       (d.data().items||[]).forEach(it => {
-        const k = itemKey(it.name, it.specs||"");
+        // 優先用 specStr（和 buildOrderSummary 產生的 key 一致）
+        const specStr = it.specStr ||
+          (it.specs && typeof it.specs === "object"
+            ? Object.values(it.specs).filter(Boolean).join(", ")
+            : String(it.specs||""));
+        const k = itemKey(it.name, specStr);
         alreadyOrdered[k] = (alreadyOrdered[k]||0) + (it.qty||1);
       });
     });
