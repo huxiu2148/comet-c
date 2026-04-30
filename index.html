@@ -5,7 +5,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <!-- build:20260430-105 -->
+  <!-- build:20260430-108 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>COMET💫</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -3107,8 +3107,12 @@
           
           <!-- 批次匯入區塊 -->
           <div id="ce-batch-import-wrap" style="display:none;margin-bottom:12px;padding:12px;background:#f9f9f9;border-radius:8px;border:1px dashed var(--border)">
-            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">請貼上文字（格式：名稱 NT$價格｜外幣）</div>
-            <textarea class="form-input" id="ce-batch-input" rows="5" style="font-size:12px;font-family:monospace;resize:vertical" placeholder="LOGO 徽章 NT$240｜₩10000&#10;明信片組 NT$240｜10000"></textarea>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px">
+              每行一個商品，格式：<code style="background:#f0f0f0;padding:1px 4px;border-radius:3px">商品名稱 NT$價格 [規格] ｜外幣</code><br>
+              規格用 <code style="background:#f0f0f0;padding:1px 4px;border-radius:3px">[A/B/C]</code> 表示選項，用 <code style="background:#f0f0f0;padding:1px 4px;border-radius:3px">[顏色/尺寸, 版本]</code> 表示多組規格
+            </div>
+            <textarea class="form-input" id="ce-batch-input" rows="6" style="font-size:12px;font-family:monospace;resize:vertical"
+              placeholder="一般商品：&#10;明信片組 NT$240｜₩10000&#10;&#10;有規格：&#10;Jewel Case NT$1200 [Ktown4u/YES24/weverse] ｜₩40000&#10;睡衣組 NT$1500 [sakuya, L/M/S]｜₩50000&#10;&#10;分成員：&#10;娃娃頭套 NT$900 [成員]｜₩30000"></textarea>
             <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:8px">
               <button class="btn btn-ghost btn-sm" onclick="toggleCeBatchImport()">取消</button>
               <button class="btn btn-primary btn-sm" onclick="processCeBatchImport()">確認匯入</button>
@@ -3280,7 +3284,7 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
   import { signInWithGoogle, signOutUser, watchAuthState } from "./auth.js";
 
   let currentRole = null;
-  console.log("%c COMET💫 v20260430-105 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
+  console.log("%c COMET💫 v20260430-108 ", "background:#FF84C3;color:#fff;font-weight:bold;border-radius:4px;padding:2px 8px");
 
   // 監聽登入狀態
   watchAuthState(({ user, role }) => {
@@ -8166,15 +8170,24 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const div = document.createElement("div");
     div.className = "product-row";
     div.id = `ce-product-row-${id}`;
-    div.style.display = "grid";
-    div.style.gridTemplateColumns = "1fr 80px 80px 30px";
-    div.style.gap = "4px";
-    div.style.alignItems = "center";
+    div.style.cssText = "display:flex;flex-direction:column;gap:4px;padding:8px;background:#fff8fb;border-radius:8px;border:1px solid var(--border)";
+    const specVal = data?.specText || "";
     div.innerHTML = `
-      <input class="form-input" type="text"   id="ce-p-name-${id}"    placeholder="商品名稱" value="${esc(data?.name || '')}" />
-      <input class="form-input" type="number" id="ce-p-foreign-${id}" placeholder="外幣"   value="${data?.foreignPrice || ''}" oninput="recalcCePrice(${id})" />
-      <input class="form-input" type="number" id="ce-p-price-${id}"   placeholder="代購價" value="${data?.price || ''}" />
-      <button class="product-remove" type="button" onclick="removeCeProductRow(${id})">✕</button>`;
+      <div style="display:grid;grid-template-columns:1fr 80px 80px 28px;gap:4px;align-items:center">
+        <input class="form-input" type="text"   id="ce-p-name-${id}"    placeholder="商品名稱" value="${esc(data?.name || '')}" />
+        <input class="form-input" type="number" id="ce-p-foreign-${id}" placeholder="外幣"   value="${data?.foreignPrice || ''}" oninput="recalcCePrice(${id})" />
+        <input class="form-input" type="number" id="ce-p-price-${id}"   placeholder="代購價" value="${data?.price || ''}" />
+        <button class="product-remove" type="button" onclick="removeCeProductRow(${id})">✕</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:11px;color:var(--text-muted);flex-shrink:0">規格：</span>
+        <input class="form-input" type="text" id="ce-p-spec-${id}"
+          placeholder="無規格 / A/B/C（選項）/ 成員（分成員）/ 顏色/尺寸, 版本"
+          value="${esc(specVal)}"
+          style="font-size:12px;flex:1"
+          oninput="window.onCeSpecInput(${id})" />
+      </div>
+      <div id="ce-p-member-wrap-${id}" style="display:none;flex-wrap:wrap;gap:6px;padding:6px 0"></div>`;
     list.appendChild(div);
   };
 
@@ -8192,6 +8205,61 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     if (!rate) { return; } // 匯率還沒載入就不動
     const fee = 0.015;
     priceEl.value = round5(foreign * rate * (1 + fee + markup));
+  };
+
+  // ── 規格欄位輸入：偵測「成員」自動顯示成員勾選 ──────────────
+  window.onCeSpecInput = function(id) {
+    const specVal = document.getElementById("ce-p-spec-"+id)?.value.trim() || "";
+    window.renderCeMemberPicker(id, specVal);
+  };
+
+  window.renderCeMemberPicker = function(id, specVal) {
+    const wrap = document.getElementById("ce-p-member-wrap-"+id);
+    if (!wrap) return;
+    const isMember = specVal.includes("成員") || specVal.toLowerCase().includes("member");
+    if (!isMember) { wrap.style.display = "none"; return; }
+
+    // 取得目前編輯的團務對應的團體成員
+    const campaignId = document.getElementById("ce-id")?.textContent;
+    // 從 groupsCache 找對應團體
+    const groupSel = document.getElementById("ce-group-display")?.textContent ||
+                     document.getElementById("c-group")?.selectedOptions?.[0]?.text || "";
+    const group = (window.groupsCache||[]).find(g => g.name === groupSel || g.abbr === groupSel);
+    const members = (group?.members||[]).map(m => typeof m==="string"?m:m.display).filter(Boolean);
+
+    if (!members.length) {
+      wrap.style.display = "flex";
+      wrap.innerHTML = '<span style="font-size:11px;color:var(--text-muted)">（找不到成員清單，儲存後仍可設定）</span>';
+      return;
+    }
+
+    // 讀取目前已選的成員（若有）
+    const storedKey = "ce-member-sel-"+id;
+    if (!window._ceMemberSel) window._ceMemberSel = {};
+    if (!window._ceMemberSel[id]) window._ceMemberSel[id] = new Set(members); // 預設全選
+
+    wrap.style.display = "flex";
+    wrap.innerHTML = [
+      '<span style="font-size:11px;color:var(--text-muted);width:100%">可選成員（預設全選）：</span>',
+      ...members.map(mn => {
+        const checked = window._ceMemberSel[id].has(mn);
+        return `<label style="display:flex;align-items:center;gap:3px;font-size:12px;cursor:pointer;background:${checked?"#fff0f7":"#f5f5f5"};border-radius:8px;padding:3px 8px;border:1px solid ${checked?"var(--pink)":"#ddd"}">
+          <input type="checkbox" value="${mn}" ${checked?"checked":""} style="accent-color:var(--pink)"
+            onchange="window.onCeMemberToggle(${id},'${mn.replace(/'/g,"\'")}',this.checked)">
+          ${mn}
+        </label>`;
+      })
+    ].join("");
+  };
+
+  window.onCeMemberToggle = function(id, memberName, checked) {
+    if (!window._ceMemberSel) window._ceMemberSel = {};
+    if (!window._ceMemberSel[id]) window._ceMemberSel[id] = new Set();
+    if (checked) window._ceMemberSel[id].add(memberName);
+    else window._ceMemberSel[id].delete(memberName);
+    // 重繪（更新 checked 樣式）
+    const specVal = document.getElementById("ce-p-spec-"+id)?.value.trim() || "";
+    window.renderCeMemberPicker(id, specVal);
   };
 
   window.removeCeProductRow = function(id) {
@@ -8217,45 +8285,59 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
     const lines = text.split("\n");
     let count = 0;
     lines.forEach(line => {
-      if (!line.trim()) return;
-      // 格式：名稱 NT$價格｜外幣
-      // 支援多種分隔符號：｜, |, ｜
+      line = line.trim();
+      if (!line || line.startsWith("//") || line.startsWith("#")) return;
+
+      // 分離外幣部分
       const parts = line.split(/[｜|]/);
-      let namePart = parts[0] || "";
+      let mainPart   = parts[0] || "";
       let foreignPart = parts[1] || "";
 
-      // 從 namePart 中分離名稱與台幣價格
-      // 尋找 NT$ 或價格數字
-      let name = namePart;
-      let price = "";
-      const ntMatch = namePart.match(/(.*?)NT\$?\s*(\d+)/i);
+      // 抽取規格 [...]
+      let specText = "";
+      mainPart = mainPart.replace(/\[([^\]]+)\]/, (_, s) => { specText = s.trim(); return ""; }).trim();
+
+      // 從 mainPart 分離名稱與台幣價格
+      let name = mainPart, price = "";
+      const ntMatch = mainPart.match(/^(.+?)\s+NT\$?\s*(\d+)\s*$/i);
       if (ntMatch) {
-        name = ntMatch[1].trim();
+        name  = ntMatch[1].trim();
         price = ntMatch[2];
       } else {
-        // 如果沒找到 NT$，嘗試找最後一個空格後的數字
-        const lastSpaceMatch = namePart.match(/(.*)\s+(\d+)$/);
-        if (lastSpaceMatch) {
-          name = lastSpaceMatch[1].trim();
-          price = lastSpaceMatch[2];
+        const lastNum = mainPart.match(/^(.+?)\s+(\d{2,})\s*$/);
+        if (lastNum) { name = lastNum[1].trim(); price = lastNum[2]; }
+      }
+
+      // 處理外幣
+      const foreign = foreignPart.replace(/[^\d.]/g, "");
+
+      // 解析規格
+      let specs = [], specMode = "none";
+      if (specText) {
+        if (specText.includes("成員") || specText.toLowerCase().includes("member")) {
+          specMode = "member";
+          const selMembers = window._ceMemberSel?.[rid];
+          const memberNames = selMembers ? Array.from(selMembers) : [];
+          specs = [{ label: "成員", options: memberNames, isMember: true, memberNames }];
+        } else {
+          // 用逗號分隔多組規格，每組用 / 分隔選項
+          specs = specText.split(",").map(g => {
+            const opts = g.trim().split("/").map(o => o.trim()).filter(Boolean);
+            return { label: g.trim(), options: opts.length > 1 ? opts : [g.trim()], isMember: false };
+          }).filter(s => s.label);
+          specMode = specs.length ? "multi" : "none";
         }
       }
 
-      // 處理外幣部分，移除貨幣符號如 ₩
-      let foreign = foreignPart.replace(/[^\d.]/g, "");
-
       if (name) {
         addCeProductRow({
-          name: name,
-          price: price,
-          foreignPrice: foreign
+          name, price, foreignPrice: foreign,
+          specText, specs, specMode
         });
         count++;
       }
     });
-    if (count > 0) {
-      window.toggleCeBatchImport();
-    }
+    if (count > 0) window.toggleCeBatchImport();
   };
 
   window.openCampaignEdit = async function(campaignId) {
@@ -8298,7 +8380,19 @@ gmga@gmail.com、1223、xxuxuuu"></textarea>
       }
 
       if (d.products && d.products.length) {
-        d.products.forEach(p => addCeProductRow(p));
+        d.products.forEach(p => {
+          addCeProductRow(p);
+          const rid = ceProductCounter;
+          // 若規格含「成員」，從儲存的 memberNames 初始化選取狀態
+          if (p.specText && (p.specText.includes("成員") || p.specText.toLowerCase().includes("member"))) {
+            const stored = p.specs?.find(s2 => s2.isMember);
+            if (stored?.memberNames?.length) {
+              if (!window._ceMemberSel) window._ceMemberSel = {};
+              window._ceMemberSel[rid] = new Set(stored.memberNames);
+            }
+            setTimeout(() => window.renderCeMemberPicker?.(rid, p.specText), 50);
+          }
+        });
       }
 
       loading.style.display = "none";
